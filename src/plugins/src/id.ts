@@ -15,11 +15,11 @@ export class IdPlugin implements Plugin {
   }
 
   onMessage = (msg: Message) => {
-    if (msg.reply_to_message) {
+    if (msg.reply_to_message != null) {
       // TODO: add msgCache
       const tmp = msg.reply_to_message;
-      if (tmp) {
-        if (tmp.forward_from) {
+      if (tmp != null) {
+        if (tmp.forward_from != null) {
           this.api.reply(msg, `${tmp.forward_from.id}`);
         } else {
           this.api.reply(msg, `${tmp.from!.id}`);
