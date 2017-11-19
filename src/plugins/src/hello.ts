@@ -1,16 +1,13 @@
 import { Input } from 'core/bot_api/input';
 import { Plugin } from 'core/bot_api/plugin';
-import { Injector } from 'core/di/injector';
+import { Inject } from 'core/di/injector';
 import { TgApi } from 'core/tg/tg_api';
 
+@Inject
 export class HelloPlugin implements Plugin {
-  private readonly tgApi: TgApi;
-
   readonly name = 'Hello';
 
-  constructor(injector: Injector) {
-    this.tgApi = injector.get(TgApi);
-  }
+  constructor(private tgApi: TgApi) {}
 
   init(input: Input): void {
     input.onText(/hello/, (msg) => {
