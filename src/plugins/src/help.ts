@@ -33,7 +33,7 @@ export class HelpPlugin implements Plugin {
   constructor(private api: TgApi) {}
 
   init(input: Input) {
-    input.onText(/[!\/](help|помощь|команды|хэлп|хелп)\b/, this.onMessage)
+    input.onText(/^[!\/](help|помощь|команды|хэлп|хелп)\b/, this.onMessage)
   }
 
   onMessage = (msg: Message) => {
