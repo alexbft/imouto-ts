@@ -1,4 +1,5 @@
 import { Injector } from './injector';
+import 'reflect-metadata';
 
 interface ProviderOptions {
   useValue?: any;
@@ -14,7 +15,9 @@ export class Provider {
         return injector.getCached(this.key, () => value);
       }
     }
-    return injector.getCached(this.key, () => new this.key(injector));
+    const deps = Reflect.getMetadata('design:paramtypes', this.key)
+    const params = deps ? deps.map(a => injector.get(a)) : [injector]
+    return injector.getCached(this.key, () => new this.key(...params));
   }
 
   toString(): string {
