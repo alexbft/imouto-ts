@@ -27,6 +27,7 @@
   "dependencies": {
     "moment": "^2.19.1",
     "most": "^1.7.2",
+    "reflect-metadata": "^0.1.10",
     "winston": "^2.4.0"
   }
 }
