@@ -7,6 +7,6 @@ export function moment(message: Message): _moment.Moment {
 }
 
 export const fullName = (user: User) =>
-  user.last_name
+  user.last_name != null
     ? `${user.first_name} ${user.last_name}`
     : `${user.first_name}`;
