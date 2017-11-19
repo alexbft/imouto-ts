@@ -11,7 +11,7 @@ export class IdPlugin implements Plugin {
   constructor(private api: TgApi) {}
 
   init(input: Input) {
-    input.onText(/!id$/, this.onMessage)
+    input.onText(/^!id$/, this.onMessage)
   }
 
   onMessage = (msg: Message) => {
