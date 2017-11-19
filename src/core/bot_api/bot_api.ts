@@ -1,11 +1,11 @@
-import { Update, Message } from 'node-telegram-bot-api';
 import * as moment from 'moment';
+import { Message, Update } from 'node-telegram-bot-api';
 
 import { Injector } from 'core/di/injector';
 import { logger } from 'core/logging/logger';
+import * as msg from 'core/tg/message_util';
 import { timeout } from 'core/util/promises';
 import { pluginBindings } from 'plugins/module';
-import * as msg from 'core/tg/message_util';
 
 import { InputImpl } from './input';
 import { Plugin } from './plugin';
