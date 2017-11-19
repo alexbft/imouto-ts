@@ -22,6 +22,7 @@
     "@types/winston": "^2.3.7",
     "concurrently": "*",
     "nodemon": "*",
+    "tslint": "^5.8.0",
     "typescript": "*"
   },
   "dependencies": {
