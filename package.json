@@ -1,0 +1,32 @@
+{
+  "name": "imouto-ts",
+  "version": "1.0.0",
+  "description": "Imouto bot for telegram (typescript)",
+  "scripts": {
+    "start": "npm run build && npm run watch",
+    "serve": "nodemon dist/main.js",
+    "build": "npm run build-ts",
+    "watch": "npm run watch-ts",
+    "test": "jest --forceExit",
+    "build-ts": "tsc",
+    "watch-ts": "tsc -w",
+    "debug": "npm run build && npm run watch-debug",
+    "serve-debug": "nodemon --inspect dist/server.js",
+    "watch-debug": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run serve-debug\""
+  },
+  "author": "alexbft",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "*",
+    "@types/node-telegram-bot-api": "^0.28.1",
+    "@types/winston": "^2.3.7",
+    "concurrently": "*",
+    "nodemon": "*",
+    "typescript": "*"
+  },
+  "dependencies": {
+    "moment": "^2.19.1",
+    "most": "^1.7.2",
+    "winston": "^2.4.0"
+  }
+}
