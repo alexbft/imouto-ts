@@ -2,19 +2,16 @@ import { Update } from 'node-telegram-bot-api';
 
 import { logger } from 'core/logging/logger';
 import { Injector } from 'core/di/injector';
-import { TgApi } from 'core/tg/tg_api';
 import { TgClient } from 'core/tg/tg_client';
 import { Environment } from 'core/environment/environment';
 import { BotApi } from 'core/bot_api/bot_api';
 
 export class ImoutoServer {
-  private readonly tgApi: TgApi;
   private readonly tgClient: TgClient;
   private readonly environment: Environment;
   private readonly botApi: BotApi;
 
   constructor(injector: Injector) {
-    this.tgApi = injector.get(TgApi);
     this.tgClient = injector.get(TgClient);
     this.environment = injector.get(Environment);
     this.botApi = injector.get(BotApi);

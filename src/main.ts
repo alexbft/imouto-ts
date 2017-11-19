@@ -1,5 +1,5 @@
 // Hack to resolve non-relative paths in Node.
-process.env.NODE_PATH = __dirname + "/src";
+process.env.NODE_PATH = __dirname;
 require('module').Module._initPaths();
 
 import { Injector } from 'core/di/injector';
