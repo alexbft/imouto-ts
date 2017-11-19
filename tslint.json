@@ -5,7 +5,10 @@
     ],
     "jsRules": {},
     "rules": {
-        "quotemark": [true, "single"]
+        "quotemark": [true, "single"],
+        "no-unsafe-any": true,
+        "strict-type-predicates": true,
+        "interface-name": [true, "never-prefix"]
     },
     "rulesDirectory": []
 }
