@@ -1,20 +1,20 @@
-import { Inject } from 'core/di/injector';
 import { Input } from 'core/bot_api/input';
 import { Plugin } from 'core/bot_api/plugin';
-import { Message } from 'node-telegram-bot-api';
+import { Inject } from 'core/di/injector';
 import { TgApi } from 'core/tg/tg_api';
+import { Message } from 'node-telegram-bot-api';
 
 @Inject
 export class IdPlugin implements Plugin {
-  readonly name = 'ID'
+  public readonly name = 'ID';
 
   constructor(private api: TgApi) {}
 
-  init(input: Input) {
-    input.onText(/^!id$/, this.onMessage)
+  public init(input: Input) {
+    input.onText(/^!id$/, this.onMessage);
   }
 
-  onMessage = (msg: Message) => {
+  public onMessage = (msg: Message) => {
     if (msg.reply_to_message != null) {
       // TODO: add msgCache
       const tmp = msg.reply_to_message;
