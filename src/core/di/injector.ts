@@ -25,3 +25,5 @@ export class Injector {
     return new Injector(Array.from(this.bindingMap.values()).concat(providers));
   }
 }
+
+export const Inject = (constructor: any) => {}
