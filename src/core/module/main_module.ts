@@ -5,9 +5,10 @@ import { Web } from 'core/util/web';
 import { TgApi } from 'core/tg/tg_api';
 import { TgClient } from 'core/tg/tg_client';
 import { BotApi } from 'core/bot_api/bot_api';
-import * as config from 'core/config/module';
+import { ConfigLoader } from 'core/config/config_loader';
 
-const bindings = [
+export const bindings = [
+  provide(ConfigLoader),
   provide(Environment),
   provide(ImoutoServer),
   provide(Web),
@@ -15,6 +16,3 @@ const bindings = [
   provide(TgClient),
   provide(BotApi),
 ];
-
-export const mainBindings = bindings.concat(
-  config.bindings);

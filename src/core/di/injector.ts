@@ -11,7 +11,13 @@ export class Injector {
   }
 
   get(key: any): any {
-    return this.bindingMap.get(key)!.get(this);
+    const provider = this.bindingMap.get(key);
+    if (provider == null) {
+      const keyName = key != null && key.name != null ? key.name : key;
+      throw new Error(`Injection failed: key '${keyName}' not found`);
+    } else {
+      return provider.get(this);
+    }
   }
 
   getCached<T>(key: any, create: () => T): T {

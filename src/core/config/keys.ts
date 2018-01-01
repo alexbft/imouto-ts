@@ -1,1 +1,1 @@
-export const AuthToken = Symbol();
+export const AuthToken = Symbol('AuthToken');
