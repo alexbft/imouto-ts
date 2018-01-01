@@ -6,7 +6,7 @@ import { Update } from 'node-telegram-bot-api';
 
 import { logger } from 'core/logging/logger';
 import { AuthToken } from 'core/config/keys';
-import { Injector } from 'core/di/injector';
+import { Inject, Injector } from 'core/di/injector';
 import { Environment } from 'core/environment/environment';
 import { Props } from 'core/util/misc';
 import { Web, WebException } from 'core/util/web';
@@ -17,19 +17,19 @@ const oldUpdatesLimit = 10;
 const updatesLongPollingTimeout = moment.duration(300, 'seconds');
 const updatesErrorDelay = moment.duration(10, 'seconds');
 
+@Inject
 export class TgClient {
-  private readonly environment: Environment;
-  private readonly web: Web;
   private readonly authToken: string;
 
   private readonly updateSubject = new Subject<Update>();
 
   private lastUpdateId = -1;
 
-  constructor(injector: Injector) {
-    this.environment = injector.get(Environment);
+  constructor(
+      private readonly environment: Environment,
+      private readonly web: Web,
+      injector: Injector) {
     this.authToken = injector.get(AuthToken);
-    this.web = injector.get(Web);
   }
 
   public get updateStream(): Observable<Update> {

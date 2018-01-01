@@ -1,21 +1,17 @@
 import { Update } from 'node-telegram-bot-api';
 
 import { logger } from 'core/logging/logger';
-import { Injector } from 'core/di/injector';
+import { Inject } from 'core/di/injector';
 import { TgClient } from 'core/tg/tg_client';
 import { Environment } from 'core/environment/environment';
 import { BotApi } from 'core/bot_api/bot_api';
 
+@Inject
 export class ImoutoServer {
-  private readonly tgClient: TgClient;
-  private readonly environment: Environment;
-  private readonly botApi: BotApi;
-
-  constructor(injector: Injector) {
-    this.tgClient = injector.get(TgClient);
-    this.environment = injector.get(Environment);
-    this.botApi = injector.get(BotApi);
-  }
+  constructor(
+      private readonly tgClient: TgClient,
+      private readonly environment: Environment,
+      private readonly botApi: BotApi) {}
 
   async start(): Promise<void> {
     logger.info('Starting...');

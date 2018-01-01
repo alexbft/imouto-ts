@@ -1,7 +1,9 @@
 import { Observable, Subscription } from 'rxjs';
 import { Duration } from 'moment';
 import { Completer } from 'core/util/completer';
+import { Inject } from 'core/di/injector';
 
+@Inject
 export class Environment {
   private _isDisposing = false;
   private readonly disposingCompleter: Completer<void>;

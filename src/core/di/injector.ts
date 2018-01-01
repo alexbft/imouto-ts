@@ -13,6 +13,10 @@ export class Injector {
   get(key: any): any {
     const provider = this.bindingMap.get(key);
     if (provider == null) {
+      // Allow to inject the injector.
+      if (key === Injector) {
+        return this;
+      }
       const keyName = key != null && key.name != null ? key.name : key;
       throw new Error(`Injection failed: key '${keyName}' not found`);
     } else {

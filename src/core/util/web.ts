@@ -1,5 +1,5 @@
 import * as http from 'http';
-import { Injector } from 'core/di/injector';
+import { Inject } from 'core/di/injector';
 import { Environment } from 'core/environment/environment';
 import { Subscriber } from './subscriber';
 
@@ -10,12 +10,9 @@ export class WebException extends Error {
   }
 }
 
+@Inject
 export class Web {
-  private readonly environment: Environment;
-
-  constructor(injector: Injector) {
-    this.environment = injector.get(Environment);
-  }
+  constructor(private readonly environment: Environment) {}
 
   sendRequest(request: http.ClientRequest): Promise<http.IncomingMessage> {
     return new Promise<http.IncomingMessage>((resolve, reject) => {
