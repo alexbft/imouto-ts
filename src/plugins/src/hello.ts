@@ -1,9 +1,9 @@
 import { Input } from 'core/bot_api/input';
 import { Plugin } from 'core/bot_api/plugin';
-import { Inject } from 'core/di/injector';
+import { Injectable } from 'core/di/injector';
 import { TgApi } from 'core/tg/tg_api';
 
-@Inject
+@Injectable
 export class HelloPlugin implements Plugin {
   readonly name = 'Hello';
 

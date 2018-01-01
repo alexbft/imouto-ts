@@ -6,11 +6,11 @@ import { Provider, provide } from "core/di/provider";
 import { logger } from 'core/logging/logger';
 
 import { AuthToken } from "./keys";
-import { Inject } from 'core/di/injector';
+import { Injectable } from 'core/di/injector';
 
 const configFileName = __dirname + '/../../../../config/main.config';
 
-@Inject
+@Injectable
 export class ConfigLoader {
   async load(): Promise<Provider[]> {
     logger.info('Reading configuration...');

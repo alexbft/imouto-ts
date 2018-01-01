@@ -1,6 +1,6 @@
 import { Message, SendMessageOptions } from 'node-telegram-bot-api';
 
-import { Inject } from 'core/di/injector';
+import { Injectable } from 'core/di/injector';
 import { TgClient } from './tg_client';
 
 interface SendMessageArgs extends SendMessageOptions {
@@ -8,7 +8,7 @@ interface SendMessageArgs extends SendMessageOptions {
   text: string;
 }
 
-@Inject
+@Injectable
 export class TgApi {
   constructor(private readonly tgClient: TgClient) {}
 

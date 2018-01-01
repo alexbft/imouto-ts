@@ -1,5 +1,5 @@
 import * as http from 'http';
-import { Inject } from 'core/di/injector';
+import { Injectable } from 'core/di/injector';
 import { Environment } from 'core/environment/environment';
 import { Subscriber } from './subscriber';
 
@@ -10,7 +10,7 @@ export class WebException extends Error {
   }
 }
 
-@Inject
+@Injectable
 export class Web {
   constructor(private readonly environment: Environment) {}
 

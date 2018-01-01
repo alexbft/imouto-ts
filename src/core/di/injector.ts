@@ -36,4 +36,14 @@ export class Injector {
   }
 }
 
-export const Inject = (_: any) => {}
+export const injectMetadata = Symbol('injectMetadata');
+
+export const Injectable = (_classFn: any) => {}
+
+export function Inject(key: any) {
+  return function (classFn: Object, _propertyKey: any, paramIndex: number) {
+    const existing: Map<number, any> = Reflect.getOwnMetadata(injectMetadata, classFn) || new Map<number, any>();
+    existing.set(paramIndex, key);
+    Reflect.defineMetadata(injectMetadata, existing, classFn);
+  }
+}

@@ -6,7 +6,7 @@ import { Update } from 'node-telegram-bot-api';
 
 import { logger } from 'core/logging/logger';
 import { AuthToken } from 'core/config/keys';
-import { Inject, Injector } from 'core/di/injector';
+import { Injectable, Inject } from 'core/di/injector';
 import { Environment } from 'core/environment/environment';
 import { Props } from 'core/util/misc';
 import { Web, WebException } from 'core/util/web';
@@ -17,10 +17,8 @@ const oldUpdatesLimit = 10;
 const updatesLongPollingTimeout = moment.duration(300, 'seconds');
 const updatesErrorDelay = moment.duration(10, 'seconds');
 
-@Inject
+@Injectable
 export class TgClient {
-  private readonly authToken: string;
-
   private readonly updateSubject = new Subject<Update>();
 
   private lastUpdateId = -1;
@@ -28,9 +26,7 @@ export class TgClient {
   constructor(
       private readonly environment: Environment,
       private readonly web: Web,
-      injector: Injector) {
-    this.authToken = injector.get(AuthToken);
-  }
+      @Inject(AuthToken) private readonly authToken: string) {}
 
   public get updateStream(): Observable<Update> {
     return this.updateSubject;
@@ -64,7 +60,7 @@ export class TgClient {
         logger.error('getUpdates returned error:', response);
         if (response['parameters'] != null && response['parameters']['retry_after'] != null) {
           await this.environment.pause(
-            moment.duration(response['parameters']['retry_after'], 'seconds'));
+              moment.duration(response['parameters']['retry_after'], 'seconds'));
         } else {
           await this.environment.pause(updatesErrorDelay);
         }

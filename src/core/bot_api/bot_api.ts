@@ -1,7 +1,7 @@
 import { Update, Message } from 'node-telegram-bot-api';
 import * as moment from 'moment';
 
-import { Injector, Inject } from 'core/di/injector';
+import { Injector, Injectable } from 'core/di/injector';
 import { logger } from 'core/logging/logger';
 import { timeout } from 'core/util/promises';
 import { pluginBindings } from 'plugins/module';
@@ -13,7 +13,7 @@ import { TimeoutError } from 'rxjs/util/TimeoutError';
 
 const pluginInitTimeout = moment.duration(30, 'seconds');
 
-@Inject
+@Injectable
 export class BotApi {
   private input: InputImpl;
   private readonly startMoment: moment.Moment;

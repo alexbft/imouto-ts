@@ -1,6 +1,6 @@
 import { Input } from 'core/bot_api/input';
 import { Plugin } from 'core/bot_api/plugin';
-import { Inject } from 'core/di/injector';
+import { Injectable } from 'core/di/injector';
 import { fullName } from 'core/tg/message_util';
 import { TgApi } from 'core/tg/tg_api';
 import { Message } from 'node-telegram-bot-api';
@@ -16,7 +16,7 @@ const iq = (s: string) => {
   }
 };
 
-@Inject
+@Injectable
 export class IqTestPlugin implements Plugin {
   public readonly name = 'IQ Test';
 
