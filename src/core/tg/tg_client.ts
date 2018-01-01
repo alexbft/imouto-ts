@@ -1,6 +1,5 @@
 import * as moment from 'moment';
-import { EventEmitter } from 'events';
-import { Stream, fromEvent } from 'most';
+import { Subject, Observable } from 'rxjs';
 import * as http from 'http';
 import * as https from 'https';
 import { Update } from 'node-telegram-bot-api';
@@ -23,8 +22,7 @@ export class TgClient {
   private readonly web: Web;
   private readonly authToken: string;
 
-  private readonly updateEmitter = new EventEmitter();
-  readonly updateStream: Stream<Update>;
+  private readonly updateSubject = new Subject<Update>();
 
   private lastUpdateId = -1;
 
@@ -32,8 +30,10 @@ export class TgClient {
     this.environment = injector.get(Environment);
     this.authToken = injector.get(AuthToken);
     this.web = injector.get(Web);
+  }
 
-    this.updateStream = fromEvent<Update>('update', this.updateEmitter);
+  public get updateStream(): Observable<Update> {
+    return this.updateSubject;
   }
 
   connect(): Promise<void> {
@@ -88,7 +88,7 @@ export class TgClient {
         logger.warn("Update doesn't have id:", update);
       }
       if (!this.environment.isDisposing) {
-        this.updateEmitter.emit('update', update);
+        this.updateSubject.next(update);
       }
     }
   }

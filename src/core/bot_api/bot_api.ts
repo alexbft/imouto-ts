@@ -9,6 +9,7 @@ import * as msg from 'core/tg/message_util';
 
 import { InputImpl } from './input';
 import { Plugin } from './plugin';
+import { TimeoutError } from 'rxjs/util/TimeoutError';
 
 const pluginInitTimeout = moment.duration(30, 'seconds');
 
@@ -32,12 +33,13 @@ export class BotApi {
           logger.info(`Initializing plugin: ${plugin.name}`);
           try {
             const initPromise = Promise.resolve(plugin.init(this.input));
-            await timeout(initPromise, pluginInitTimeout, () => {
-              logger.warn(`Plugin ${plugin.name} has timed out in initialization!`);
-              failed++;
-            });
+            await timeout(initPromise, pluginInitTimeout);
           } catch (e) {
-            logger.warn(`Plugin ${plugin.name} has failed to initialize!`, e.stack || e);
+            if (e instanceof TimeoutError) {
+              logger.warn(`Plugin ${plugin.name} has timed out in initialization!`);
+            } else {
+              logger.warn(`Plugin ${plugin.name} has failed to initialize!`, e.stack || e);
+            }
             failed++;
           }
         });

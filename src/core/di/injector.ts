@@ -26,4 +26,4 @@ export class Injector {
   }
 }
 
-export const Inject = (constructor: any) => {}
+export const Inject = (_: any) => {}

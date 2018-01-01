@@ -1,16 +1,15 @@
-import { Stream, fromPromise, Subscription } from 'most';
+import { Observable, Subscription } from 'rxjs';
 import { Duration } from 'moment';
 import { Completer } from 'core/util/completer';
-import { timeout } from 'core/util/promises';
 
 export class Environment {
   private _isDisposing = false;
   private readonly disposingCompleter: Completer<void>;
-  private readonly disposingStream: Stream<void>;
+  private readonly disposingStream: Observable<void>;
 
   constructor() {
     this.disposingCompleter = new Completer<void>();
-    this.disposingStream = fromPromise(this.disposingCompleter.promise);
+    this.disposingStream = Observable.fromPromise(this.disposingCompleter.promise);
   }
 
   get isDisposing(): boolean {
@@ -22,15 +21,11 @@ export class Environment {
     this.disposingCompleter.resolve();
   }
 
-  onDispose(fn: () => void): Subscription<void> {
-    return this.disposingStream.subscribe({
-      next: fn,
-      error: (_) => {},
-      complete: () => {}
-    });
+  onDispose(fn: () => void): Subscription {
+    return this.disposingStream.subscribe(fn);
   }
 
   pause(delay: Duration): Promise<void> {
-    return timeout(this.disposingStream, delay, () => {});
+    return this.disposingStream.timeout(delay.asMilliseconds()).toPromise().catch(() => {});
   }
 }

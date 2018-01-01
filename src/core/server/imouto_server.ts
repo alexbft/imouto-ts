@@ -23,7 +23,7 @@ export class ImoutoServer {
     process.on('uncaughtException', this.onUncaughtException.bind(this));
     process.on('SIGINT', this.onSigInt.bind(this));
     await this.botApi.initPlugins();
-    this.tgClient.updateStream.observe(this.onUpdate.bind(this));
+    this.tgClient.updateStream.subscribe(this.onUpdate.bind(this));
     const connection = this.tgClient.connect();
     logger.info('Ready.');
     await connection;

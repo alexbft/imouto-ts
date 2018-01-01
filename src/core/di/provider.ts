@@ -16,7 +16,7 @@ export class Provider {
       }
     }
     const deps = Reflect.getMetadata('design:paramtypes', this.key)
-    const params = deps ? deps.map(a => injector.get(a)) : [injector]
+    const params = deps ? deps.map((a: any) => injector.get(a)) : [injector]
     return injector.getCached(this.key, () => new this.key(...params));
   }
 
