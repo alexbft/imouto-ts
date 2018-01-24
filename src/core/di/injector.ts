@@ -5,7 +5,7 @@ export class Injector {
   private cachedInstances = new Map<any, any>();
 
   constructor(providers: Provider[]) {
-    for (let provider of providers) {
+    for (const provider of providers) {
       this.bindingMap.set(provider.key, provider);
     }
   }
@@ -26,4 +26,12 @@ export class Injector {
   }
 }
 
-export const Inject = (constructor: any) => {}
+export const Inject = (_: any) => { };
+
+export const InjectValue = (value: symbol) => {
+  return (target: any, _: string, paramIndex: number) => {
+    const deps = Reflect.getMetadata('design:paramtypes', target);
+    deps[paramIndex] = value;
+    Reflect.defineMetadata('design:paramtypes', deps, target);
+  };
+};
