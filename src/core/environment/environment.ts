@@ -1,7 +1,7 @@
-import { Stream, fromPromise, Subscription } from 'most';
-import { Duration } from 'moment';
 import { Completer } from 'core/util/completer';
 import { timeout } from 'core/util/promises';
+import { Duration } from 'moment';
+import { fromPromise, Stream, Subscription } from 'most';
 
 export class Environment {
   private _isDisposing = false;
@@ -26,7 +26,7 @@ export class Environment {
     return this.disposingStream.subscribe({
       next: fn,
       error: (_) => {},
-      complete: () => {}
+      complete: () => {},
     });
   }
 
