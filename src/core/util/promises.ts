@@ -1,5 +1,5 @@
-import { Stream, Subscription, fromPromise } from 'most';
 import { Duration } from 'moment';
+import { fromPromise, Stream, Subscription } from 'most';
 import { Completer } from './completer';
 
 export type PromiseOr<T> = T|PromiseLike<T>;
@@ -15,15 +15,15 @@ export function timeout<T>(
   if (onTimeout == null) {
     onTimeout = () => {
       throw new Error('Promise timed out.');
-    }
+    };
   }
-  let result = new Completer<T>();
+  const result = new Completer<T>();
   let subscription: Subscription<T>;
-  let timer = setTimeout(() => {
+  const timer = setTimeout(() => {
     subscription.unsubscribe();
     result.complete(onTimeout!);
   }, delay.asMilliseconds());
-  let stream = isPromise(source) ? fromPromise(source) : source;
+  const stream = isPromise(source) ? fromPromise(source) : source;
   subscription = stream.subscribe({
     next: (value) => {
       clearTimeout(timer);
@@ -33,7 +33,7 @@ export function timeout<T>(
       clearTimeout(timer);
       result.reject(reason);
     },
-    complete: () => {}
+    complete: () => {},
   });
   return result.promise;
 }
