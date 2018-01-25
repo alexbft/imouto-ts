@@ -1,7 +1,7 @@
 import { Input } from 'core/bot_api/input';
-import { TgApi } from 'core/tg/tg_api';
 import { Plugin } from 'core/bot_api/plugin';
 import { Inject } from 'core/di/injector';
+import { TgApi } from 'core/tg/tg_api';
 import { Message } from 'node-telegram-bot-api';
 
 const helptext = `Команды, которые я понимаю:
@@ -24,20 +24,19 @@ const helptext = `Команды, которые я понимаю:
 !няш(!мяш) - случайный пост или картинка с nya.sh
 !баш - случайная цитата с bash.im
 !няша [<теги>] - случайная картинка с danbooru
-!команды(!help) - список команд`
+!команды(!help) - список команд`;
 
 @Inject
 export class HelpPlugin implements Plugin {
-  readonly name = 'Help'
+  readonly name = 'Help';
 
   constructor(private api: TgApi) {}
 
   init(input: Input) {
-    input.onText(/^[!\/](help|помощь|команды|хэлп|хелп)\b/, this.onMessage)
+    input.onText(/^[!\/](help|помощь|команды|хэлп|хелп)\b/, this.onMessage);
   }
 
   onMessage = (msg: Message) => {
-    this.api.reply(msg, helptext)
+    this.api.reply(msg, helptext);
   }
 }
-
