@@ -18,15 +18,15 @@ const iq = (s: string) => {
 
 @Inject
 export class IqTestPlugin implements Plugin {
-  public readonly name = 'IQ Test';
+  readonly name = 'IQ Test';
 
   constructor(private api: TgApi) { }
 
-  public init(input: Input) {
+  init(input: Input) {
     input.onText(/^\/iq/, this.onMessage);
   }
 
-  public onMessage = (msg: Message) => {
+  onMessage = (msg: Message) => {
     this.api.reply(msg, `Ваш IQ: ${iq(fullName(msg.from!))}`);
   }
 }
