@@ -1,4 +1,3 @@
-//@ts-check
 //tslint:disable
 // A Javascript implementaion of Richard Brent's Xorgens xor4096 algorithm.
 //
