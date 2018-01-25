@@ -1,14 +1,13 @@
-import * as http from 'http';
 import { Injector } from 'core/di/injector';
 import { Environment } from 'core/environment/environment';
+import * as http from 'http';
+// import * as https from 'https';
+import fetch from 'node-fetch';
+import { URL, URLSearchParams } from 'url';
 import { Subscriber } from './subscriber';
+import { WebException } from './web_exception';
 
-export class WebException extends Error {
-  constructor(message?: string) {
-    super(message);
-    Object.setPrototypeOf(this, new.target.prototype);
-  }
-}
+export { WebException };
 
 export class Web {
   private readonly environment: Environment;
@@ -97,5 +96,31 @@ export class Web {
 
   async fetchJson(request: http.ClientRequest): Promise<any> {
     return this.readResponseJson(request, await this.sendRequest(request));
+  }
+
+  async getAsBrowser(url: string, options = { qs: {} }): Promise<string> {
+    const newUrl = new URL(url);
+    if (newUrl.search === '') {
+      newUrl.search = new URLSearchParams(options.qs) as any;
+    }
+
+    const res = await fetch(newUrl.toString(), {
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+      },
+      method: 'GET',
+    });
+
+    return res.text();
+  }
+
+  get(url: string, options = { qs: {} }) {
+    const newUrl = new URL(url);
+    if (newUrl.search === '') {
+      newUrl.search = new URLSearchParams(options.qs) as any;
+    }
+    return fetch(newUrl.toString(), {
+      method: 'GET',
+    });
   }
 }
