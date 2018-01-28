@@ -1,6 +1,6 @@
 import { Input } from 'core/bot_api/input';
 import { Plugin } from 'core/bot_api/plugin';
-import { Inject } from 'core/di/injector';
+import { Injectable } from 'core/di/injector';
 import { TgApi } from 'core/tg/tg_api';
 import { Message } from 'node-telegram-bot-api';
 
@@ -26,7 +26,7 @@ const helptext = `Команды, которые я понимаю:
 !няша [<теги>] - случайная картинка с danbooru
 !команды(!help) - список команд`;
 
-@Inject
+@Injectable
 export class HelpPlugin implements Plugin {
   readonly name = 'Help';
 

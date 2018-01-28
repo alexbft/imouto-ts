@@ -1,6 +1,6 @@
 import { Environment } from 'core/environment/environment';
 import { EventEmitter } from 'events';
-import { Subscription } from 'most';
+import { Subscription } from 'rxjs';
 import { Disposable } from './disposable';
 
 type EventType = string | symbol;
@@ -8,7 +8,7 @@ type Listener = (...args: any[]) => void;
 
 export class Subscriber implements Disposable {
   private listeners: Array<[EventType, Listener]> = [];
-  private disposeSubscriptions: Array<Subscription<void>> = [];
+  private disposeSubscriptions: Subscription[] = [];
 
   constructor(
       private eventEmitter: EventEmitter,

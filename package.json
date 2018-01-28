@@ -19,22 +19,25 @@
   "license": "ISC",
   "devDependencies": {
     "@types/html-entities": "^1.2.16",
-    "@types/node": "*",
     "@types/node-fetch": "^1.6.7",
-    "@types/node-telegram-bot-api": "^0.28.1",
+    "@types/node": "^8.5.2",
+    "@types/node-telegram-bot-api": "^0.28.2",
+    "@types/properties-reader": "0.0.1",
     "@types/winston": "^2.3.7",
-    "concurrently": "*",
-    "nodemon": "*",
+    "concurrently": "^3.5.1",
+    "nodemon": "^1.14.7",
     "tslint": "^5.8.0",
-    "typescript": "*"
+    "typescript": "^2.6.2"
   },
   "dependencies": {
     "html-entities": "^1.2.1",
     "iconv-lite": "^0.4.19",
-    "moment": "^2.19.1",
     "most": "^1.7.2",
     "node-fetch": "^1.7.3",
+    "moment": "^2.20.1",
+    "properties-reader": "0.0.16",
     "reflect-metadata": "^0.1.10",
+    "rxjs": "^5.5.6",
     "winston": "^2.4.0"
   }
 }

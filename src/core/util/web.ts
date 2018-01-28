@@ -1,4 +1,4 @@
-import { Injector } from 'core/di/injector';
+import { Injectable } from 'core/di/injector';
 import { Environment } from 'core/environment/environment';
 import * as http from 'http';
 // import * as https from 'https';
@@ -9,12 +9,9 @@ import { WebException } from './web_exception';
 
 export { WebException };
 
+@Injectable
 export class Web {
-  private readonly environment: Environment;
-
-  constructor(injector: Injector) {
-    this.environment = injector.get(Environment);
-  }
+  constructor(private readonly environment: Environment) {}
 
   sendRequest(request: http.ClientRequest): Promise<http.IncomingMessage> {
     return new Promise<http.IncomingMessage>((resolve, reject) => {

@@ -11,7 +11,17 @@ export class Injector {
   }
 
   get(key: any): any {
-    return this.bindingMap.get(key)!.get(this);
+    const provider = this.bindingMap.get(key);
+    if (provider == null) {
+      // Allow to inject the injector.
+      if (key === Injector) {
+        return this;
+      }
+      const keyName = key != null && key.name != null ? key.name : key;
+      throw new Error(`Injection failed: key '${keyName}' not found`);
+    } else {
+      return provider.get(this);
+    }
   }
 
   getCached<T>(key: any, create: () => T): T {
@@ -26,12 +36,14 @@ export class Injector {
   }
 }
 
-export const Inject = (_: any) => { };
+export const injectMetadata = Symbol('injectMetadata');
 
-export const InjectValue = (value: symbol) => {
-  return (target: any, _: string, paramIndex: number) => {
-    const deps = Reflect.getMetadata('design:paramtypes', target);
-    deps[paramIndex] = value;
-    Reflect.defineMetadata('design:paramtypes', deps, target);
-  };
-};
+export const Injectable = (_classFn: any) => {}
+
+export function Inject(key: any) {
+  return function (classFn: Object, _propertyKey: any, paramIndex: number) {
+    const existing: Map<number, any> = Reflect.getOwnMetadata(injectMetadata, classFn) || new Map<number, any>();
+    existing.set(paramIndex, key);
+    Reflect.defineMetadata(injectMetadata, existing, classFn);
+  }
+}

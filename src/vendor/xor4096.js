@@ -1,4 +1,4 @@
-//tslint:disable
+//@ts-nocheck
 // A Javascript implementaion of Richard Brent's Xorgens xor4096 algorithm.
 //
 // This fast non-cryptographic random number generator is designed for

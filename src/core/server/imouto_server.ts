@@ -1,21 +1,17 @@
 import { Update } from 'node-telegram-bot-api';
 
 import { logger } from 'core/logging/logger';
-import { Injector } from 'core/di/injector';
+import { Injectable } from 'core/di/injector';
 import { TgClient } from 'core/tg/tg_client';
 import { Environment } from 'core/environment/environment';
 import { BotApi } from 'core/bot_api/bot_api';
 
+@Injectable
 export class ImoutoServer {
-  private readonly tgClient: TgClient;
-  private readonly environment: Environment;
-  private readonly botApi: BotApi;
-
-  constructor(injector: Injector) {
-    this.tgClient = injector.get(TgClient);
-    this.environment = injector.get(Environment);
-    this.botApi = injector.get(BotApi);
-  }
+  constructor(
+      private readonly tgClient: TgClient,
+      private readonly environment: Environment,
+      private readonly botApi: BotApi) {}
 
   async start(): Promise<void> {
     logger.info('Starting...');
@@ -23,7 +19,7 @@ export class ImoutoServer {
     process.on('uncaughtException', this.onUncaughtException.bind(this));
     process.on('SIGINT', this.onSigInt.bind(this));
     await this.botApi.initPlugins();
-    this.tgClient.updateStream.observe(this.onUpdate.bind(this));
+    this.tgClient.updateStream.subscribe(this.onUpdate.bind(this));
     const connection = this.tgClient.connect();
     logger.info('Ready.');
     await connection;

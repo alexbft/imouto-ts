@@ -1,12 +1,12 @@
-import { EventEmitter } from 'events';
 import * as http from 'http';
 import * as https from 'https';
 import * as moment from 'moment';
 import { fromEvent, Stream } from 'most';
 import { Update } from 'node-telegram-bot-api';
+import { Observable, Subject } from 'rxjs';
 
 import { AuthToken } from 'core/config/keys';
-import { Injector } from 'core/di/injector';
+import { Inject, Injectable } from 'core/di/injector';
 import { Environment } from 'core/environment/environment';
 import { logger } from 'core/logging/logger';
 import { Props } from 'core/util/misc';
@@ -18,20 +18,19 @@ const oldUpdatesLimit = 10;
 const updatesLongPollingTimeout = moment.duration(300, 'seconds');
 const updatesErrorDelay = moment.duration(10, 'seconds');
 
+@Injectable
 export class TgClient {
-  readonly updateStream: Stream<Update>;
-  private readonly environment: Environment;
-  private readonly web: Web;
-  private readonly authToken: string;
-  private readonly updateEmitter = new EventEmitter();
+  private readonly updateSubject = new Subject<Update>();
+
   private lastUpdateId = -1;
 
-  constructor(injector: Injector) {
-    this.environment = injector.get(Environment);
-    this.authToken = injector.get(AuthToken);
-    this.web = injector.get(Web);
+  constructor(
+      private readonly environment: Environment,
+      private readonly web: Web,
+      @Inject(AuthToken) private readonly authToken: string) {}
 
-    this.updateStream = fromEvent<Update>('update', this.updateEmitter);
+  public get updateStream(): Observable<Update> {
+    return this.updateSubject;
   }
 
   connect(): Promise<void> {
@@ -69,7 +68,7 @@ export class TgClient {
         logger.error('getUpdates returned error:', response);
         if (response.parameters != null && response.parameters.retry_after != null) {
           await this.environment.pause(
-            moment.duration(response.parameters.retry_after, 'seconds'));
+              moment.duration(response['parameters']['retry_after'], 'seconds'));
         } else {
           await this.environment.pause(updatesErrorDelay);
         }
@@ -93,7 +92,7 @@ export class TgClient {
         logger.warn('Update doesn\'t have id:', update);
       }
       if (!this.environment.isDisposing) {
-        this.updateEmitter.emit('update', update);
+        this.updateSubject.next(update);
       }
     }
   }
