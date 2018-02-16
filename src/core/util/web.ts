@@ -2,7 +2,7 @@ import { Injectable } from 'core/di/injector';
 import { Environment } from 'core/environment/environment';
 import * as http from 'http';
 // import * as https from 'https';
-import fetch from 'node-fetch';
+import fetch, { Response } from 'node-fetch';
 import { URL, URLSearchParams } from 'url';
 import { Subscriber } from './subscriber';
 import { WebException } from './web_exception';
@@ -111,7 +111,7 @@ export class Web {
     return res.text();
   }
 
-  get(url: string, options = { qs: {} }) {
+  get(url: string, options = { qs: {} }): Promise<Response> {
     const newUrl = new URL(url);
     if (newUrl.search === '') {
       newUrl.search = new URLSearchParams(options.qs) as any;
