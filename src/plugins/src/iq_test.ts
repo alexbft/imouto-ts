@@ -6,7 +6,7 @@ import { TgApi } from 'core/tg/tg_api';
 import { Message } from 'node-telegram-bot-api';
 import Xor4k from 'vendor/xor4096';
 
-const iq = (s: string) => {
+function iq(s: string): number {
   const xorgen = new Xor4k(s + 'sas' + new Date().toDateString());
   const res = xorgen.double();
   if (res < 0.5) {
@@ -22,11 +22,11 @@ export class IqTestPlugin implements Plugin {
 
   constructor(private api: TgApi) { }
 
-  init(input: Input) {
+  init(input: Input): void {
     input.onText(/^\/iq/, this.onMessage);
   }
 
-  onMessage = (msg: Message) => {
+  onMessage = (msg: Message): void => {
     this.api.reply(msg, `Ваш IQ: ${iq(fullName(msg.from!))}`);
   }
 }
