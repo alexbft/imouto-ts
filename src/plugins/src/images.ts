@@ -6,22 +6,14 @@ import { TgApi } from 'core/tg/tg_api';
 import { Web } from 'core/util/web';
 import { Message } from 'node-telegram-bot-api';
 
-const firstKeyboard = [
-  [
-      {text: 'Следующая', callback_data: 'next'},
-  ],
-];
+const firstKeyboard = [[{ text: 'Следующая', callback_data: 'next' }]];
 
-const lastKeyboard = [
-  [
-      {text: 'Предыдущая', callback_data: 'prev'},
-  ],
-];
+const lastKeyboard = [[{ text: 'Предыдущая', callback_data: 'prev' }]];
 
 const pageKeyboard = [
   [
-      {text: 'Предыдущая', callback_data: 'prev'},
-      {text: 'Следующая', callback_data: 'next'},
+    { text: 'Предыдущая', callback_data: 'prev' },
+    { text: 'Следующая', callback_data: 'next' },
   ],
 ];
 
@@ -55,13 +47,12 @@ export class ImagesPlugin implements Plugin {
     input.onText(
       /!(покажи|пик|пек|img|pic|moar|моар|more|еще|ещё)(?: (.+))?/,
       this.onMessage,
-      this.onError,
     );
   }
 
   sendInline(msg: Message, pic, picSet, txt): void {
     const url = pic.link;
-    let context: Context = {
+    const context: Context = {
       msg,
       txt,
       pic,
@@ -123,23 +114,31 @@ export class ImagesPlugin implements Plugin {
   }
 
   onMessage = async (msg: Message, match: RegExpExecArray): Promise<void> => {
-    let txt = match[2];
-    if (txt == null && msg.reply_to_message && msg.reply_to_message.text != null) {
-      txt = msg.reply_to_message.text;
-    }
-    if (txt == null) {
-      return;
-    }
-    const results = await this.search(txt);
-    console.log(results);
-    if (results == null || results.length === 0) {
-      this.api.sendMessage({
-        chat_id: msg.chat.id,
-        text: 'Ничего не найдено!',
-      });
-    } else {
-      const result = results[0];
-      this.sendInline(msg, result, results, txt);
+    try {
+      let txt = match[2];
+      if (
+        txt == null &&
+        msg.reply_to_message &&
+        msg.reply_to_message.text != null
+      ) {
+        txt = msg.reply_to_message.text;
+      }
+      if (txt == null) {
+        return;
+      }
+      const results = await this.search(txt);
+      console.log(results);
+      if (results == null || results.length === 0) {
+        this.api.sendMessage({
+          chat_id: msg.chat.id,
+          text: 'Ничего не найдено!',
+        });
+      } else {
+        const result = results[0];
+        this.sendInline(msg, result, results, txt);
+      }
+    } catch (e) {
+      this.onError(msg);
     }
   }
 
@@ -150,20 +149,27 @@ export class ImagesPlugin implements Plugin {
     });
   }
 
-  private async rawSearch(txt: string, rsz = 1, offset = 1): Promise<GoogleSearchResult> {
-    const res = await this.web.get('https://www.googleapis.com/customsearch/v1', {
-      qs: {
-        key: this.googlekey,
-        cx: this.googlecx,
-        gl: 'ru',
-        hl: 'ru',
-        num: rsz,
-        start: offset,
-        safe: 'high',
-        searchType: 'image',
-        q: txt,
+  private async rawSearch(
+    txt: string,
+    rsz = 1,
+    offset = 1,
+  ): Promise<GoogleSearchResult> {
+    const res = await this.web.get(
+      'https://www.googleapis.com/customsearch/v1',
+      {
+        qs: {
+          key: this.googlekey,
+          cx: this.googlecx,
+          gl: 'ru',
+          hl: 'ru',
+          num: rsz,
+          start: offset,
+          safe: 'high',
+          searchType: 'image',
+          q: txt,
+        },
       },
-    });
+    );
     const json = await res.json();
 
     console.log(json);
