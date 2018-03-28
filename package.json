@@ -19,14 +19,15 @@
   "license": "ISC",
   "devDependencies": {
     "@types/html-entities": "^1.2.16",
-    "@types/node-fetch": "^1.6.7",
     "@types/node": "^8.5.2",
+    "@types/node-fetch": "^1.6.7",
     "@types/node-telegram-bot-api": "^0.28.2",
     "@types/properties-reader": "0.0.1",
     "@types/winston": "^2.3.7",
     "concurrently": "^3.5.1",
     "nodemon": "^1.14.7",
     "tslint": "^5.8.0",
+    "tslint-config-prettier": "^1.10.0",
     "typescript": "^2.6.2"
   },
   "dependencies": {
