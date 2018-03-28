@@ -10,11 +10,11 @@ export class IdPlugin implements Plugin {
 
   constructor(private api: TgApi) {}
 
-  init(input: Input) {
+  init(input: Input): void {
     input.onText(/^!id$/, this.onMessage);
   }
 
-  onMessage = (msg: Message) => {
+  onMessage = (msg: Message): void => {
     if (msg.reply_to_message != null) {
       // TODO: add msgCache
       const tmp = msg.reply_to_message;
