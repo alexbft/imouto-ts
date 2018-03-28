@@ -1,7 +1,6 @@
 import { Injectable } from 'core/di/injector';
 import { Environment } from 'core/environment/environment';
 import * as http from 'http';
-// import * as https from 'https';
 import fetch, { Response } from 'node-fetch';
 import { URL, URLSearchParams } from 'url';
 import { Subscriber } from './subscriber';
