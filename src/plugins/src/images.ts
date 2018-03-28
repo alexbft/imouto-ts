@@ -1,7 +1,7 @@
 import { Input } from 'core/bot_api/input';
 import { Plugin } from 'core/bot_api/plugin';
 import { GoogleCX, GoogleKey } from 'core/config/keys';
-import { Inject, InjectValue } from 'core/di/injector';
+rimport { Inject, Injectable } from 'core/di/injector';
 import { TgApi } from 'core/tg/tg_api';
 import { Web } from 'core/util/web';
 import { Message } from 'node-telegram-bot-api';
@@ -38,18 +38,20 @@ interface Context {
   msg: Message;
 }
 
-@Inject
+type GoogleSearchResult = GooglePic[];
+
+@Injectable
 export class ImagesPlugin implements Plugin {
   readonly name = 'Images';
 
   constructor(
     private web: Web,
     private api: TgApi,
-    @InjectValue(GoogleKey) private googlekey: string,
-    @InjectValue(GoogleCX) private googlecx: string,
+    @Inject(GoogleKey) private googlekey: string,
+    @Inject(GoogleCX) private googlecx: string,
   ) {}
 
-  init(input: Input) {
+  init(input: Input): void {
     input.onText(
       /!(покажи|пик|пек|img|pic|moar|моар|more|еще|ещё)(?: (.+))?/,
       this.onMessage,
@@ -57,7 +59,7 @@ export class ImagesPlugin implements Plugin {
     );
   }
 
-  sendInline(msg: Message, pic, picSet, txt) {
+  sendInline(msg: Message, pic, picSet, txt): void {
     const url = pic.link;
     let context: Context = {
       msg,
@@ -76,7 +78,7 @@ export class ImagesPlugin implements Plugin {
     });
   }
 
-  updateInline({ msg, pic, keyboard }: Context) {
+  updateInline({ msg, pic, keyboard }: Context): void {
     this.api.editMessageText(msg, pic.link, {
       reply_markup: {
         inline_keyboard: keyboard,
@@ -84,11 +86,11 @@ export class ImagesPlugin implements Plugin {
     });
   }
 
-  search(txt: string, offset?: number) {
+  search(txt: string, offset?: number): Promise<GoogleSearchResult> {
     return this.rawSearch(txt, 8, offset);
   }
 
-  async onCallback(context: Context, cb, msg: Message) {
+  async onCallback(context: Context, cb, msg: Message): Promise<void> {
     context.msg = msg;
     let { index, keyboard, pic, picSet, txt } = context;
     switch (cb.data) {
@@ -120,7 +122,7 @@ export class ImagesPlugin implements Plugin {
     }
   }
 
-  onMessage = async (msg: Message, match: RegExpExecArray) => {
+  onMessage = async (msg: Message, match: RegExpExecArray): Promise<void> => {
     let txt = match[2];
     if (txt == null && msg.reply_to_message && msg.reply_to_message.text != null) {
       txt = msg.reply_to_message.text;
@@ -141,14 +143,14 @@ export class ImagesPlugin implements Plugin {
     }
   }
 
-  onError = ({ chat }: Message) => {
+  onError = ({ chat }: Message): void => {
     this.api.sendMessage({
       chat_id: chat.id,
       text: 'Поиск не удался...',
     });
   }
 
-  private async rawSearch(txt: string, rsz = 1, offset = 1) {
+  private async rawSearch(txt: string, rsz = 1, offset = 1): Promise<GoogleSearchResult> {
     const res = await this.web.get('https://www.googleapis.com/customsearch/v1', {
       qs: {
         key: this.googlekey,
