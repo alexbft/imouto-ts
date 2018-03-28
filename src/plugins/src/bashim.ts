@@ -14,16 +14,13 @@ function mapRandom(page: string): string[] {
     id,
     text.replace(/<' \+ 'br>/g, '\n').replace(/<' \+ 'br \/>/g, '\n'),
   ];
-};
+}
 
 function mapSpecific(id: string, page: string): string[] {
   const decodedPage = iconv.decode(page as any, 'win1251');
   const text = decodedPage.match(/<div class="text">([^]+?)<\/div>/)![1];
-  return [
-    id,
-    text.replace(/<br \/>/g, '\n').replace(/<br>/g, '\n'),
-  ];
-};
+  return [id, text.replace(/<br \/>/g, '\n').replace(/<br>/g, '\n')];
+}
 
 @Injectable
 export class BashimPlugin implements Plugin {
@@ -36,7 +33,7 @@ export class BashimPlugin implements Plugin {
   ) {}
 
   init(input: Input): void {
-    input.onText(/^\!(баш|bash)\b[\s]*(\d+)?/, this.onMessage, this.onError);
+    input.onText(/^\!(баш|bash)\b[\s]*(\d+)?/, this.onMessage);
   }
 
   onError = (msg: Message): void => {
@@ -44,17 +41,25 @@ export class BashimPlugin implements Plugin {
       chat_id: msg.chat.id,
       text: 'Баш уже не тот...',
     });
-  }
+  };
 
   onMessage = async (msg: Message, match: RegExpExecArray): Promise<void> => {
-    const id = match[2];
-    const [quoteId, text] = id == null
-      ? mapRandom(await this.web.getAsBrowser('http://bash.im/forweb/?u'))
-      : mapSpecific(id, await this.web.getAsBrowser(`http://bash.im/quote/${id}`));
+    try {
+      const id = match[2];
+      const [quoteId, text] =
+        id == null
+          ? mapRandom(await this.web.getAsBrowser('http://bash.im/forweb/?u'))
+          : mapSpecific(
+              id,
+              await this.web.getAsBrowser(`http://bash.im/quote/${id}`),
+            );
 
-    await this.api.sendMessage({
-      chat_id: msg.chat.id,
-      text: `Цитата №${quoteId}\n\n${this.entities.decode(text)}`,
-    });
-  }
+      await this.api.sendMessage({
+        chat_id: msg.chat.id,
+        text: `Цитата №${quoteId}\n\n${this.entities.decode(text)}`,
+      });
+    } catch (e) {
+      this.onError(msg);
+    }
+  };
 }
