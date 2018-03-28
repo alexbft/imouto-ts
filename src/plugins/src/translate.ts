@@ -1,11 +1,11 @@
 import { Input } from 'core/bot_api/input';
 import { Plugin } from 'core/bot_api/plugin';
-import { Inject } from 'core/di/injector';
+import { Injectable } from 'core/di/injector';
 import { TgApi } from 'core/tg/tg_api';
 import { Web } from 'core/util/web';
 import { Message } from 'node-telegram-bot-api';
 
-@Inject
+@Injectable
 export class TranslatePlugin implements Plugin {
   readonly name = 'Translate';
 
@@ -14,7 +14,7 @@ export class TranslatePlugin implements Plugin {
     private web: Web,
   ) {}
 
-  async translate(src: string, dest: string, txt: string) {
+  async translate(src: string, dest: string, txt: string): Promise<string | null> {
     const res = await this.web.getAsBrowser('http://translate.google.com/translate_a/single', {
       qs: {
         client: 's',
@@ -38,7 +38,7 @@ export class TranslatePlugin implements Plugin {
     }
   }
 
-  init(input: Input) {
+  init(input: Input): void {
     input.onText(
       /!(переведи|translate|перевод|расшифруй|tr)( [a-z]{2})?( [a-z]{2})?(?: ([^]+))?$/,
       this.onMessage,
@@ -46,7 +46,7 @@ export class TranslatePlugin implements Plugin {
     );
   }
 
-  onMessage = async (msg: Message, match: RegExpMatchArray) => {
+  onMessage = async (msg: Message, match: RegExpMatchArray): Promise<void> => {
     let src: string;
     let dest: string;
     let text: string;
@@ -85,7 +85,7 @@ export class TranslatePlugin implements Plugin {
     }
   }
 
-  onError = (msg: Message) => {
+  onError = (msg: Message): void => {
     this.api.sendMessage({
       chat_id: msg.chat.id,
       text: 'Не понимаю я эти ваши иероглифы.',
