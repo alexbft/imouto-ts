@@ -1,7 +1,7 @@
 import { Input } from 'core/bot_api/input';
 import { Plugin } from 'core/bot_api/plugin';
 import { GoogleCX, GoogleKey } from 'core/config/keys';
-rimport { Inject, Injectable } from 'core/di/injector';
+import { Inject, Injectable } from 'core/di/injector';
 import { TgApi } from 'core/tg/tg_api';
 import { Web } from 'core/util/web';
 import { Message } from 'node-telegram-bot-api';
