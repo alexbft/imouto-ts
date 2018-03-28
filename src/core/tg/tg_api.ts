@@ -24,7 +24,7 @@ export class TgApi {
     return this.tgClient.send('sendMessage', args);
   }
 
-  editMessageText({ message_id, chat }: Message, text: string, args: EditMessageTextOptions) {
+  editMessageText({ message_id, chat }: Message, text: string, args: EditMessageTextOptions): Promise<Message> {
     return this.tgClient.send('editMessageText', {
       chat_id: chat.id,
       message_id,
@@ -36,8 +36,8 @@ export class TgApi {
   reply(message: Message, text: string): Promise<Message> {
     return this.sendMessage({
       chat_id: message.chat.id,
-      text: text,
-      reply_to_message_id: message.message_id
+      text,
+      reply_to_message_id: message.message_id,
     });
   }
 }
