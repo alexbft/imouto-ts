@@ -1,7 +1,8 @@
+import { PromiseOr } from 'core/util/promises';
 import { EventEmitter } from 'events';
 import { Message } from 'node-telegram-bot-api';
 
-type MessageHandler = (msg: Message) => void;
+type MessageHandler = (msg: Message, match: RegExpExecArray) => PromiseOr<void>;
 
 export interface Input {
   onText(regex: RegExp, handler: MessageHandler): void;
@@ -17,9 +18,10 @@ export class InputImpl implements Input {
   }
 
   onText(regex: RegExp, handler: MessageHandler): void {
-    this.eventEmitter.on('text', (msg) => {
-      if (regex.test(msg.text)) {
-        handler(msg);
+    this.eventEmitter.on('text', async (msg: Message) => {
+      const result = regex.exec(msg.text || '')
+      if (msg.text != null && result !== null) {
+        await handler(msg, result);
       }
     });
   }

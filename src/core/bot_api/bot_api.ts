@@ -1,11 +1,11 @@
-import { Update, Message } from 'node-telegram-bot-api';
 import * as moment from 'moment';
+import { Message, Update } from 'node-telegram-bot-api';
 
 import { Injector, Injectable } from 'core/di/injector';
 import { logger } from 'core/logging/logger';
+import * as msg from 'core/tg/message_util';
 import { timeout } from 'core/util/promises';
 import { pluginBindings } from 'plugins/module';
-import * as msg from 'core/tg/message_util';
 
 import { InputImpl } from './input';
 import { Plugin } from './plugin';
@@ -25,9 +25,9 @@ export class BotApi {
   async initPlugins(): Promise<void> {
     this.input = new InputImpl();
     const pluginInjector = this.injector.subContext(pluginBindings);
-    let initializers = [];
+    const initializers = [];
     let failed = 0;
-    for (let provider of pluginBindings) {
+    for (const provider of pluginBindings) {
       try {
         const plugin: Plugin = provider.get(pluginInjector);
         initializers.push(async () => {

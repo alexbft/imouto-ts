@@ -5,7 +5,7 @@ export class Injector {
   private cachedInstances = new Map<any, any>();
 
   constructor(providers: Provider[]) {
-    for (let provider of providers) {
+    for (const provider of providers) {
       this.bindingMap.set(provider.key, provider);
     }
   }

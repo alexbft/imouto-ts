@@ -1,11 +1,16 @@
 {
     "defaultSeverity": "error",
     "extends": [
-        "tslint:recommended"
+        "tslint:recommended",
+        "tslint-config-prettier"
     ],
     "jsRules": {},
     "rules": {
-        "quotemark": [true, "single"]
+        "quotemark": [true, "single"],
+        "strict-type-predicates": true,
+        "interface-name": [true, "never-prefix"],
+        "member-access": [true, "no-public"],
+        "no-console": false     
     },
     "rulesDirectory": []
 }

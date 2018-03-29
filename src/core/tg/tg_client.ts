@@ -1,13 +1,14 @@
-import * as moment from 'moment';
-import { Subject, Observable } from 'rxjs';
 import * as http from 'http';
 import * as https from 'https';
+import * as moment from 'moment';
+import { fromEvent, Stream } from 'most';
 import { Update } from 'node-telegram-bot-api';
+import { Observable, Subject } from 'rxjs';
 
-import { logger } from 'core/logging/logger';
 import { AuthToken } from 'core/config/keys';
-import { Injectable, Inject } from 'core/di/injector';
+import { Inject, Injectable } from 'core/di/injector';
 import { Environment } from 'core/environment/environment';
+import { logger } from 'core/logging/logger';
 import { Props } from 'core/util/misc';
 import { Web, WebException } from 'core/util/web';
 
@@ -40,6 +41,13 @@ export class TgClient {
     return this.getUpdatesLoop();
   }
 
+  send(methodName: string, args?: Props): Promise<any> {
+    if (this.environment.isDisposing) {
+      throw new TgException('Disposing');
+    }
+    return args != null ? this.sendArgs(methodName, args) : this.sendNoArgs(methodName);
+  }
+
   private async getUpdatesLoop(): Promise<void> {
     while (!this.environment.isDisposing) {
       await this.getUpdates();
@@ -49,16 +57,16 @@ export class TgClient {
   private async getUpdates(): Promise<void> {
     try {
       const args = {
-        'offset': this.lastUpdateId == -1 ? -1 * oldUpdatesLimit : this.lastUpdateId + 1,
-        'timeout': updatesLongPollingTimeout.asSeconds(),
-        'allowed_updates': ['message'],
+        offset: this.lastUpdateId == -1 ? -1 * oldUpdatesLimit : this.lastUpdateId + 1,
+        timeout: updatesLongPollingTimeout.asSeconds(),
+        allowed_updates: ['message'],
       };
       const response = await this.sendArgsRaw('getUpdates', args, 'debug');
-      if (response['ok']) {
-        this.processUpdates(response['result']);
+      if (response.ok) {
+        this.processUpdates(response.result);
       } else {
         logger.error('getUpdates returned error:', response);
-        if (response['parameters'] != null && response['parameters']['retry_after'] != null) {
+        if (response.parameters != null && response.parameters.retry_after != null) {
           await this.environment.pause(
               moment.duration(response['parameters']['retry_after'], 'seconds'));
         } else {
@@ -74,26 +82,19 @@ export class TgClient {
   }
 
   private processUpdates(updates: Update[]): void {
-    for (let update of updates) {
+    for (const update of updates) {
       logger.debug('Received update:', update);
       if (update.update_id != null) {
         if (this.lastUpdateId < update.update_id) {
           this.lastUpdateId = update.update_id;
         }
       } else {
-        logger.warn("Update doesn't have id:", update);
+        logger.warn('Update doesn\'t have id:', update);
       }
       if (!this.environment.isDisposing) {
         this.updateSubject.next(update);
       }
     }
-  }
-
-  send(methodName: string, args?: Props): Promise<any> {
-    if (this.environment.isDisposing) {
-      throw new TgException('Disposing');
-    }
-    return args != null ? this.sendArgs(methodName, args) : this.sendNoArgs(methodName);
   }
 
   private async sendArgs(methodName: string, args: Props): Promise<any> {
@@ -121,7 +122,7 @@ export class TgClient {
       path: `/bot${this.authToken}/${methodName}`,
       headers: {
         'Content-Type': 'application/json',
-      }
+      },
     });
   }
 
@@ -135,7 +136,7 @@ export class TgClient {
 
   private getResult(response: any): any {
     if (response['ok']) {
-      logger.verbose(`Got result:`, response['result'])
+      logger.verbose(`Got result:`, response['result']);
       return response['result'];
     } else {
       throw new TgException(response['description'], response['parameters']);

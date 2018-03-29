@@ -1,5 +1,5 @@
-import { Duration } from "moment";
-import { Observable } from "rxjs/Observable";
+import { Duration } from 'moment';
+import { Observable } from 'rxjs/Observable';
 
 export type PromiseOr<T> = T|PromiseLike<T>;
 

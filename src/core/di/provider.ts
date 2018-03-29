@@ -1,12 +1,12 @@
-import { Injector, injectMetadata } from './injector';
 import 'reflect-metadata';
+import { injectMetadata, Injector } from './injector';
 
 interface ProviderOptions {
   useValue?: any;
 }
 
 export class Provider {
-  constructor(public readonly key: any, private readonly options?: ProviderOptions) {}
+  constructor(readonly key: any, private readonly options?: ProviderOptions) {}
 
   get(injector: Injector): any {
     if (this.options != null) {

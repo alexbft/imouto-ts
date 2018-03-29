@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Imouto bot for telegram (typescript)",
   "scripts": {
+    "lint": "tslint --project tsconfig.json",
     "start": "npm run build && npm run watch",
     "serve": "nodemon dist/main.js",
     "build": "npm run build-ts",
@@ -17,16 +18,23 @@
   "author": "alexbft",
   "license": "ISC",
   "devDependencies": {
+    "@types/html-entities": "^1.2.16",
     "@types/node": "^8.5.2",
+    "@types/node-fetch": "^1.6.7",
     "@types/node-telegram-bot-api": "^0.28.2",
     "@types/properties-reader": "0.0.1",
     "@types/winston": "^2.3.7",
     "concurrently": "^3.5.1",
     "nodemon": "^1.14.7",
     "tslint": "^5.8.0",
+    "tslint-config-prettier": "^1.10.0",
     "typescript": "^2.6.2"
   },
   "dependencies": {
+    "html-entities": "^1.2.1",
+    "iconv-lite": "^0.4.19",
+    "most": "^1.7.2",
+    "node-fetch": "^1.7.3",
     "moment": "^2.20.1",
     "properties-reader": "0.0.16",
     "reflect-metadata": "^0.1.10",
