@@ -15,15 +15,15 @@ const pluginInitTimeout = moment.duration(30, 'seconds');
 
 @Injectable
 export class BotApi {
-  private input: InputImpl;
+  private readonly input: InputImpl;
   private readonly startMoment: moment.Moment;
 
   constructor(private injector: Injector) {
+    this.input = new InputImpl();
     this.startMoment = moment();
   }
 
   async initPlugins(): Promise<void> {
-    this.input = new InputImpl();
     const pluginInjector = this.injector.subContext(pluginBindings);
     const initializers = [];
     let failed = 0;

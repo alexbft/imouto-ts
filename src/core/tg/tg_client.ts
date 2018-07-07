@@ -1,7 +1,6 @@
 import * as http from 'http';
 import * as https from 'https';
 import * as moment from 'moment';
-import { fromEvent, Stream } from 'most';
 import { Update } from 'node-telegram-bot-api';
 import { Observable, Subject } from 'rxjs';
 

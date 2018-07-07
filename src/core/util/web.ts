@@ -5,6 +5,7 @@ import fetch, { Response } from 'node-fetch';
 import { URL, URLSearchParams } from 'url';
 import { Subscriber } from './subscriber';
 import { WebException } from './web_exception';
+import { logger } from 'core/logging/logger';
 
 export { WebException };
 
@@ -30,6 +31,7 @@ export class Web {
         resolve(res);
       });
       subscriber.onDispose(() => {
+        logger.verbose('Aborted: sendRequest');
         request.abort();
       });
 
@@ -59,6 +61,7 @@ export class Web {
         resolve(buffer);
       });
       subscriber.onDispose(() => {
+        logger.verbose('Aborted: readResponseRaw');
         request.abort();
       });
     });

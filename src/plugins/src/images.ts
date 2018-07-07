@@ -50,7 +50,7 @@ export class ImagesPlugin implements Plugin {
     );
   }
 
-  sendInline(msg: Message, pic, picSet, txt): void {
+  sendInline(msg: Message, pic: GooglePic, picSet: GooglePic[], txt: string): void {
     const url = pic.link;
     const context: Context = {
       msg,
@@ -81,18 +81,18 @@ export class ImagesPlugin implements Plugin {
     return this.rawSearch(txt, 8, offset);
   }
 
-  async onCallback(context: Context, cb, msg: Message): Promise<void> {
+  async onCallback(context: Context, cb: any, msg: Message): Promise<void> {
     context.msg = msg;
-    let { index, keyboard, pic, picSet, txt } = context;
+    let { index, picSet, txt } = context;
     switch (cb.data) {
       case 'prev':
         if (index > 1) {
           index -= 1;
         } else {
           index = 0;
-          keyboard = firstKeyboard;
+          context.keyboard = firstKeyboard;
         }
-        pic = picSet[index];
+        context.pic = picSet[index];
         this.updateInline(context);
         // cb.answer('');
         break;
@@ -100,13 +100,13 @@ export class ImagesPlugin implements Plugin {
       case 'next':
         if (index + 1 < picSet.length) {
           index += 1;
-          keyboard = pageKeyboard;
+          context.keyboard = pageKeyboard;
         } else {
           const results = await this.search(txt, picSet.length);
           index = picSet.length + 1;
           picSet = picSet.concat(results);
         }
-        pic = picSet[index];
+        context.pic = picSet[index];
         this.updateInline(context);
         // cb.answer('');
         break;

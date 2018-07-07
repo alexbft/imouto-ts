@@ -1,6 +1,5 @@
 import { BotApi } from 'core/bot_api/bot_api';
 import { ConfigLoader } from 'core/config/config_loader';
-import * as config from 'core/config/module';
 import { provide } from 'core/di/provider';
 import { Environment } from 'core/environment/environment';
 import { ImoutoServer } from 'core/server/imouto_server';

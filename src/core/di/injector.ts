@@ -18,7 +18,7 @@ export class Injector {
         return this;
       }
       const keyName = key != null && key.name != null ? key.name : key;
-      throw new Error(`Injection failed: key '${keyName}' not found`);
+      throw new Error(`Injection failed: key '${String(keyName)}' not found`);
     } else {
       return provider.get(this);
     }
