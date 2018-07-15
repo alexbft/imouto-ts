@@ -45,8 +45,8 @@ export class ImagesPlugin implements Plugin {
 
   init(input: Input): void {
     input.onText(
-      /!(покажи|пик|пек|img|pic|moar|моар|more|еще|ещё)(?: (.+))?/,
-      this.onMessage,
+      /!(покажи|пик|пек|img|pic)(?: (.+))?/,
+      ({message, match}) => this.onMessage(message, match),
     );
   }
 
@@ -154,26 +154,18 @@ export class ImagesPlugin implements Plugin {
     rsz = 1,
     offset = 1,
   ): Promise<GoogleSearchResult> {
-    const res = await this.web.get(
-      'https://www.googleapis.com/customsearch/v1',
-      {
-        qs: {
-          key: this.googlekey,
-          cx: this.googlecx,
-          gl: 'ru',
-          hl: 'ru',
-          num: rsz,
-          start: offset,
-          safe: 'high',
-          searchType: 'image',
-          q: txt,
-        },
-      },
-    );
-    const json = await res.json();
-
+    const json = await this.web.getJson('https://www.googleapis.com/customsearch/v1', {
+      key: this.googlekey,
+      cx: this.googlecx,
+      gl: 'ru',
+      hl: 'ru',
+      num: rsz.toString(),
+      start: offset.toString(),
+      safe: 'high',
+      searchType: 'image',
+      q: txt,
+    });
     console.log(json);
-
     return json.items;
   }
 }

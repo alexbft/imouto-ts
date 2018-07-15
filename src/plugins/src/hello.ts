@@ -10,8 +10,8 @@ export class HelloPlugin implements Plugin {
   constructor(private tgApi: TgApi) {}
 
   init(input: Input): void {
-    input.onText(/hello/, (msg) => {
-      this.tgApi.reply(msg, `Hello ${msg.from!.first_name}`);
+    input.onText(/hello/, ({message}) => {
+      this.tgApi.reply(message, `Hello ${message.from!.first_name}`);
     });
   }
 }

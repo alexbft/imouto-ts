@@ -6,6 +6,7 @@ import { Web } from 'core/util/web';
 import { AllHtmlEntities as Entities } from 'html-entities';
 import * as iconv from 'iconv-lite';
 import { Message } from 'node-telegram-bot-api';
+import { TextMatch } from 'core/bot_api/text_match';
 
 function mapRandom(page: string): string[] {
   const id = page.match(/bash.im\/quote\/(\d+)/)![1];
@@ -25,15 +26,15 @@ function mapSpecific(id: string, page: string): string[] {
 @Injectable
 export class BashimPlugin implements Plugin {
   readonly name = 'bash.im';
+  private readonly entities = new Entities();
 
   constructor(
     private api: TgApi,
     private web: Web,
-    private entities: Entities,
   ) {}
 
   init(input: Input): void {
-    input.onText(/^\!(баш|bash)\b[\s]*(\d+)?/, this.onMessage);
+    input.onText(/^\!\s?(баш|bash)\b[\s]*(\d+)?/, this.onMessage);
   }
 
   onError = (msg: Message): void => {
@@ -43,7 +44,7 @@ export class BashimPlugin implements Plugin {
     });
   };
 
-  onMessage = async (msg: Message, match: RegExpExecArray): Promise<void> => {
+  onMessage = async ({message, match}: TextMatch): Promise<void> => {
     try {
       const id = match[2];
       const [quoteId, text] =
@@ -55,11 +56,11 @@ export class BashimPlugin implements Plugin {
             );
 
       await this.api.sendMessage({
-        chat_id: msg.chat.id,
+        chat_id: message.chat.id,
         text: `Цитата №${quoteId}\n\n${this.entities.decode(text)}`,
       });
     } catch (e) {
-      this.onError(msg);
+      this.onError(message);
     }
   };
 }

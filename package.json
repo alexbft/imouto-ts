@@ -20,7 +20,6 @@
   "devDependencies": {
     "@types/html-entities": "^1.2.16",
     "@types/node": "^8.10.21",
-    "@types/node-fetch": "^1.6.9",
     "@types/node-telegram-bot-api": "^0.28.4",
     "@types/properties-reader": "0.0.1",
     "@types/winston": "^2.3.9",
@@ -31,11 +30,10 @@
     "typescript": "^2.9.2"
   },
   "dependencies": {
+    "cloudscraper": "^1.5.0",
     "html-entities": "^1.2.1",
     "iconv-lite": "^0.4.19",
     "moment": "^2.22.2",
-    "most": "^1.7.2",
-    "node-fetch": "^1.7.3",
     "properties-reader": "0.0.16",
     "reflect-metadata": "^0.1.12",
     "rxjs": "^5.5.11",

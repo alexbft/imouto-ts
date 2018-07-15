@@ -4,6 +4,7 @@ import { Injectable } from 'core/di/injector';
 import { TgApi } from 'core/tg/tg_api';
 import { Web } from 'core/util/web';
 import { Message } from 'node-telegram-bot-api';
+import { TextMatch } from 'core/bot_api/text_match';
 
 @Injectable
 export class TranslatePlugin implements Plugin {
@@ -19,15 +20,13 @@ export class TranslatePlugin implements Plugin {
     const res = await this.web.getAsBrowser(
       'http://translate.google.com/translate_a/single',
       {
-        qs: {
-          client: 's',
-          ie: 'UTF-8',
-          oe: 'UTF-8',
-          sl: src,
-          tl: dest,
-          dt: 't',
-          q: txt,
-        },
+        client: 's',
+        ie: 'UTF-8',
+        oe: 'UTF-8',
+        sl: src,
+        tl: dest,
+        dt: 't',
+        q: txt,
       },
     );
 
@@ -49,7 +48,7 @@ export class TranslatePlugin implements Plugin {
     );
   }
 
-  onMessage = async (msg: Message, match: RegExpMatchArray): Promise<void> => {
+  onMessage = async ({message, match}: TextMatch): Promise<void> => {
     try {
       let src: string;
       let dest: string;
@@ -69,8 +68,8 @@ export class TranslatePlugin implements Plugin {
 
       if (match[4] !== null) {
         text = match[4].trim();
-      } else if (msg && msg.reply_to_message && msg.reply_to_message.text) {
-        text = msg.reply_to_message.text;
+      } else if (message && message.reply_to_message && message.reply_to_message.text) {
+        text = message.reply_to_message.text;
       } else {
         return;
       }
@@ -78,17 +77,17 @@ export class TranslatePlugin implements Plugin {
       const res = await this.translate(src, dest, text);
       if (res !== null) {
         this.api.sendMessage({
-          chat_id: msg.chat.id,
+          chat_id: message.chat.id,
           text: `Перевод: ${res}`,
         });
       } else {
         this.api.sendMessage({
-          chat_id: msg.chat.id,
+          chat_id: message.chat.id,
           text: 'Сервис недоступен.',
         });
       }
     } catch (e) {
-      this.onError(msg);
+      this.onError(message);
     }
   }
 

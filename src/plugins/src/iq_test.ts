@@ -23,7 +23,7 @@ export class IqTestPlugin implements Plugin {
   constructor(private api: TgApi) { }
 
   init(input: Input): void {
-    input.onText(/^\/iq/, this.onMessage);
+    input.onText(/^\/iq/, ({message}) => this.onMessage(message));
   }
 
   onMessage = (msg: Message): void => {

@@ -4,9 +4,10 @@ import { BashimPlugin } from './src/bashim';
 import { HelloPlugin } from './src/hello';
 import { HelpPlugin } from './src/help';
 import { IdPlugin } from './src/id';
-import { ImagesPlugin } from './src/images';
+// import { ImagesPlugin } from './src/images';
 import { IqTestPlugin } from './src/iq_test';
 import { TranslatePlugin } from './src/translate';
+import { A2chPlugin } from 'plugins/src/2ch';
 
 export const pluginBindings = [
   provide(HelloPlugin),
@@ -15,5 +16,6 @@ export const pluginBindings = [
   provide(IqTestPlugin),
   provide(BashimPlugin),
   provide(TranslatePlugin),
-  provide(ImagesPlugin),
+  // provide(ImagesPlugin),
+  provide(A2chPlugin),
 ];

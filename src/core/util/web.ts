@@ -1,7 +1,7 @@
 import { Injectable } from 'core/di/injector';
 import { Environment } from 'core/environment/environment';
 import * as http from 'http';
-import fetch, { Response } from 'node-fetch';
+import * as https from 'https';
 import { URL, URLSearchParams } from 'url';
 import { Subscriber } from './subscriber';
 import { WebException } from './web_exception';
@@ -9,9 +9,33 @@ import { logger } from 'core/logging/logger';
 
 export { WebException };
 
+export function toUrl(url: string|URL, searchParams?: any): URL {
+  const url_ = url instanceof URL ? url : new URL(url);
+  if (searchParams != null) {
+    url_.search = new URLSearchParams(searchParams) as any;
+  }
+  return url_;
+}
+
+export function requestOptionsFromUrl(url: URL): http.RequestOptions {
+  return {
+    protocol: url.protocol,
+    hostname: url.hostname,
+    path: url.pathname + url.search
+  };
+}
+
 @Injectable
 export class Web {
   constructor(private readonly environment: Environment) {}
+
+  request(options: http.RequestOptions): http.ClientRequest {
+    if (options.protocol === 'https') {
+      return https.request(options);
+    } else {
+      return http.request(options);
+    }
+  }
 
   sendRequest(request: http.ClientRequest): Promise<http.IncomingMessage> {
     return new Promise<http.IncomingMessage>((resolve, reject) => {
@@ -97,29 +121,19 @@ export class Web {
     return this.readResponseJson(request, await this.sendRequest(request));
   }
 
-  async getAsBrowser(url: string, options = { qs: {} }): Promise<string> {
-    const newUrl = new URL(url);
-    if (newUrl.search === '') {
-      newUrl.search = new URLSearchParams(options.qs) as any;
-    }
-
-    const res = await fetch(newUrl.toString(), {
-      headers: {
-        'User-Agent': 'Mozilla/5.0',
-      },
-      method: 'GET',
-    });
-
-    return res.text();
+  getAsBrowser(url: string|URL, searchParams?: any): Promise<string> {
+    const options = requestOptionsFromUrl(toUrl(url, searchParams));
+    options.headers = {
+      'User-Agent': 'Mozilla/5.0',
+    };
+    return this.fetch(this.request(options));
   }
 
-  get(url: string, options = { qs: {} }): Promise<Response> {
-    const newUrl = new URL(url);
-    if (newUrl.search === '') {
-      newUrl.search = new URLSearchParams(options.qs) as any;
-    }
-    return fetch(newUrl.toString(), {
-      method: 'GET',
-    });
+  get(url: string|URL, searchParams?: any): Promise<string> {
+    return this.fetch(this.request(requestOptionsFromUrl(toUrl(url, searchParams))));
+  }
+
+  getJson(url: string|URL, searchParams?: any): Promise<any> {
+    return this.fetchJson(this.request(requestOptionsFromUrl(toUrl(url, searchParams))));
   }
 }

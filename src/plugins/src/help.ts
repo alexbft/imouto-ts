@@ -2,7 +2,7 @@ import { Input } from 'core/bot_api/input';
 import { Plugin } from 'core/bot_api/plugin';
 import { Injectable } from 'core/di/injector';
 import { TgApi } from 'core/tg/tg_api';
-import { Message } from 'node-telegram-bot-api';
+import { TextMatch } from 'core/bot_api/text_match';
 
 const helptext = `Команды, которые я понимаю:
 !скажи <текст>
@@ -33,10 +33,10 @@ export class HelpPlugin implements Plugin {
   constructor(private api: TgApi) {}
 
   init(input: Input): void {
-    input.onText(/^[!\/](help|помощь|команды|хэлп|хелп)\b/, this.onMessage);
+    input.onText(/^[!\/]\s?(help|помощь|команды|хэлп|хелп)\b/, this.onMessage);
   }
 
-  onMessage = (msg: Message): void => {
-    this.api.reply(msg, helptext);
+  onMessage = ({message}: TextMatch): void => {
+    this.api.reply(message, helptext);
   }
 }
