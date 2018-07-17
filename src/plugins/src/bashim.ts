@@ -1,5 +1,5 @@
 import { Input } from 'core/bot_api/input';
-import { Plugin } from 'core/bot_api/plugin';
+import { BotPlugin } from 'core/bot_api/bot_plugin';
 import { Injectable } from 'core/di/injector';
 import { TgApi } from 'core/tg/tg_api';
 import { Web } from 'core/util/web';
@@ -24,7 +24,7 @@ function mapSpecific(id: string, page: string): string[] {
 }
 
 @Injectable
-export class BashimPlugin implements Plugin {
+export class BashimPlugin implements BotPlugin {
   readonly name = 'bash.im';
   private readonly entities = new Entities();
 

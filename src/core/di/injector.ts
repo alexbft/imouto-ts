@@ -1,4 +1,4 @@
-import { Provider } from './provider';
+import { Provider } from 'core/di/provider';
 
 export class Injector {
   private bindingMap = new Map<any, Provider>();

@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { injectMetadata, Injector } from './injector';
+import { injectMetadata, Injector } from 'core/di/injector';
 
 interface ProviderOptions {
   useValue?: any;

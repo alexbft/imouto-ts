@@ -11,7 +11,7 @@ import { logger } from 'core/logging/logger';
 import { Props } from 'core/util/misc';
 import { Web, WebException } from 'core/util/web';
 
-import { TgException } from './tg_exception';
+import { TgException } from 'core/tg/tg_exception';
 
 const oldUpdatesLimit = 10;
 const updatesLongPollingTimeout = moment.duration(300, 'seconds');

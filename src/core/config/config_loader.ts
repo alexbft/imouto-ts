@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import { Provider, provide } from "core/di/provider";
 import { logger } from 'core/logging/logger';
 
-import { AuthToken } from "./keys";
+import { AuthToken } from "core/config/keys";
 import { Injectable } from 'core/di/injector';
 
 const configFileName = __dirname + '/../../../../config/main.config';

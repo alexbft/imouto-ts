@@ -1,4 +1,4 @@
-import { PromiseOr } from './promises';
+import { PromiseOr } from 'core/util/promises';
 
 export class Completer<T> {
   resolve: (value?: PromiseOr<T>) => void = _ => {};

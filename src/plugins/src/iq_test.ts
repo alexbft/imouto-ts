@@ -1,5 +1,5 @@
 import { Input } from 'core/bot_api/input';
-import { Plugin } from 'core/bot_api/plugin';
+import { BotPlugin } from 'core/bot_api/bot_plugin';
 import { Injectable } from 'core/di/injector';
 import { fullName } from 'core/tg/message_util';
 import { TgApi } from 'core/tg/tg_api';
@@ -17,7 +17,7 @@ function iq(s: string): number {
 };
 
 @Injectable
-export class IqTestPlugin implements Plugin {
+export class IqTestPlugin implements BotPlugin {
   readonly name = 'IQ Test';
 
   constructor(private api: TgApi) { }

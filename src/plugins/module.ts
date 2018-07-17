@@ -1,12 +1,12 @@
 import { provide } from 'core/di/provider';
 
-import { BashimPlugin } from './src/bashim';
-import { HelloPlugin } from './src/hello';
-import { HelpPlugin } from './src/help';
-import { IdPlugin } from './src/id';
+import { BashimPlugin } from 'plugins/src/bashim';
+import { HelloPlugin } from 'plugins/src/hello';
+import { HelpPlugin } from 'plugins/src/help';
+import { IdPlugin } from 'plugins/src/id';
 // import { ImagesPlugin } from './src/images';
-import { IqTestPlugin } from './src/iq_test';
-import { TranslatePlugin } from './src/translate';
+import { IqTestPlugin } from 'plugins/src/iq_test';
+import { TranslatePlugin } from 'plugins/src/translate';
 import { A2chPlugin } from 'plugins/src/2ch';
 
 export const pluginBindings = [

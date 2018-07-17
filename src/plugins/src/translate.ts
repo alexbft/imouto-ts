@@ -1,5 +1,5 @@
 import { Input } from 'core/bot_api/input';
-import { Plugin } from 'core/bot_api/plugin';
+import { BotPlugin } from 'core/bot_api/bot_plugin';
 import { Injectable } from 'core/di/injector';
 import { TgApi } from 'core/tg/tg_api';
 import { Web } from 'core/util/web';
@@ -7,7 +7,7 @@ import { Message } from 'node-telegram-bot-api';
 import { TextMatch } from 'core/bot_api/text_match';
 
 @Injectable
-export class TranslatePlugin implements Plugin {
+export class TranslatePlugin implements BotPlugin {
   readonly name = 'Translate';
 
   constructor(private api: TgApi, private web: Web) {}

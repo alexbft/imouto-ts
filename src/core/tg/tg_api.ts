@@ -5,7 +5,7 @@ import {
 } from 'node-telegram-bot-api';
 
 import { Injectable } from 'core/di/injector';
-import { TgClient } from './tg_client';
+import { TgClient } from 'core/tg/tg_client';
 
 interface SendMessageArgs extends SendMessageOptions {
   chat_id: number | string;

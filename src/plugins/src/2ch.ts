@@ -1,4 +1,4 @@
-import { Plugin } from 'core/bot_api/plugin';
+import { BotPlugin } from 'core/bot_api/bot_plugin';
 import { Input } from 'core/bot_api/input';
 import * as cloudscraper from 'cloudscraper';
 import { randomChoice } from 'core/util/misc';
@@ -87,7 +87,7 @@ async function randomPost(threadNum: any): Promise<any> {
 }
 
 @Injectable
-export class A2chPlugin implements Plugin {
+export class A2chPlugin implements BotPlugin {
   readonly name: string = '2ch';
 
   constructor(private api: TgApi) {}

@@ -3,8 +3,8 @@ import { Environment } from 'core/environment/environment';
 import * as http from 'http';
 import * as https from 'https';
 import { URL, URLSearchParams } from 'url';
-import { Subscriber } from './subscriber';
-import { WebException } from './web_exception';
+import { Subscriber } from 'core/util/subscriber';
+import { WebException } from 'core/util/web_exception';
 import { logger } from 'core/logging/logger';
 
 export { WebException };

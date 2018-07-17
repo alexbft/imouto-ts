@@ -7,8 +7,8 @@ import * as msg from 'core/tg/message_util';
 import { timeout } from 'core/util/promises';
 import { pluginBindings } from 'plugins/module';
 
-import { InputImpl } from './input';
-import { Plugin } from './plugin';
+import { InputImpl } from 'core/bot_api/input';
+import { BotPlugin } from 'core/bot_api/bot_plugin';
 import { TimeoutError } from 'rxjs/util/TimeoutError';
 
 const pluginInitTimeout = moment.duration(30, 'seconds');
@@ -29,7 +29,7 @@ export class BotApi {
     let failed = 0;
     for (const provider of pluginBindings) {
       try {
-        const plugin: Plugin = provider.get(pluginInjector);
+        const plugin: BotPlugin = provider.get(pluginInjector);
         initializers.push(async () => {
           logger.info(`Initializing plugin: ${plugin.name}`);
           try {

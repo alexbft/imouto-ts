@@ -1,10 +1,10 @@
 import { Input } from 'core/bot_api/input';
-import { Plugin } from 'core/bot_api/plugin';
+import { BotPlugin } from 'core/bot_api/bot_plugin';
 import { Injectable } from 'core/di/injector';
 import { TgApi } from 'core/tg/tg_api';
 
 @Injectable
-export class HelloPlugin implements Plugin {
+export class HelloPlugin implements BotPlugin {
   readonly name = 'Hello';
 
   constructor(private tgApi: TgApi) {}

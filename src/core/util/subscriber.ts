@@ -1,7 +1,7 @@
 import { Environment } from 'core/environment/environment';
 import { EventEmitter } from 'events';
 import { Subscription } from 'rxjs';
-import { Disposable } from './disposable';
+import { Disposable } from 'core/util/disposable';
 
 type EventType = string | symbol;
 type Listener = (...args: any[]) => void;

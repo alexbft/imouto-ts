@@ -1,11 +1,11 @@
 import { Input } from 'core/bot_api/input';
-import { Plugin } from 'core/bot_api/plugin';
+import { BotPlugin } from 'core/bot_api/bot_plugin';
 import { Injectable } from 'core/di/injector';
 import { TgApi } from 'core/tg/tg_api';
 import { Message } from 'node-telegram-bot-api';
 
 @Injectable
-export class IdPlugin implements Plugin {
+export class IdPlugin implements BotPlugin {
   readonly name = 'ID';
 
   constructor(private api: TgApi) {}

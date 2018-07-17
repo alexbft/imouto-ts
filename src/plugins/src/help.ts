@@ -1,5 +1,5 @@
 import { Input } from 'core/bot_api/input';
-import { Plugin } from 'core/bot_api/plugin';
+import { BotPlugin } from 'core/bot_api/bot_plugin';
 import { Injectable } from 'core/di/injector';
 import { TgApi } from 'core/tg/tg_api';
 import { TextMatch } from 'core/bot_api/text_match';
@@ -27,7 +27,7 @@ const helptext = `Команды, которые я понимаю:
 !команды(!help) - список команд`;
 
 @Injectable
-export class HelpPlugin implements Plugin {
+export class HelpPlugin implements BotPlugin {
   readonly name = 'Help';
 
   constructor(private api: TgApi) {}

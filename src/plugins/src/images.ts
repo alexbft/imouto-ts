@@ -1,5 +1,5 @@
 import { Input } from 'core/bot_api/input';
-import { Plugin } from 'core/bot_api/plugin';
+import { BotPlugin } from 'core/bot_api/bot_plugin';
 import { GoogleCX, GoogleKey } from 'core/config/keys';
 import { Inject, Injectable } from 'core/di/injector';
 import { TgApi } from 'core/tg/tg_api';
@@ -33,7 +33,7 @@ interface Context {
 type GoogleSearchResult = GooglePic[];
 
 @Injectable
-export class ImagesPlugin implements Plugin {
+export class ImagesPlugin implements BotPlugin {
   readonly name = 'Images';
 
   constructor(
