@@ -7,7 +7,7 @@ import { TgApi } from "core/tg/tg_api";
 @Injectable
 export class CatPlugin implements BotPlugin {
   readonly name = 'Cats';
-  
+
   constructor(private api: TgApi) {}
 
   init(input: Input): void {
@@ -15,6 +15,6 @@ export class CatPlugin implements BotPlugin {
   }
 
   handle = async ({message}: TextMatch): Promise<void> => {
-    await this.api.replyWithImageFromUrl(message, 'http://thecatapi.com/api/images/get');
+    await this.api.replyWithImageFromUrl(message, `http://thecatapi.com/api/images/get?${Date.now()}`);
   }
 }

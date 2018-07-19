@@ -8,6 +8,7 @@ import { IdPlugin } from 'plugins/src/id';
 import { IqTestPlugin } from 'plugins/src/iq_test';
 import { TranslatePlugin } from 'plugins/src/translate';
 import { A2chPlugin } from 'plugins/src/2ch';
+import { CatPlugin } from 'plugins/src/cat';
 
 export const pluginBindings = [
   provide(HelloPlugin),
@@ -18,4 +19,5 @@ export const pluginBindings = [
   provide(TranslatePlugin),
   // provide(ImagesPlugin),
   provide(A2chPlugin),
+  provide(CatPlugin),
 ];
