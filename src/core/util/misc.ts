@@ -9,3 +9,7 @@ export function random(x: number): number {
 export function randomChoice<T>(a: T[]): T {
   return a[random(a.length)];
 }
+
+export function fixMultiline(s: string): string {
+  return s.trim().split('\n').map(line => line.trim()).join('\n');
+}

@@ -52,6 +52,13 @@ export class TgApi {
     });
   }
 
+  respondWithText(message: Message, text: string, options: SendMessageOptions = {}): Promise<Message> {
+    return this.sendMessage({
+      chat_id: message.chat.id,
+      text,
+      ...options});
+  }
+
   replyWithImageFromUrl(message: Message, url: string): Promise<Message> {
     return this.sendPhoto({
       chat_id: message.chat.id,

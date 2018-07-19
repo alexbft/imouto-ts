@@ -30,7 +30,7 @@ export class Web {
   constructor(private readonly environment: Environment) {}
 
   request(options: http.RequestOptions): http.ClientRequest {
-    if (options.protocol === 'https') {
+    if ((options.protocol || '').toLowerCase() === 'https:') {
       return https.request(options);
     } else {
       return http.request(options);

@@ -9,6 +9,7 @@ import { IqTestPlugin } from 'plugins/src/iq_test';
 import { TranslatePlugin } from 'plugins/src/translate';
 import { A2chPlugin } from 'plugins/src/2ch';
 import { CatPlugin } from 'plugins/src/cat';
+import { CoinPlugin } from 'plugins/src/coin';
 
 export const pluginBindings = [
   provide(HelloPlugin),
@@ -20,4 +21,5 @@ export const pluginBindings = [
   // provide(ImagesPlugin),
   provide(A2chPlugin),
   provide(CatPlugin),
+  provide(CoinPlugin),
 ];
