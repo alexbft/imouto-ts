@@ -11,14 +11,12 @@ type TextMatchHandler = (match: TextMatch) => PromiseOr<any>;
 type ErrorHandler = (message: Message, error: Error) => PromiseOr<any>;
 
 function wrapMessageHandler(handler: MessageHandler, errorHandler?: ErrorHandler): MessageHandler {
-  if (errorHandler == null) {
-    return handler;
-  } else {
-    return async (msg) => {
-      try {
-        await handler(msg);
-      } catch (e) {
-        logger.error(e.stack || e);
+  return async (msg) => {
+    try {
+      await handler(msg);
+    } catch (e) {
+      logger.error(e.stack || e);
+      if (errorHandler != null) {
         await errorHandler(msg, e);
       }
     }
@@ -31,6 +29,10 @@ export interface Input {
 
 export class InputImpl implements Input {
   private readonly eventEmitter = new EventEmitter();
+
+  constructor() {
+    this.eventEmitter.setMaxListeners(1000);
+  }
 
   handleMessage(msg: Message): void {
     if (msg.text != null) {

@@ -45,7 +45,7 @@ export class ImoutoServer {
   async onSigInt(): Promise<void> {
     if (!this.environment.isDisposing) {
       logger.info('Starting cleanup...');
-      this.environment.startDisposing();
+      this.environment.dispose();
     } else {
       logger.warn('Force quit.', () => {
         process.exit();

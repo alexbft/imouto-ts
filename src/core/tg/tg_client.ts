@@ -8,8 +8,8 @@ import { AuthToken } from 'core/config/keys';
 import { Inject, Injectable } from 'core/di/injector';
 import { Environment } from 'core/environment/environment';
 import { logger } from 'core/logging/logger';
-import { Props } from 'core/util/misc';
-import { Web, WebException } from 'core/util/web';
+import { Props, pause } from 'core/util/misc';
+import { Web } from 'core/util/web';
 
 import { TgException } from 'core/tg/tg_exception';
 
@@ -33,17 +33,11 @@ export class TgClient {
   }
 
   connect(): Promise<void> {
-    if (this.environment.isDisposing) {
-      return Promise.resolve();
-    }
     logger.info('Starting getUpdates loop...');
     return this.getUpdatesLoop();
   }
 
   send(methodName: string, args?: Props): Promise<any> {
-    if (this.environment.isDisposing) {
-      throw new TgException('Disposing');
-    }
     return args != null ? this.sendArgs(methodName, args) : this.sendNoArgs(methodName);
   }
 
@@ -66,17 +60,15 @@ export class TgClient {
       } else {
         logger.error('getUpdates returned error:', response);
         if (response.parameters != null && response.parameters.retry_after != null) {
-          await this.environment.pause(
+          await pause(
               moment.duration(response['parameters']['retry_after'], 'seconds'));
         } else {
-          await this.environment.pause(updatesErrorDelay);
+          await pause(updatesErrorDelay);
         }
       }
     } catch (e) {
-      if (!(e instanceof WebException && this.environment.isDisposing)) {
-        logger.error('Exception in getUpdates:', e.stack || e);
-        await this.environment.pause(updatesErrorDelay);
-      }
+      logger.error('Exception in getUpdates:', e.stack || e);
+      await pause(updatesErrorDelay);
     }
   }
 

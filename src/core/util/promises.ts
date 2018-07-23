@@ -3,6 +3,8 @@ import { Observable } from 'rxjs/Observable';
 
 export type PromiseOr<T> = T|PromiseLike<T>;
 
+export type AsyncHandler<T> = () => PromiseOr<T>;
+
 export function isPromise<T>(p: any): p is PromiseLike<T> {
   return 'then' in p;
 }
