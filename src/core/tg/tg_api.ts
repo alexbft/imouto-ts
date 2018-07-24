@@ -41,6 +41,7 @@ export class TgApi {
   }
 
   sendPhoto(args: SendPhotoArgs): Promise<Message> {
+    // TODO: implement sending image from buffer or stream.
     return this.tgClient.send('sendPhoto', args);
   }
 
@@ -59,11 +60,20 @@ export class TgApi {
       ...options});
   }
 
-  replyWithImageFromUrl(message: Message, url: string): Promise<Message> {
+  replyWithImageFromUrl(message: Message, url: string, options: SendPhotoOptions = {}): Promise<Message> {
     return this.sendPhoto({
       chat_id: message.chat.id,
       reply_to_message_id: message.message_id,
       photo: url,
+      ...options
+    });
+  }
+
+  respondWithImageFromUrl(message: Message, url: string, options: SendPhotoOptions = {}): Promise<Message> {
+    return this.sendPhoto({
+      chat_id: message.chat.id,
+      photo: url,
+      ...options
     });
   }
 }

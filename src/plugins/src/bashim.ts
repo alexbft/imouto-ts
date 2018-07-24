@@ -34,33 +34,22 @@ export class BashimPlugin implements BotPlugin {
   ) {}
 
   init(input: Input): void {
-    input.onText(/^\!\s?(баш|bash)\b[\s]*(\d+)?/, this.onMessage);
+    input.onText(/^\!\s?(баш|bash)\b[\s]*(\d+)?/, this.onMessage, this.onError);
   }
 
-  onError = (msg: Message): void => {
-    this.api.sendMessage({
-      chat_id: msg.chat.id,
-      text: 'Баш уже не тот...',
-    });
-  };
+  onError = (msg: Message) =>
+      this.api.respondWithText(msg, 'Баш уже не тот...');
 
   onMessage = async ({message, match}: TextMatch): Promise<void> => {
-    try {
-      const id = match[2];
-      const [quoteId, text] =
-        id == null
-          ? mapRandom(await this.web.getAsBrowser('http://bash.im/forweb/?u'))
-          : mapSpecific(
-              id,
-              await this.web.getAsBrowser(`http://bash.im/quote/${id}`),
-            );
+    const id = match[2];
+    const [quoteId, text] =
+      id == null
+        ? mapRandom(await this.web.getAsBrowser('http://bash.im/forweb/?u'))
+        : mapSpecific(
+            id,
+            await this.web.getAsBrowser(`http://bash.im/quote/${id}`),
+          );
 
-      await this.api.sendMessage({
-        chat_id: message.chat.id,
-        text: `Цитата №${quoteId}\n\n${this.entities.decode(text)}`,
-      });
-    } catch (e) {
-      this.onError(message);
-    }
+    await this.api.respondWithText(message, `Цитата №${quoteId}\n\n${this.entities.decode(text)}`);
   };
 }

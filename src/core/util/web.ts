@@ -22,6 +22,8 @@ export function requestOptionsFromUrl(url: URL): http.RequestOptions {
   };
 }
 
+// TODO: handle redirects && 400 error from TG
+
 @Injectable
 export class Web {
   request(options: http.RequestOptions): http.ClientRequest {

@@ -20,13 +20,12 @@ function iq(s: string): number {
 export class IqTestPlugin implements BotPlugin {
   readonly name = 'IQ Test';
 
-  constructor(private api: TgApi) { }
+  constructor(private api: TgApi) {}
 
   init(input: Input): void {
     input.onText(/^\/iq/, ({message}) => this.onMessage(message));
   }
 
-  onMessage = (msg: Message): void => {
-    this.api.reply(msg, `Ваш IQ: ${iq(fullName(msg.from!))}`);
-  }
+  onMessage = (msg: Message): Promise<any> =>
+      this.api.reply(msg, `Ваш IQ: ${iq(fullName(msg.from!))}`);
 }

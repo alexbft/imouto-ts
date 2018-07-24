@@ -10,8 +10,7 @@ export class HelloPlugin implements BotPlugin {
   constructor(private tgApi: TgApi) {}
 
   init(input: Input): void {
-    input.onText(/hello/, ({message}) => {
-      this.tgApi.reply(message, `Hello ${message.from!.first_name}`);
-    });
+    input.onText(/hello/, ({message}) =>
+        this.tgApi.reply(message, `Hello ${message.from!.first_name}`));
   }
 }

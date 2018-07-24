@@ -93,51 +93,39 @@ export class A2chPlugin implements BotPlugin {
   constructor(private api: TgApi) {}
 
   init(input: Input): void {
-    input.onText(/^!\s?(кек|kek)/, this.onKek);
-    input.onText(/^!\s?(сас|sas)/, this.onSas);
+    input.onText(/^!\s?(кек|kek)/, this.onKek, (message) => this.api.reply(message, 'ты кек'));
+    input.onText(/^!\s?(сас|sas)/, this.onSas, (message) => this.api.reply(message, 'ты сас'));
   }
 
-  onKek = async ({message}: TextMatch): Promise<void> => {
-    try {
-      const thread = await randomBhThread();
-      if (thread == null) {
-        this.api.reply(message, 'В Багдаде всё спокойно!');
-        return;
-      }
-      const post = await randomBhPost(thread.num);
-      if (post == null) {
-        this.api.reply(message, 'В Багдаде всё спокойно!');
-        return;
-      }
-      this.api.sendMessage({
-        chat_id: message.chat.id,
-        text: getPostText(post),
-        parse_mode: 'HTML'
-      });
-    } catch (e) {
-      this.api.reply(message, 'ты кек');
+  onKek = async ({message}: TextMatch): Promise<any> => {
+    const thread = await randomBhThread();
+    if (thread == null) {
+      return this.api.reply(message, 'В Багдаде всё спокойно!');
     }
+    const post = await randomBhPost(thread.num);
+    if (post == null) {
+      return this.api.reply(message, 'В Багдаде всё спокойно!');
+    }
+    await this.api.sendMessage({
+      chat_id: message.chat.id,
+      text: getPostText(post),
+      parse_mode: 'HTML'
+    });
   }
 
-  onSas = async ({message}: TextMatch): Promise<void> => {
-    try {
-      const thread = await randomThread();
-      if (thread == null) {
-        this.api.reply(message, 'Нет тредов');
-        return;
-      }
-      const post = await randomPost(thread.num);
-      if (post == null) {
-        this.api.reply(message, 'В треде нет норм постов');
-        return;
-      }
-      this.api.sendMessage({
-        chat_id: message.chat.id,
-        text: getPostText(post),
-        parse_mode: 'HTML'
-      });
-    } catch (e) {
-      this.api.reply(message, 'ты сас');
+  onSas = async ({message}: TextMatch): Promise<any> => {
+    const thread = await randomThread();
+    if (thread == null) {
+      return this.api.reply(message, 'Нет тредов');
     }
+    const post = await randomPost(thread.num);
+    if (post == null) {
+      return this.api.reply(message, 'В треде нет норм постов');
+    }
+    await this.api.sendMessage({
+      chat_id: message.chat.id,
+      text: getPostText(post),
+      parse_mode: 'HTML'
+    });
   }
 }

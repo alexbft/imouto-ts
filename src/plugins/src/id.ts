@@ -14,21 +14,21 @@ export class IdPlugin implements BotPlugin {
     input.onText(/^!id$/, ({message}) => this.onMessage(message));
   }
 
-  onMessage = (msg: Message): void => {
+  onMessage = (msg: Message): Promise<any> => {
     if (msg.reply_to_message != null) {
       // TODO: add msgCache
       const tmp = msg.reply_to_message;
       if (tmp != null) {
         if (tmp.forward_from != null) {
-          this.api.reply(msg, `${tmp.forward_from.id}`);
+          return this.api.reply(msg, `${tmp.forward_from.id}`);
         } else {
-          this.api.reply(msg, `${tmp.from!.id}`);
+          return this.api.reply(msg, `${tmp.from!.id}`);
         }
       } else {
-        this.api.reply(msg, 'Нет данных...');
+        return this.api.reply(msg, 'Нет данных...');
       }
     } else {
-      this.api.reply(msg, `${msg.from!.id}`);
+      return this.api.reply(msg, `${msg.from!.id}`);
     }
   }
 }

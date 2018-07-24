@@ -36,7 +36,7 @@ export class HelpPlugin implements BotPlugin {
     input.onText(/^[!\/]\s?(help|помощь|команды|хэлп|хелп)\b/, this.onMessage);
   }
 
-  onMessage = ({message}: TextMatch): void => {
-    this.api.reply(message, helptext);
+  onMessage = async ({message}: TextMatch) => {
+    await this.api.reply(message, helptext);
   }
 }

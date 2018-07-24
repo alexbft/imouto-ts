@@ -104,12 +104,12 @@ class CoinQuery {
               `${amount} ${from.name} = ${this.calcUsd(from, amount)}\$
               1h: *${from.percent_change_1h}* 24h: *${from.percent_change_24h}* 7d: *${from.percent_change_7d}*`);
         }
-        this.api.respondWithText(message, txt, {parse_mode: 'Markdown'});
+        await this.api.respondWithText(message, txt, {parse_mode: 'Markdown'});
       } else {
-        this.api.reply(message, 'Не знаю такой монеты!');
+        await this.api.reply(message, 'Не знаю такой монеты!');
       }
     } else {
-      this.api.reply(message, 'Не могу посчитать!');
+      await this.api.reply(message, 'Не могу посчитать!');
     }
   }
 }

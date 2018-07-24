@@ -12,7 +12,7 @@ export class TranslatePlugin implements BotPlugin {
 
   constructor(private api: TgApi, private web: Web) {}
 
-  async translate(
+  private async translate(
     src: string,
     dest: string,
     txt: string,
@@ -31,12 +31,10 @@ export class TranslatePlugin implements BotPlugin {
     );
 
     try {
-      console.log(res);
       const evalFn = new Function(`return ${res}`);
       const json: string[][] = evalFn();
       return json[0].map(d => d[0]).join('');
     } catch (e) {
-      console.error(e);
       return null;
     }
   }
@@ -45,56 +43,52 @@ export class TranslatePlugin implements BotPlugin {
     input.onText(
       /!(переведи|translate|перевод|расшифруй|tr)( [a-z]{2})?( [a-z]{2})?(?: ([^]+))?$/,
       this.onMessage,
+      this.onError,
     );
   }
 
   onMessage = async ({message, match}: TextMatch): Promise<void> => {
-    try {
-      let src: string;
-      let dest: string;
-      let text: string;
+    let src: string;
+    let dest: string;
+    let text: string;
 
-      if (match[2] != null && match[3] == null) {
-        src = 'auto';
-        dest = match[2].trim();
-      } else {
-        src = (match[2] && 'auto').trim();
-        dest = (match[3] && 'ru').trim();
-      }
+    if (match[2] != null && match[3] == null) {
+      src = 'auto';
+      dest = match[2].trim();
+    } else {
+      src = (match[2] && 'auto').trim();
+      dest = (match[3] && 'ru').trim();
+    }
 
-      if (src === 'auto' && match[1].toLowerCase() === 'расшифруй') {
-        src = 'ja';
-      }
+    if (src === 'auto' && match[1].toLowerCase() === 'расшифруй') {
+      src = 'ja';
+    }
 
-      if (match[4] !== null) {
-        text = match[4].trim();
-      } else if (message && message.reply_to_message && message.reply_to_message.text) {
-        text = message.reply_to_message.text;
-      } else {
-        return;
-      }
+    if (match[4] !== null) {
+      text = match[4].trim();
+    } else if (message && message.reply_to_message && message.reply_to_message.text) {
+      text = message.reply_to_message.text;
+    } else {
+      return;
+    }
 
-      const res = await this.translate(src, dest, text);
-      if (res !== null) {
-        this.api.sendMessage({
-          chat_id: message.chat.id,
-          text: `Перевод: ${res}`,
-        });
-      } else {
-        this.api.sendMessage({
-          chat_id: message.chat.id,
-          text: 'Сервис недоступен.',
-        });
-      }
-    } catch (e) {
-      this.onError(message);
+    const res = await this.translate(src, dest, text);
+    if (res !== null) {
+      await this.api.sendMessage({
+        chat_id: message.chat.id,
+        text: `Перевод: ${res}`,
+      });
+    } else {
+      await this.api.sendMessage({
+        chat_id: message.chat.id,
+        text: 'Сервис недоступен.',
+      });
     }
   }
 
-  onError = (msg: Message): void => {
-    this.api.sendMessage({
-      chat_id: msg.chat.id,
-      text: 'Не понимаю я эти ваши иероглифы.',
-    });
-  }
+  onError = (msg: Message) =>
+      this.api.sendMessage({
+        chat_id: msg.chat.id,
+        text: 'Не понимаю я эти ваши иероглифы.',
+      });
 }

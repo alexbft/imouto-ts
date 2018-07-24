@@ -31,13 +31,13 @@ export class ImoutoServer {
   }
 
   onUnhandledRejection(err: any, _: Promise<any>): void {
-    logger.error(`Unhandled: `, err.stack || err, () => {
+    logger.error('************** WARNING ***************\nUnhandled: ', err.stack || err, () => {
       process.exit();
     });
   }
 
   onUncaughtException(err: any): void {
-    logger.error(`Uncaught: `, err.stack || err, () => {
+    logger.error('************** WARNING ***************\nUncaught: ', err.stack || err, () => {
       process.exit();
     });
   }
