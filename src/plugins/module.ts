@@ -11,6 +11,8 @@ import { A2chPlugin } from 'plugins/src/2ch';
 import { CatPlugin } from 'plugins/src/cat';
 import { CoinPlugin } from 'plugins/src/coin';
 import { DanbooruPlugin } from 'plugins/src/danbooru';
+import { DogifyPlugin } from 'plugins/src/dogify';
+import { EchoPlugin } from 'plugins/src/echo';
 
 export const pluginBindings = [
   provide(HelloPlugin),
@@ -24,4 +26,6 @@ export const pluginBindings = [
   provide(CatPlugin),
   provide(CoinPlugin),
   provide(DanbooruPlugin),
+  provide(DogifyPlugin),
+  provide(EchoPlugin),
 ];
