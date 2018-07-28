@@ -13,6 +13,7 @@ import { DanbooruPlugin } from 'plugins/src/danbooru';
 import { DogifyPlugin } from 'plugins/src/dogify';
 import { EchoPlugin } from 'plugins/src/echo';
 import { GooglePlugin } from 'plugins/src/google';
+import { MoneyPlugin } from 'plugins/src/money';
 
 export const pluginBindings = [
   provide(HelloPlugin),
@@ -28,4 +29,5 @@ export const pluginBindings = [
   provide(DogifyPlugin),
   provide(EchoPlugin),
   provide(GooglePlugin),
+  provide(MoneyPlugin),
 ];

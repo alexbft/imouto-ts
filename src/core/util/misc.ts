@@ -6,6 +6,10 @@ export interface Props {
   [key: string]: any;
 }
 
+export interface PropsOf<T> {
+  [key: string]: T|undefined;
+}
+
 export function random(x: number): number {
   return Math.floor(Math.random() * x);
 }
@@ -30,4 +34,13 @@ export function pause(delay: Duration): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, delay.milliseconds());
   });
+}
+
+export function formatDate(date: Date) {
+  const d = date.getDate();
+  const ds = d < 10 ? `0${d}` : `${d}`;
+  const m = date.getMonth() + 1;
+  const ms = m < 10 ? `0${m}` : `${m}`;
+  const y = date.getFullYear();
+  return `${ds}.${ms}.${y} ${date.toLocaleTimeString()}`;
 }

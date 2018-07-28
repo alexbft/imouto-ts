@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import { Provider, provide } from "core/di/provider";
 import { logger } from 'core/logging/logger';
 
-import { AuthToken, GoogleKey, GoogleCx } from "core/config/keys";
+import { AuthToken, GoogleKey, GoogleCx, ExchangeKey } from "core/config/keys";
 import { Injectable } from 'core/di/injector';
 
 const configFileName = __dirname + '/../../../../config/main.config';
@@ -26,6 +26,7 @@ export class ConfigLoader {
       provide(AuthToken, { useValue: properties.get('token') }),
       provide(GoogleKey, { useValue: properties.get('googlekey') }),
       provide(GoogleCx, { useValue: properties.get('googlecx') }),
+      provide(ExchangeKey, { useValue: properties.get('exchangekey') }),
     ];
   }
 }

@@ -28,7 +28,7 @@ export class GooglePlugin implements BotPlugin {
 
   private handle = async ({message, match}: TextMatch, type: 'web'|'image'): Promise<any> => {
     const cmd = match[1];
-    var query: string | undefined = match[2];
+    let query: string | undefined = match[2];
     if (query == null && message.reply_to_message != null) {
       query = message.reply_to_message.text;
     }
@@ -58,9 +58,9 @@ export class GooglePlugin implements BotPlugin {
         return `${result.link}`;
       }
     } else {
-      var link: string = result.link.toString().toLowerCase();
-      var url: string;
-      if (!(link.endsWith('jpg') || link.endsWith('jpeg') || link.endsWith('png'))) {
+      let link: string = result.link.toString().toLowerCase();
+      let url: string;
+      if (!(link.endsWith('.jpg') || link.endsWith('.jpeg') || link.endsWith('.png'))) {
         url = result.image.thumbnailLink;
       } else {
         url = result.link;
@@ -84,8 +84,10 @@ export class GooglePlugin implements BotPlugin {
       num,
       safe: type === 'web' ? 'off' : 'high',
       q: query,
-      searchType: type === 'web' ? null : 'image',
     });
+    if (type === 'image') {
+      url.searchParams.append('searchType', 'image');
+    }
     const result = await this.web.getJson(url);
     return result.items;
   }
