@@ -4,9 +4,9 @@ import { TextMatch } from "core/bot_api/text_match";
 import { Injectable, Inject } from "core/di/injector";
 import { TgApi } from "core/tg/tg_api";
 import { Message } from "node-telegram-bot-api";
-import { Web } from "core/util/web";
+import { Web, toUrl } from "core/util/web";
 import { GoogleKey, GoogleCx } from "core/config/keys";
-import { pagerReply } from "core/tg/pager";
+import { pagerReply, PageResult } from "core/tg/pager";
 
 const pageSize = 8;
 
@@ -22,10 +22,11 @@ export class GooglePlugin implements BotPlugin {
       @Inject(GoogleCx) private googleCx: string) {}
 
   init(): void {
-    this.input.onText(/^!\s?(ищи|г|g|gg)(?:\s+([^]+))?$/, this.handle, this.onError);
+    this.input.onText(/^!\s?(ищи|г|g|gg)(?:\s+([^]+))?$/, (match) => this.handle(match, 'web'), this.onError);
+    this.input.onText(/^!\s?(покажи|пик|pic|img|фото)(?:\s+([^]+))?$/, (match) => this.handle(match, 'image'), this.onError);
   }
 
-  private handle = async ({message, match}: TextMatch): Promise<any> => {
+  private handle = async ({message, match}: TextMatch, type: 'web'|'image'): Promise<any> => {
     const cmd = match[1];
     var query: string | undefined = match[2];
     if (query == null && message.reply_to_message != null) {
@@ -34,41 +35,58 @@ export class GooglePlugin implements BotPlugin {
     if (query == null) {
       return this.api.reply(message, 'Что искать?');
     }
-    const results = await this.search(query, 0, 1);
+    const results = await this.search(query, 0, 1, type);
     return pagerReply(message, this.api, this.input, {
-      getPage: (page) => this.getPage(cmd, query!, results, page)
+      type: type === 'web' ? 'text' : 'imageurl',
+      getPage: (index) => this.getPage(cmd, type, query!, results, index)
     });
   }
 
-  private async getPage(cmd: string, query: string, results: any[], index: number): Promise<string | null> {
+  private async getPage(cmd: string, type: 'web'|'image', query: string, results: any[], index: number): Promise<PageResult> {
     if (index >= results.length) {
-      const nextPage = await this.search(query, results.length, pageSize);
+      const nextPage = await this.search(query, results.length, pageSize, type);
       results.push(...nextPage);
     }
     const result = results[index];
     if (result == null) {
       return null;
     }
-    if (cmd === 'gg') {
-      return `${result.title}\n${result.link}`;
+    if (type === 'web') {
+      if (cmd === 'gg') {
+        return `${result.title}\n${result.link}`;
+      } else {
+        return `${result.link}`;
+      }
     } else {
-      return `${result.link}`;
+      var link: string = result.link.toString().toLowerCase();
+      var url: string;
+      if (!(link.endsWith('jpg') || link.endsWith('jpeg') || link.endsWith('png'))) {
+        url = result.image.thumbnailLink;
+      } else {
+        url = result.link;
+      }
+      return {
+        caption: result.title,
+        url: url
+      };
     }
   }
 
   private onError = (message: Message) => this.api.reply(message, 'Поиск не удался');
 
-  private async search(query: string, start: number, num: number): Promise<any[]> {
-    const result = await this.web.getJson('https://www.googleapis.com/customsearch/v1', {
+  private async search(query: string, start: number, num: number, type: 'web'|'image'): Promise<any[]> {
+    const url = toUrl('https://www.googleapis.com/customsearch/v1', {
       key: this.googleKey,
       cx: this.googleCx,
       gl: 'ru',
       hl: 'ru',
       start: start + 1,
       num,
-      safe: 'off',
+      safe: type === 'web' ? 'off' : 'high',
       q: query,
+      searchType: type === 'web' ? null : 'image',
     });
+    const result = await this.web.getJson(url);
     return result.items;
   }
 }
