@@ -7,10 +7,10 @@ import { TgApi } from 'core/tg/tg_api';
 export class HelloPlugin implements BotPlugin {
   readonly name = 'Hello';
 
-  constructor(private tgApi: TgApi) {}
+  constructor(private input: Input, private tgApi: TgApi) {}
 
-  init(input: Input): void {
-    input.onText(/hello/, ({message}) =>
+  init(): void {
+    this.input.onText(/hello/, ({message}) =>
         this.tgApi.reply(message, `Hello ${message.from!.first_name}`));
   }
 }

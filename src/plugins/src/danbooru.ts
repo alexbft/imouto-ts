@@ -12,12 +12,14 @@ import { Props, randomChoice } from "core/util/misc";
 export class DanbooruPlugin implements BotPlugin {
   readonly name = 'Danbooru';
 
-  constructor(private api: TgApi,
+  constructor(
+      private input: Input,
+      private api: TgApi,
       private web: Web) {}
 
-  init(input: Input): void {
-    input.onText(/^!няша\s*$/, ({message}) => this.handle(message), this.onError);
-    input.onText(/^!няша\s+(.+)/, ({message, match}) => this.handle(message, match[1]), this.onError);
+  init(): void {
+    this.input.onText(/^!няша\s*$/, ({message}) => this.handle(message), this.onError);
+    this.input.onText(/^!няша\s+(.+)/, ({message, match}) => this.handle(message, match[1]), this.onError);
   }
 
   private async handle(message: Message, query?: string): Promise<void> {

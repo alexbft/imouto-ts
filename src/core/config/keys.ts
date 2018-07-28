@@ -1,3 +1,3 @@
 export const GoogleKey = Symbol('GoogleKey');
-export const GoogleCX = Symbol('GoogleCX');
+export const GoogleCx = Symbol('GoogleCx');
 export const AuthToken = Symbol('AuthToken');

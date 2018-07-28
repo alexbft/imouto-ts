@@ -1,5 +1,5 @@
 import * as moment from 'moment';
-import { Message, Update } from 'node-telegram-bot-api';
+import { Message, Update, CallbackQuery } from 'node-telegram-bot-api';
 
 import { Injector, Injectable } from 'core/di/injector';
 import { logger } from 'core/logging/logger';
@@ -7,9 +7,10 @@ import * as msg from 'core/tg/message_util';
 import { timeout } from 'core/util/promises';
 import { pluginBindings } from 'plugins/module';
 
-import { InputImpl } from 'core/bot_api/input';
+import { InputImpl, Input } from 'core/bot_api/input';
 import { BotPlugin } from 'core/bot_api/bot_plugin';
 import { TimeoutError } from 'rxjs/util/TimeoutError';
+import { provide } from 'core/di/provider';
 
 const pluginInitTimeout = moment.duration(30, 'seconds');
 
@@ -24,7 +25,7 @@ export class BotApi {
   }
 
   async initPlugins(): Promise<void> {
-    const pluginInjector = this.injector.subContext(pluginBindings);
+    const pluginInjector = this.injector.subContext([...pluginBindings, provide(Input, {useValue: this.input})]);
     const initializers = [];
     let failed = 0;
     for (const provider of pluginBindings) {
@@ -33,7 +34,7 @@ export class BotApi {
         initializers.push(async () => {
           logger.info(`Initializing plugin: ${plugin.name}`);
           try {
-            const initPromise = Promise.resolve(plugin.init(this.input));
+            const initPromise = Promise.resolve(plugin.init());
             await timeout(initPromise, pluginInitTimeout);
           } catch (e) {
             if (e instanceof TimeoutError) {
@@ -61,6 +62,9 @@ export class BotApi {
     if (update.message != null) {
       this.onMessage(update.message);
     }
+    if (update.callback_query != null) {
+      this.onCallbackQuery(update.callback_query);
+    }
   }
 
   onMessage(message: Message): void {
@@ -69,6 +73,11 @@ export class BotApi {
       return;
     }
     this.input.handleMessage(message);
+  }
+
+  onCallbackQuery(query: CallbackQuery): void {
+    logger.debug('Callback query:', query);
+    this.input.handleCallbackQuery(query);
   }
 
   isOldMessage(message: Message): boolean {

@@ -52,7 +52,7 @@ export class TgClient {
       const args = {
         offset: this.lastUpdateId == -1 ? -1 * oldUpdatesLimit : this.lastUpdateId + 1,
         timeout: updatesLongPollingTimeout.asSeconds(),
-        allowed_updates: ['message'],
+        allowed_updates: ['message', 'callback_query'],
       };
       const response = await this.sendArgsRaw('getUpdates', args, 'debug');
       if (response.ok) {

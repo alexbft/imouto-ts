@@ -8,10 +8,10 @@ import { Message } from 'node-telegram-bot-api';
 export class IdPlugin implements BotPlugin {
   readonly name = 'ID';
 
-  constructor(private api: TgApi) {}
+  constructor(private input: Input, private api: TgApi) {}
 
-  init(input: Input): void {
-    input.onText(/^!id$/, ({message}) => this.onMessage(message));
+  init(): void {
+    this.input.onText(/^!id$/, ({message}) => this.onMessage(message));
   }
 
   onMessage = (msg: Message): Promise<any> => {

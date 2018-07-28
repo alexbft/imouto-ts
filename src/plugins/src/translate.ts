@@ -10,7 +10,7 @@ import { TextMatch } from 'core/bot_api/text_match';
 export class TranslatePlugin implements BotPlugin {
   readonly name = 'Translate';
 
-  constructor(private api: TgApi, private web: Web) {}
+  constructor(private input: Input, private api: TgApi, private web: Web) {}
 
   private async translate(
     src: string,
@@ -39,8 +39,8 @@ export class TranslatePlugin implements BotPlugin {
     }
   }
 
-  init(input: Input): void {
-    input.onText(
+  init(): void {
+    this.input.onText(
       /!(переведи|translate|перевод|расшифруй|tr)( [a-z]{2})?( [a-z]{2})?(?: ([^]+))?$/,
       this.onMessage,
       this.onError,

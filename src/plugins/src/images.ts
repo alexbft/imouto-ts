@@ -1,6 +1,7 @@
+/*
 import { Input } from 'core/bot_api/input';
 import { BotPlugin } from 'core/bot_api/bot_plugin';
-import { GoogleCX, GoogleKey } from 'core/config/keys';
+import { GoogleCx, GoogleKey } from 'core/config/keys';
 import { Inject, Injectable } from 'core/di/injector';
 import { TgApi } from 'core/tg/tg_api';
 import { Web } from 'core/util/web';
@@ -40,7 +41,7 @@ export class ImagesPlugin implements BotPlugin {
     private web: Web,
     private api: TgApi,
     @Inject(GoogleKey) private googlekey: string,
-    @Inject(GoogleCX) private googlecx: string,
+    @Inject(GoogleCx) private googlecx: string,
   ) {}
 
   init(input: Input): void {
@@ -169,3 +170,4 @@ export class ImagesPlugin implements BotPlugin {
     return json.items;
   }
 }
+*/

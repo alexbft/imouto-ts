@@ -29,12 +29,13 @@ export class BashimPlugin implements BotPlugin {
   private readonly entities = new Entities();
 
   constructor(
+    private input: Input,
     private api: TgApi,
     private web: Web,
   ) {}
 
-  init(input: Input): void {
-    input.onText(/^\!\s?(баш|bash)\b[\s]*(\d+)?/, this.onMessage, this.onError);
+  init(): void {
+    this.input.onText(/^\!\s?(баш|bash)\b[\s]*(\d+)?/, this.onMessage, this.onError);
   }
 
   onError = (msg: Message) =>

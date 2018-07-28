@@ -8,10 +8,10 @@ import { TextMatch } from 'core/bot_api/text_match';
 export class DogifyPlugin implements BotPlugin {
   readonly name = 'Dogify';
 
-  constructor(private tgApi: TgApi) {}
+  constructor(private input: Input, private tgApi: TgApi) {}
 
-  init(input: Input): void {
-    input.onText(/^!\s?dogify\s+(.+)/, this.handle);
+  init(): void {
+    this.input.onText(/^!\s?dogify\s+(.+)/, this.handle);
   }
 
   private handle = async ({message, match}: TextMatch): Promise<void> => {

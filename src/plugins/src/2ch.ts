@@ -90,11 +90,11 @@ async function randomPost(threadNum: any): Promise<any> {
 export class A2chPlugin implements BotPlugin {
   readonly name: string = '2ch';
 
-  constructor(private api: TgApi) {}
+  constructor(private api: TgApi, private input: Input) {}
 
-  init(input: Input): void {
-    input.onText(/^!\s?(кек|kek)/, this.onKek, (message) => this.api.reply(message, 'ты кек'));
-    input.onText(/^!\s?(сас|sas)/, this.onSas, (message) => this.api.reply(message, 'ты сас'));
+  init(): void {
+    this.input.onText(/^!\s?(кек|kek)/, this.onKek, (message) => this.api.reply(message, 'ты кек'));
+    this.input.onText(/^!\s?(сас|sas)/, this.onSas, (message) => this.api.reply(message, 'ты сас'));
   }
 
   onKek = async ({message}: TextMatch): Promise<any> => {

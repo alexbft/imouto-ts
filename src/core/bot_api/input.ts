@@ -1,16 +1,18 @@
 import { PromiseOr } from 'core/util/promises';
-import { EventEmitter } from 'events';
-import { Message } from 'node-telegram-bot-api';
+import { Message, CallbackQuery } from 'node-telegram-bot-api';
 import { TextMatch } from 'core/bot_api/text_match';
 import { logger } from 'core/logging/logger';
-
-type MessageHandler = (msg: Message) => Promise<void>;
+import { Subject, Subscription } from 'rxjs';
 
 type TextMatchHandler = (match: TextMatch) => PromiseOr<any>;
 
-type ErrorHandler = (message: Message, error: Error) => PromiseOr<any>;
+type MessageErrorHandler = (message: Message, error: Error) => PromiseOr<any>;
 
-function wrapMessageHandler(handler: MessageHandler, errorHandler?: ErrorHandler): MessageHandler {
+type CallbackHandler = (query: CallbackQuery) => PromiseOr<any>;
+
+type CallbackErrorHandler = (query: CallbackQuery, error: Error) => PromiseOr<any>;
+
+function wrapHandler<T>(handler: (data: T) => any, errorHandler?: (data: T, error: Error) => any): (data: T) => Promise<void> {
   return async (msg) => {
     try {
       await handler(msg);
@@ -23,28 +25,40 @@ function wrapMessageHandler(handler: MessageHandler, errorHandler?: ErrorHandler
   }
 }
 
-export interface Input {
-  onText(regex: RegExp, handler: TextMatchHandler, onError?: ErrorHandler): void;
+export abstract class Input {
+  abstract onText(regex: RegExp, handler: TextMatchHandler, onError?: MessageErrorHandler): Subscription;
+  abstract onCallback(message: Message, handler: CallbackHandler, onError?: CallbackErrorHandler): Subscription;
 }
 
-export class InputImpl implements Input {
-  private readonly eventEmitter = new EventEmitter();
-
-  constructor() {
-    this.eventEmitter.setMaxListeners(1000);
-  }
+export class InputImpl extends Input {
+  private readonly textSubject = new Subject<Message>();
+  private readonly callbackSubject = new Subject<CallbackQuery>();
 
   handleMessage(msg: Message): void {
     if (msg.text != null) {
-      this.eventEmitter.emit('text', msg);
+      this.textSubject.next(msg);
     }
   }
 
-  onText(regex: RegExp, handler: TextMatchHandler, onError?: ErrorHandler): void {
-    this.eventEmitter.on('text', wrapMessageHandler(async (msg: Message) => {
+  handleCallbackQuery(query: CallbackQuery): void {
+    this.callbackSubject.next(query);
+  }
+
+  onText(regex: RegExp, handler: TextMatchHandler, onError?: MessageErrorHandler): Subscription {
+    return this.textSubject.subscribe(wrapHandler(async (msg: Message) => {
       const result = regex.exec(msg.text!);
       if (result !== null) {
         await handler(new TextMatch(msg, result));
+      }
+    }, onError));
+  }
+
+  onCallback(forMessage: Message, handler: CallbackHandler, onError?: CallbackErrorHandler): Subscription {
+    const messageId = forMessage.message_id;
+    const chatId = forMessage.chat.id;
+    return this.callbackSubject.subscribe(wrapHandler(async (query: CallbackQuery) => {
+      if (query.message != null && query.message.message_id === messageId && query.message.chat.id === chatId) {
+        await handler(query);
       }
     }, onError));
   }

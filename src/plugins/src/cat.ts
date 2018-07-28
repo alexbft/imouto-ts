@@ -8,10 +8,10 @@ import { TgApi } from "core/tg/tg_api";
 export class CatPlugin implements BotPlugin {
   readonly name = 'Cats';
 
-  constructor(private api: TgApi) {}
+  constructor(private input: Input, private api: TgApi) {}
 
-  init(input: Input): void {
-    input.onText(/^!\s?(кот|киса|cat)/, this.handle);
+  init(): void {
+    this.input.onText(/^!\s?(кот|киса|cat)/, this.handle);
   }
 
   handle = async ({message}: TextMatch): Promise<void> => {

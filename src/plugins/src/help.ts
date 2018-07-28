@@ -30,10 +30,10 @@ const helptext = `Команды, которые я понимаю:
 export class HelpPlugin implements BotPlugin {
   readonly name = 'Help';
 
-  constructor(private api: TgApi) {}
+  constructor(private input: Input, private api: TgApi) {}
 
-  init(input: Input): void {
-    input.onText(/^[!\/]\s?(help|помощь|команды|хэлп|хелп)\b/, this.onMessage);
+  init(): void {
+    this.input.onText(/^[!\/]\s?(help|помощь|команды|хэлп|хелп)\b/, this.onMessage);
   }
 
   onMessage = async ({message}: TextMatch) => {

@@ -11,13 +11,13 @@ import { fixMultiline } from "core/util/misc";
 export class CoinPlugin implements BotPlugin {
   readonly name = 'Coin';
 
-  constructor(private api: TgApi, private web: Web) {}
+  constructor(private input: Input, private api: TgApi, private web: Web) {}
 
-  init(input: Input): void {
-    input.onText(/^!\s?(coin|койн|коин|к|c)\s*$/,
+  init(): void {
+    this.input.onText(/^!\s?(coin|койн|коин|к|c)\s*$/,
         (match) => new CoinQuery(this.api, this.web).handleOverall(match),
         this.onError);
-    input.onText(/^!\s?(coin|койн|коин|к|c)\s+([\d\.]+)?\s*([A-Za-z]+)\s*([A-Za-z]+)?/,
+    this.input.onText(/^!\s?(coin|койн|коин|к|c)\s+([\d\.]+)?\s*([A-Za-z]+)\s*([A-Za-z]+)?/,
         (match) => new CoinQuery(this.api, this.web).handleSpecific(match),
         this.onError);
   }

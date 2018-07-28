@@ -3,6 +3,7 @@ import * as http from 'http';
 import * as https from 'https';
 import { URL, URLSearchParams } from 'url';
 import { WebException } from 'core/util/web_exception';
+import { logger } from 'core/logging/logger';
 
 export { WebException };
 
@@ -63,25 +64,26 @@ export class Web {
     });
   }
 
-  readResponse(response: http.IncomingMessage): Promise<string> {
+  async readResponse(response: http.IncomingMessage): Promise<string> {
+    const rawResponse = await this.readResponseRaw(response);
     if (response.statusCode !== 200) {
-      response.resume();
-      return Promise.reject(new WebException(`HTTP Error ${response.statusCode}: ${response.statusMessage}`));
+      logger.debug(`Response {${rawResponse}}`);
+      throw new WebException(`HTTP Error ${response.statusCode}: ${response.statusMessage}`);
     }
-    return this.readResponseRaw(response);
+    return rawResponse;
   }
 
   async readResponseJson(response: http.IncomingMessage): Promise<any> {
+    const rawResponse = await this.readResponseRaw(response);
     if (response.statusCode !== 200) {
-      response.resume();
+      logger.debug(`Response {${rawResponse}}`);
       throw new WebException(`HTTP Error ${response.statusCode}: ${response.statusMessage}`);
     }
     const contentType = response.headers['content-type'] as string;
     if (!/^application\/json/.test(contentType)) {
-      response.resume();
+      logger.debug(`Response {${rawResponse}}`);
       throw new WebException(`Expected application/json but got ${contentType}`);
     }
-    const rawResponse = await this.readResponseRaw(response);
     return JSON.parse(rawResponse);
   }
 
@@ -106,6 +108,8 @@ export class Web {
   }
 
   getJson(url: string|URL, searchParams?: any): Promise<any> {
-    return this.fetchJson(this.request(requestOptionsFromUrl(toUrl(url, searchParams))));
+    const _url = toUrl(url, searchParams);
+    logger.debug('getJson: ', _url);
+    return this.fetchJson(this.request(requestOptionsFromUrl(_url)));
   }
 }

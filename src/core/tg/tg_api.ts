@@ -3,20 +3,25 @@ import {
   Message,
   SendMessageOptions,
   SendPhotoOptions,
+  AnswerCallbackQueryOptions,
 } from 'node-telegram-bot-api';
 
 import { Injectable } from 'core/di/injector';
 import { TgClient } from 'core/tg/tg_client';
 import { Stream } from 'stream';
 
-interface SendMessageArgs extends SendMessageOptions {
+export interface SendMessageArgs extends SendMessageOptions {
   chat_id: number | string;
   text: string;
 }
 
-interface SendPhotoArgs extends SendPhotoOptions {
+export interface SendPhotoArgs extends SendPhotoOptions {
   chat_id: number | string;
   photo: string | Stream | Buffer;
+}
+
+export interface EditMessageTextArgs extends EditMessageTextOptions {
+  text: string;
 }
 
 @Injectable
@@ -31,18 +36,17 @@ export class TgApi {
     return this.tgClient.send('sendMessage', args);
   }
 
-  editMessageText({ message_id, chat }: Message, text: string, args: EditMessageTextOptions): Promise<Message> {
-    return this.tgClient.send('editMessageText', {
-      chat_id: chat.id,
-      message_id,
-      text,
-      ...args,
-    });
+  editMessageText(args: EditMessageTextArgs): Promise<Message> {
+    return this.tgClient.send('editMessageText', args);
   }
 
   sendPhoto(args: SendPhotoArgs): Promise<Message> {
     // TODO: implement sending image from buffer or stream.
     return this.tgClient.send('sendPhoto', args);
+  }
+
+  answerCallbackQuery(args: AnswerCallbackQueryOptions): Promise<boolean> {
+    return this.tgClient.send('answerCallbackQuery', args);
   }
 
   reply(message: Message, text: string): Promise<Message> {
@@ -74,6 +78,13 @@ export class TgApi {
       chat_id: message.chat.id,
       photo: url,
       ...options
+    });
+  }
+
+  answerCallback(callbackId: string, text: string): Promise<boolean> {
+    return this.answerCallbackQuery({
+      callback_query_id: callbackId,
+      text: text
     });
   }
 }
