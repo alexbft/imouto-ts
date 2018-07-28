@@ -22,7 +22,7 @@ export class GooglePlugin implements BotPlugin {
       @Inject(GoogleCx) private googleCx: string) {}
 
   init(): void {
-    this.input.onText(/^!\s?(ищи|г|g|gg)(?:\s+([^]+))?/, this.handle, this.onError);
+    this.input.onText(/^!\s?(ищи|г|g|gg)(?:\s+([^]+))?$/, this.handle, this.onError);
   }
 
   private handle = async ({message, match}: TextMatch): Promise<any> => {
@@ -50,7 +50,7 @@ export class GooglePlugin implements BotPlugin {
       return null;
     }
     if (cmd === 'gg') {
-      return `${result.titleNoFormatting}\n${result.link}`;
+      return `${result.title}\n${result.link}`;
     } else {
       return `${result.link}`;
     }

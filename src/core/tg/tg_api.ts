@@ -1,28 +1,7 @@
-import {
-  EditMessageTextOptions,
-  Message,
-  SendMessageOptions,
-  SendPhotoOptions,
-  AnswerCallbackQueryOptions,
-} from 'node-telegram-bot-api';
-
 import { Injectable } from 'core/di/injector';
 import { TgClient } from 'core/tg/tg_client';
-import { Stream } from 'stream';
-
-export interface SendMessageArgs extends SendMessageOptions {
-  chat_id: number | string;
-  text: string;
-}
-
-export interface SendPhotoArgs extends SendPhotoOptions {
-  chat_id: number | string;
-  photo: string | Stream | Buffer;
-}
-
-export interface EditMessageTextArgs extends EditMessageTextOptions {
-  text: string;
-}
+import { SendMessageArgs, EditMessageTextArgs, EditMessageMediaArgs, SendPhotoArgs, EditMessageCaptionArgs } from 'core/tg/tg_types';
+import { Message, AnswerCallbackQueryOptions, SendMessageOptions, SendPhotoOptions } from 'node-telegram-bot-api';
 
 @Injectable
 export class TgApi {
@@ -38,6 +17,14 @@ export class TgApi {
 
   editMessageText(args: EditMessageTextArgs): Promise<Message> {
     return this.tgClient.send('editMessageText', args);
+  }
+
+  editMessageMedia(args: EditMessageMediaArgs): Promise<Message> {
+    return this.tgClient.send('editMessageMedia', args);
+  }
+
+  editMessageCaption(args: EditMessageCaptionArgs): Promise<Message> {
+    return this.tgClient.send('editMessageCaption', args);
   }
 
   sendPhoto(args: SendPhotoArgs): Promise<Message> {

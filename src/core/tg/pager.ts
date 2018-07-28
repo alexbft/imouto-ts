@@ -1,33 +1,42 @@
-import { TgApi, SendMessageArgs } from "core/tg/tg_api";
+import { TgApi } from "core/tg/tg_api";
 import { Input } from "core/bot_api/input";
 import { PromiseOr } from "core/util/promises";
 import { Subscription } from "rxjs";
-import { InlineKeyboardMarkup, InlineKeyboardButton, Message, CallbackQuery, SendMessageOptions } from "node-telegram-bot-api";
+import { InlineKeyboardMarkup, InlineKeyboardButton, Message, CallbackQuery, SendMessageOptions, SendPhotoOptions } from "node-telegram-bot-api";
+import { SendMessageArgs, SendPhotoArgs, InputMediaPhoto } from "core/tg/tg_types";
+import { logger } from "core/logging/logger";
 
-type MaybeString = string | null | undefined;
+type UrlWithCaption = {
+  url: string,
+  caption?: string
+};
+
+export type PageResult = null | undefined | string | UrlWithCaption;
 
 export interface PagerOptions {
   chatId?: number | string;
   replyToMessageId?: number;
-  messageOptions?: SendMessageOptions,
+  messageOptions?: SendMessageOptions | SendPhotoOptions,
+  type?: 'text' | 'imageurl',
   startPage?: number,
   numPages?: number,
   prevCaption?: string,
   nextCaption?: string,
-  getPage(index: number): PromiseOr<MaybeString>,
+  getPage(index: number): PromiseOr<PageResult>,
 }
 
 const defaultPagerOptions = {
   startPage: 0,
   prevCaption: 'Назад',
   nextCaption: 'Дальше',
+  type: 'text',
 };
 
 const allPagers: Pager[] = [];
 const maxPagers = 100;
 
 export async function pager(tgApi: TgApi, input: Input, options: PagerOptions): Promise<Pager> {
-  options = {...defaultPagerOptions, ...options};
+  options = {...defaultPagerOptions, ...options} as any;
   const result = new Pager(tgApi, input, options);
   allPagers.push(result);
   while (allPagers.length > maxPagers) {
@@ -49,34 +58,60 @@ export class Pager {
   private index: number;
   private message?: Message;
   private callbackSubscription?: Subscription;
-  private sendMessageArgs: SendMessageArgs;
+  private sendArgs: SendMessageArgs | SendPhotoArgs;
 
   constructor(private api: TgApi, private input: Input, private options: PagerOptions) {
     this.index = options.startPage!;
-    this.sendMessageArgs = {
-      chat_id: options.chatId!,
-      reply_to_message_id: options.replyToMessageId,
-      text: '',
-      ...options.messageOptions,
-    };
+    if (options.type === 'text') {
+      this.sendArgs = {
+        chat_id: options.chatId!,
+        reply_to_message_id: options.replyToMessageId,
+        text: '',
+        ...options.messageOptions,
+      };
+    } else {
+      this.sendArgs = {
+        chat_id: options.chatId!,
+        reply_to_message_id: options.replyToMessageId,
+        photo: '',
+        ...options.messageOptions,
+      }
+    }
+  }
+
+  private sendMessage(args: SendMessageArgs | SendPhotoArgs): Promise<Message> {
+    if (this.options.type === 'text') {
+      return this.api.sendMessage(args as SendMessageArgs);
+    } else {
+      return this.api.sendPhoto(args as SendPhotoArgs);
+    }
   }
 
   async send(): Promise<void> {
-    const text = await this.getPage(this.index);
-    if (text == null) {
+    const page = await this.getPage(this.index);
+    if (page == null) {
       return;
     }
     const messageOptions = {
-      ...this.sendMessageArgs,
-      text: text,
+      ...this.sendArgs,
       reply_markup: this.getKeyboard(),
     };
+    if (this.options.type === 'text') {
+      (messageOptions as SendMessageArgs).text = String(page);
+    } else {
+      if (typeof page === 'object' && page.url != null) {
+        (messageOptions as SendPhotoArgs).photo = page.url;
+        (messageOptions as SendPhotoArgs).caption = page.caption;
+      } else {
+        (messageOptions as SendPhotoArgs).photo = String(page);
+      }
+    }
     if (this.options.numPages != null && this.options.numPages <= 1) {
       delete messageOptions.reply_markup;
-      await this.api.sendMessage(messageOptions);
+      await this.sendMessage(messageOptions);
       return;
     }
-    this.message = await this.api.sendMessage(messageOptions);
+    this.message = await this.sendMessage(messageOptions);
     this.callbackSubscription = this.input.onCallback(this.message, this.handleCallback);
   }
 
@@ -86,7 +121,7 @@ export class Pager {
     }
   }
 
-  private getPage(index: number): Promise<MaybeString> {
+  private getPage(index: number): Promise<PageResult> {
     return Promise.resolve(this.options.getPage(index));
   }
 
@@ -124,14 +159,46 @@ export class Pager {
       return this.api.answerCallback(id, 'Не найдено');
     }
     this.index = newIndex;
-    await this.api.editMessageText({
-      parse_mode: this.sendMessageArgs.parse_mode,
-      disable_web_page_preview: this.sendMessageArgs.disable_web_page_preview,
-      message_id: this.message!.message_id,
-      chat_id: this.message!.chat.id,
-      text: newPage,
-      reply_markup: this.getKeyboard()
-    });
+    if (this.options.type === 'text') {
+      await this.api.editMessageText({
+        parse_mode: (this.sendArgs as SendMessageArgs).parse_mode,
+        disable_web_page_preview: (this.sendArgs as SendMessageArgs).disable_web_page_preview,
+        message_id: this.message!.message_id,
+        chat_id: this.message!.chat.id,
+        text: String(newPage),
+        reply_markup: this.getKeyboard()
+      });
+    } else {
+      let media: InputMediaPhoto;
+      if (typeof newPage === 'object' && newPage.url != null) {
+        media = {
+          type: 'photo',
+          media: newPage.url,
+          caption: newPage.caption,
+        };
+      } else {
+        media = {
+          type: 'photo',
+          media: String(newPage),
+        };
+      }
+      try {
+        await this.api.editMessageMedia({
+          message_id: this.message!.message_id,
+          chat_id: this.message!.chat.id,
+          media,
+          reply_markup: this.getKeyboard()
+        });
+      } catch (e) {
+        logger.info('Sending image failed', e.message || e);
+        await this.api.editMessageCaption({
+          message_id: this.message!.message_id,
+          chat_id: this.message!.chat.id,
+          caption: `${media.caption} ${media.media}`,
+          reply_markup: this.getKeyboard()
+        });
+      }
+    }
     const answer = this.options.numPages != null ? `${this.index}/${this.options.numPages}` : `${this.index}`;
     return this.api.answerCallback(id, answer);
   }

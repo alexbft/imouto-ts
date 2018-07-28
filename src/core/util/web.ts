@@ -109,7 +109,7 @@ export class Web {
 
   getJson(url: string|URL, searchParams?: any): Promise<any> {
     const _url = toUrl(url, searchParams);
-    logger.debug('getJson: ', _url);
+    logger.debug('getJson:', _url.href);
     return this.fetchJson(this.request(requestOptionsFromUrl(_url)));
   }
 }

@@ -4,9 +4,8 @@ import { Injectable } from "core/di/injector";
 import { Input } from "core/bot_api/input";
 import { Message } from "node-telegram-bot-api";
 import { Web } from "core/util/web";
-import { Props, randomChoice } from "core/util/misc";
-
-// TODO: send multi-result
+import { Props } from "core/util/misc";
+import { pager } from "core/tg/pager";
 
 @Injectable
 export class DanbooruPlugin implements BotPlugin {
@@ -33,9 +32,18 @@ export class DanbooruPlugin implements BotPlugin {
     if (posts.length === 0) {
       await this.api.reply(message, 'Ничего не найдено!');
     } else {
-      const post = randomChoice(posts);
-      const url = post.large_file_url != null ? post.large_file_url : post.source;
-      await this.api.respondWithImageFromUrl(message, url);
+      await pager(this.api, this.input, {
+        chatId: message.chat.id,
+        numPages: posts.length,
+        type: 'imageurl',
+        getPage: (index) => {
+          const post = posts[index];
+          return {
+            url: post.file_url != null ? post.file_url : post.source,
+            caption: `${post.tag_string_character} (${post.tag_string_copyright})`
+          };
+        }
+      });
     }
   }
 
