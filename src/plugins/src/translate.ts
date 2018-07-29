@@ -74,21 +74,11 @@ export class TranslatePlugin implements BotPlugin {
 
     const res = await this.translate(src, dest, text);
     if (res !== null) {
-      await this.api.sendMessage({
-        chat_id: message.chat.id,
-        text: `Перевод: ${res}`,
-      });
+      await this.api.respondWithText(message, `Перевод: ${res}`);
     } else {
-      await this.api.sendMessage({
-        chat_id: message.chat.id,
-        text: 'Сервис недоступен.',
-      });
+      await this.api.respondWithText(message, 'Сервис недоступен.');
     }
   }
 
-  onError = (msg: Message) =>
-    this.api.sendMessage({
-      chat_id: msg.chat.id,
-      text: 'Не понимаю я эти ваши иероглифы.',
-    });
+  onError = (msg: Message) => this.api.reply(msg, 'Не понимаю я эти ваши иероглифы.');
 }

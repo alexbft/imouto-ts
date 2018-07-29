@@ -1,6 +1,8 @@
-export const GoogleKey = Symbol('GoogleKey');
-export const GoogleCx = Symbol('GoogleCx');
-export const AuthToken = Symbol('AuthToken');
-export const ExchangeKey = Symbol('ExchangeKey');
-export const UserId = Symbol('UserId');
-export const RoleMap = Symbol('RoleMap');
+import { InjectionToken } from 'core/di/injection_token';
+
+export const GoogleKey = new InjectionToken<string | null>('GoogleKey');
+export const GoogleCx = new InjectionToken<string | null>('GoogleCx');
+export const AuthToken = new InjectionToken<string>('AuthToken');
+export const ExchangeKey = new InjectionToken<string | null>('ExchangeKey');
+export const UserId = new InjectionToken<number>('UserId');
+export const RoleMap = new InjectionToken<Map<string, number[]>>('RoleMap');

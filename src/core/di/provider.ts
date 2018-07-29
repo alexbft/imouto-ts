@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { injectMetadata, Injector } from 'core/di/injector';
 import { Constructor } from 'core/util/misc';
+import { InjectionToken } from 'core/di/injection_token';
 
 interface ProviderOptions<T> {
   useValue?: T;
@@ -41,8 +42,8 @@ export class Provider {
   }
 }
 
-export function provide(key: Symbol, options: ProviderOptions<any>): Provider;
+export function provide<T>(key: InjectionToken<T>, options: ProviderOptions<T>): Provider;
 export function provide<T>(key: Constructor<T>, options?: ProviderOptions<T>): Provider;
-export function provide<T>(key: Symbol | Constructor<T>, options?: ProviderOptions<any>): Provider {
+export function provide<T>(key: InjectionToken<T> | Constructor<T>, options?: ProviderOptions<T>): Provider {
   return new Provider(key, options);
 }

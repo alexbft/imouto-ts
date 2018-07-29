@@ -13,6 +13,7 @@ import { TimeoutError } from 'rxjs/util/TimeoutError';
 import { provide } from 'core/di/provider';
 import { InputImpl } from 'core/bot_api/input_impl';
 import { FilterFactory } from 'core/filter/filter_factory';
+import { Unfiltered } from 'core/module/keys';
 
 const pluginInitTimeout = moment.duration(30, 'seconds');
 
@@ -29,7 +30,11 @@ export class BotApi {
   async initPlugins(): Promise<void> {
     const input = this.inputImpl.input;
     input.installGlobalFilter(this.filters.isNotBanned(), 'User is banned');
-    const pluginInjector = this.injector.subContext([...pluginBindings, provide(Input, { useValue: input })]);
+    const pluginInjector = this.injector.subContext([
+      ...pluginBindings,
+      provide(Input, { useValue: input }),
+      provide(Unfiltered, { useValue: this.inputImpl }),
+    ]);
     const initializers = [];
     let failed = 0;
     for (const provider of pluginBindings) {
