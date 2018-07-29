@@ -7,25 +7,29 @@ import * as msg from 'core/tg/message_util';
 import { timeout } from 'core/util/promises';
 import { pluginBindings } from 'plugins/module';
 
-import { InputImpl, Input } from 'core/bot_api/input';
+import { Input } from 'core/bot_api/input';
 import { BotPlugin } from 'core/bot_api/bot_plugin';
 import { TimeoutError } from 'rxjs/util/TimeoutError';
 import { provide } from 'core/di/provider';
+import { InputImpl } from 'core/bot_api/input_impl';
+import { FilterFactory } from 'core/filter/filter_factory';
 
 const pluginInitTimeout = moment.duration(30, 'seconds');
 
 @Injectable
 export class BotApi {
-  private readonly input: InputImpl;
+  private readonly inputImpl: InputImpl;
   private readonly startMoment: moment.Moment;
 
-  constructor(private injector: Injector) {
-    this.input = new InputImpl();
+  constructor(private injector: Injector, private filters: FilterFactory) {
+    this.inputImpl = new InputImpl();
     this.startMoment = moment();
   }
 
   async initPlugins(): Promise<void> {
-    const pluginInjector = this.injector.subContext([...pluginBindings, provide(Input, { useValue: this.input })]);
+    const input = this.inputImpl.input;
+    input.installGlobalFilter(this.filters.isNotBanned(), 'User is banned');
+    const pluginInjector = this.injector.subContext([...pluginBindings, provide(Input, { useValue: input })]);
     const initializers = [];
     let failed = 0;
     for (const provider of pluginBindings) {
@@ -72,12 +76,12 @@ export class BotApi {
     if (this.isOldMessage(message)) {
       return;
     }
-    this.input.handleMessage(message);
+    this.inputImpl.handleMessage(message);
   }
 
   onCallbackQuery(query: CallbackQuery): void {
     logger.debug('Callback query:', query);
-    this.input.handleCallbackQuery(query);
+    this.inputImpl.handleCallbackQuery(query);
   }
 
   isOldMessage(message: Message): boolean {

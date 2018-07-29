@@ -1,12 +1,13 @@
 import 'reflect-metadata';
 import { injectMetadata, Injector } from 'core/di/injector';
+import { Constructor } from 'core/util/misc';
 
-interface ProviderOptions {
-  useValue?: any;
+interface ProviderOptions<T> {
+  useValue?: T;
 }
 
 export class Provider {
-  constructor(readonly key: any, private readonly options?: ProviderOptions) { }
+  constructor(readonly key: any, private readonly options?: ProviderOptions<any>) { }
 
   get(injector: Injector): any {
     if (this.options != null) {
@@ -40,6 +41,8 @@ export class Provider {
   }
 }
 
-export function provide<T>(key: T, options?: ProviderOptions): Provider {
+export function provide(key: Symbol, options: ProviderOptions<any>): Provider;
+export function provide<T>(key: Constructor<T>, options?: ProviderOptions<T>): Provider;
+export function provide<T>(key: Symbol | Constructor<T>, options?: ProviderOptions<any>): Provider {
   return new Provider(key, options);
 }

@@ -10,6 +10,8 @@ export interface PropsOf<T> {
   [key: string]: T | undefined;
 }
 
+export type Constructor<T> = Function & { prototype: T }
+
 export function random(x: number): number {
   return Math.floor(Math.random() * x);
 }
@@ -77,4 +79,28 @@ export function tryParseInt(s?: string): number | null {
     return x;
   }
   return null;
+}
+
+export function reverseMultiMap<K, V>(map: Map<K, V[]>): Map<V, K[]> {
+  const result: Map<V, K[]> = new Map();
+  for (const [k, vs] of map) {
+    for (const v of vs) {
+      let list: K[] | undefined = result.get(v);
+      if (list == null) {
+        list = [];
+        result.set(v, list);
+      }
+      list.push(k);
+    }
+  }
+  return result;
+}
+
+export function removeItem<T>(list: T[], item: T): T | undefined {
+  const index = list.indexOf(item);
+  if (index !== -1) {
+    return list.splice(index, 1)[0];
+  } else {
+    return;
+  }
 }

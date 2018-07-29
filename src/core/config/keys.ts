@@ -3,3 +3,4 @@ export const GoogleCx = Symbol('GoogleCx');
 export const AuthToken = Symbol('AuthToken');
 export const ExchangeKey = Symbol('ExchangeKey');
 export const UserId = Symbol('UserId');
+export const RoleMap = Symbol('RoleMap');

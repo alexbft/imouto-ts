@@ -6,6 +6,9 @@ import { ImoutoServer } from 'core/server/imouto_server';
 import { TgApi } from 'core/tg/tg_api';
 import { TgClient } from 'core/tg/tg_client';
 import { Web } from 'core/util/web';
+import { Scheduler } from 'core/util/scheduler';
+import { UserService } from 'core/tg/user_service';
+import { FilterFactory } from 'core/filter/filter_factory';
 
 export const bindings = [
   provide(ConfigLoader),
@@ -15,4 +18,7 @@ export const bindings = [
   provide(TgApi),
   provide(TgClient),
   provide(BotApi),
+  provide(Scheduler),
+  provide(UserService),
+  provide(FilterFactory),
 ];
