@@ -67,3 +67,14 @@ export function findAll(s: string, regex: RegExp): RegExpExecArray[] {
   }
   return result;
 }
+
+export function tryParseInt(s?: string): number | null {
+  if (s == null) {
+    return null;
+  }
+  const x = parseInt(s, 10);
+  if (!isNaN(x) && x.toString() === s) {
+    return x;
+  }
+  return null;
+}

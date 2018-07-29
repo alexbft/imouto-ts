@@ -16,6 +16,7 @@ import { GooglePlugin } from 'plugins/src/google';
 import { MoneyPlugin } from 'plugins/src/money';
 import { NyashPlugin } from 'plugins/src/nyash';
 import { QrPlugin } from 'plugins/src/qr';
+import { RollPlugin } from 'plugins/src/roll';
 
 export const pluginBindings = [
   provide(A2chPlugin),
@@ -33,5 +34,6 @@ export const pluginBindings = [
   provide(MoneyPlugin),
   provide(NyashPlugin),
   provide(QrPlugin),
+  provide(RollPlugin),
   provide(TranslatePlugin),
 ];
