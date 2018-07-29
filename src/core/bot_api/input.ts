@@ -42,14 +42,11 @@ export interface TextInput {
   onText(regex: RegExp, handler: TextMatchHandler, onError?: MessageErrorHandler): Subscription;
 }
 
-export interface IBaseInput extends InputSource, TextInput {
+export interface IFilteredInput extends InputSource, TextInput {
   textMessages: Observable<Message>;
   onCallback(message: Message, handler: CallbackHandler, onError?: CallbackErrorHandler): Subscription;
   exclusiveMatch(): TextInput;
   filter(...filters: Filter[]): IFilteredInput;
-}
-
-export interface IFilteredInput extends IBaseInput {
   installGlobalFilter(filter: Filter, rejectReason?: string): Subscription;
 }
 

@@ -1,4 +1,4 @@
-import { TextMatchHandler, MessageErrorHandler, TextInput, wrapHandler, IBaseInput } from 'core/bot_api/input';
+import { TextMatchHandler, MessageErrorHandler, TextInput, wrapHandler, IFilteredInput } from 'core/bot_api/input';
 import { Message } from 'node-telegram-bot-api';
 import { TextMatch } from 'core/bot_api/text_match';
 import { Subscription } from 'rxjs';
@@ -12,7 +12,7 @@ interface ErrorAwareHandler {
 export class ExclusiveTextInput implements TextInput {
   private readonly handlers: Map<RegExp, ErrorAwareHandler> = new Map();
 
-  constructor(input: IBaseInput) {
+  constructor(input: IFilteredInput) {
     input.textMessages.subscribe(async (msg: Message) => {
       for (const [regex, { handler, onError }] of this.handlers) {
         const result = regex.exec(msg.text!);
