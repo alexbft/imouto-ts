@@ -8,7 +8,7 @@ import { logger } from 'core/logging/logger';
 import { AuthToken, GoogleKey, GoogleCx, ExchangeKey, UserId } from "core/config/keys";
 import { Injectable } from 'core/di/injector';
 
-const configFileName = __dirname + '/../../../../config/main.config';
+const configFileName = __dirname + '/../../../config/main.config';
 
 @Injectable
 export class ConfigLoader {

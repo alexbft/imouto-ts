@@ -26,14 +26,19 @@ function wrapHandler<T>(handler: (data: T) => any, errorHandler?: (data: T, erro
   }
 }
 
-export abstract class Input {
+export interface TextInput {
+  onText(regex: RegExp, handler: TextMatchHandler, onError?: MessageErrorHandler): Subscription;
+}
+
+export abstract class Input implements TextInput {
   abstract onText(regex: RegExp, handler: TextMatchHandler, onError?: MessageErrorHandler): Subscription;
   abstract onCallback(message: Message, handler: CallbackHandler, onError?: CallbackErrorHandler): Subscription;
+  abstract exclusiveMatch(): TextInput;
 }
 
 export class InputImpl extends Input {
-  private readonly textSubject = new Subject<Message>();
-  private readonly callbackSubject = new Subject<CallbackQuery>();
+  readonly textSubject = new Subject<Message>();
+  readonly callbackSubject = new Subject<CallbackQuery>();
 
   handleMessage(msg: Message): void {
     if (msg.text != null) {
@@ -63,5 +68,39 @@ export class InputImpl extends Input {
         await handler(query);
       }
     }, onError));
+  }
+
+  exclusiveMatch(): TextInput {
+    return new ExclusiveTextInput(this);
+  }
+}
+
+interface ErrorAwareHandler {
+  handler: TextMatchHandler;
+  onError?: MessageErrorHandler;
+}
+
+class ExclusiveTextInput implements TextInput {
+  private handlers: Map<RegExp, ErrorAwareHandler> = new Map();
+
+  constructor(input: InputImpl) {
+    input.textSubject.subscribe(async (msg: Message) => {
+      for (const [regex, { handler, onError }] of this.handlers) {
+        const result = regex.exec(msg.text!);
+        if (result !== null) {
+          const handle = (msg: Message) => handler(new TextMatch(msg, result));
+          await wrapHandler(handle, onError)(msg);
+          break;
+        }
+      }
+    });
+  }
+
+  onText(regex: RegExp, handler: TextMatchHandler, onError?: MessageErrorHandler): Subscription {
+    regex = fixPattern(regex);
+    this.handlers.set(regex, { handler, onError });
+    return new Subscription(() => {
+      this.handlers.delete(regex);
+    });
   }
 }
