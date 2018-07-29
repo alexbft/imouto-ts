@@ -14,20 +14,22 @@ import { DogifyPlugin } from 'plugins/src/dogify';
 import { EchoPlugin } from 'plugins/src/echo';
 import { GooglePlugin } from 'plugins/src/google';
 import { MoneyPlugin } from 'plugins/src/money';
+import { NyashPlugin } from 'plugins/src/nyash';
 
 export const pluginBindings = [
-  provide(HelloPlugin),
-  provide(HelpPlugin),
-  provide(IdPlugin),
-  provide(IqTestPlugin),
-  provide(BashimPlugin),
-  provide(TranslatePlugin),
   provide(A2chPlugin),
+  provide(BashimPlugin),
   provide(CatPlugin),
   provide(CoinPlugin),
   provide(DanbooruPlugin),
   provide(DogifyPlugin),
   provide(EchoPlugin),
   provide(GooglePlugin),
+  provide(HelloPlugin),
+  provide(HelpPlugin),
+  provide(IdPlugin),
+  provide(IqTestPlugin),
   provide(MoneyPlugin),
+  provide(NyashPlugin),
+  provide(TranslatePlugin),
 ];

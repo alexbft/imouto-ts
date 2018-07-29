@@ -1,15 +1,11 @@
 import { Injectable } from 'core/di/injector';
 import { TgClient } from 'core/tg/tg_client';
-import { SendMessageArgs, EditMessageTextArgs, EditMessageMediaArgs, SendPhotoArgs, EditMessageCaptionArgs } from 'core/tg/tg_types';
+import { SendMessageArgs, EditMessageTextArgs, EditMessageMediaArgs, SendPhotoArgs, EditMessageCaptionArgs, SendMediaGroupArgs } from 'core/tg/tg_types';
 import { Message, AnswerCallbackQueryOptions, SendMessageOptions, SendPhotoOptions } from 'node-telegram-bot-api';
 
 @Injectable
 export class TgApi {
   constructor(private readonly tgClient: TgClient) { }
-
-  async getMe(): Promise<string> {
-    return JSON.stringify(await this.tgClient.send('getMe'));
-  }
 
   sendMessage(args: SendMessageArgs): Promise<Message> {
     return this.tgClient.send('sendMessage', args);
@@ -34,6 +30,10 @@ export class TgApi {
 
   answerCallbackQuery(args: AnswerCallbackQueryOptions): Promise<boolean> {
     return this.tgClient.send('answerCallbackQuery', args);
+  }
+
+  sendMediaGroup(args: SendMediaGroupArgs): Promise<Message[]> {
+    return this.tgClient.send('sendMediaGroup', args);
   }
 
   reply(message: Message, text: string): Promise<Message> {

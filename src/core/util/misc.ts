@@ -52,3 +52,18 @@ export function fixPattern(pat: RegExp): RegExp {
     .replace(/\\W/g, '[^a-zA-Zа-яА-Я0-9]');
   return new RegExp(src, 'i');
 }
+
+export function findAll(s: string, regex: RegExp): RegExpExecArray[] {
+  if (!regex.flags.includes('g')) {
+    throw new Error('RegExp is not global');
+  }
+  if (regex.lastIndex !== 0) {
+    regex.lastIndex = 0;
+  }
+  let match: RegExpExecArray | null;
+  let result: RegExpExecArray[] = [];
+  while ((match = regex.exec(s)) != null) {
+    result.push(match);
+  }
+  return result;
+}

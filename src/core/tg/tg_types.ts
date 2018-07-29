@@ -1,4 +1,4 @@
-import { SendMessageOptions, SendPhotoOptions, EditMessageTextOptions, InlineKeyboardMarkup } from "node-telegram-bot-api";
+import { SendMessageOptions, SendPhotoOptions, EditMessageTextOptions, InlineKeyboardMarkup, SendMediaGroupOptions } from "node-telegram-bot-api";
 import { Stream } from "stream";
 
 export interface SendMessageArgs extends SendMessageOptions {
@@ -51,4 +51,9 @@ export interface EditMessageCaptionArgs {
   caption: string;
   parse_mode?: string;
   reply_markup?: InlineKeyboardMarkup;
+}
+
+export interface SendMediaGroupArgs extends SendMediaGroupOptions {
+  chat_id: number | string;
+  media: InputMedia[];
 }
