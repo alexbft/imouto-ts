@@ -11,7 +11,7 @@ const BOARD = 'b';
 
 function fetchWithCloudScraper(url: string): Promise<any> {
   return new Promise((resolve, reject) => {
-    cloudscraper.request({method: 'GET', url: url}, (error: any, _code: any, body: string) => {
+    cloudscraper.request({ method: 'GET', url: url }, (error: any, _code: any, body: string) => {
       if (error != null) {
         reject(error);
       } else {
@@ -90,14 +90,14 @@ async function randomPost(threadNum: any): Promise<any> {
 export class A2chPlugin implements BotPlugin {
   readonly name: string = '2ch';
 
-  constructor(private api: TgApi, private input: Input) {}
+  constructor(private api: TgApi, private input: Input) { }
 
   init(): void {
     this.input.onText(/^!\s?(кек|kek)/, this.onKek, (message) => this.api.reply(message, 'ты кек'));
     this.input.onText(/^!\s?(сас|sas)/, this.onSas, (message) => this.api.reply(message, 'ты сас'));
   }
 
-  onKek = async ({message}: TextMatch): Promise<any> => {
+  onKek = async ({ message }: TextMatch): Promise<any> => {
     const thread = await randomBhThread();
     if (thread == null) {
       return this.api.reply(message, 'В Багдаде всё спокойно!');
@@ -113,7 +113,7 @@ export class A2chPlugin implements BotPlugin {
     });
   }
 
-  onSas = async ({message}: TextMatch): Promise<any> => {
+  onSas = async ({ message }: TextMatch): Promise<any> => {
     const thread = await randomThread();
     if (thread == null) {
       return this.api.reply(message, 'Нет тредов');

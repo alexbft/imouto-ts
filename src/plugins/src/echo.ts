@@ -9,14 +9,14 @@ import { randomChoice } from 'core/util/misc';
 export class EchoPlugin implements BotPlugin {
   readonly name = 'Echo';
 
-  constructor(private input: Input, private tgApi: TgApi) {}
+  constructor(private input: Input, private tgApi: TgApi) { }
 
   init(): void {
-    this.input.onText(/!\s?(echo|скажи)\s+([^]+)/, ({message, match}) => this.handle(message, match[2], {nya: false}));
-    this.input.onText(/!\s?ня\s+(.+)/, ({message, match}) => this.handle(message, match[1], {nya: true}));
+    this.input.onText(/!\s?(echo|скажи)\s+([^]+)/, ({ message, match }) => this.handle(message, match[2], { nya: false }));
+    this.input.onText(/!\s?ня\s+(.+)/, ({ message, match }) => this.handle(message, match[1], { nya: true }));
   }
 
-  handle(message: Message, text: string, {nya}: {nya: boolean}): Promise<any> {
+  handle(message: Message, text: string, { nya }: { nya: boolean }): Promise<any> {
     text = text.trim();
     if (nya) {
       // Add nyans on punctuation.
@@ -43,6 +43,6 @@ export class EchoPlugin implements BotPlugin {
       text += ' ❤';
     }
     const parseMode = /\<\w+\>.*\<\/\w+\>/.test(text) ? 'HTML' : 'Markdown';
-    return this.tgApi.respondWithText(message, text, {parse_mode: parseMode});
+    return this.tgApi.respondWithText(message, text, { parse_mode: parseMode });
   }
 }

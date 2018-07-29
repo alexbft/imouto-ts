@@ -1,7 +1,7 @@
 import { Duration } from 'moment';
 import { Observable } from 'rxjs/Observable';
 
-export type PromiseOr<T> = T|PromiseLike<T>;
+export type PromiseOr<T> = T | PromiseLike<T>;
 
 export type AsyncHandler<T> = () => PromiseOr<T>;
 

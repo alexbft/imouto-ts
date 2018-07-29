@@ -38,7 +38,7 @@ export class Injector {
 
 export const injectMetadata = Symbol('injectMetadata');
 
-export const Injectable = (_classFn: any) => {}
+export const Injectable = (_classFn: any) => { }
 
 export function Inject(key: any) {
   return function (classFn: Object, _propertyKey: any, paramIndex: number) {

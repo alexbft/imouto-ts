@@ -21,17 +21,17 @@ export class MoneyPlugin implements BotPlugin {
   private lastCachedData?: Props;
 
   constructor(
-      private readonly input: Input,
-      private readonly api: TgApi,
-      private readonly web: Web,
-      @Inject(ExchangeKey) private readonly exchangeKey: string) {}
+    private readonly input: Input,
+    private readonly api: TgApi,
+    private readonly web: Web,
+    @Inject(ExchangeKey) private readonly exchangeKey: string) { }
 
   init(): void {
     this.input.onText(/^!\s?(курс|деньги|money|cs)\s*$/, (match) => this.handle(match, false), this.onError);
     this.input.onText(/^!\s?(курс|деньги|money|cs)\s+([\d\.]+)?\s*([A-Za-z]+)(?:\s+([A-Za-z]+))?/, (match) => this.handle(match, true), this.onError);
   }
 
-  private async handle({message, match}: TextMatch, isSpecific: boolean): Promise<any> {
+  private async handle({ message, match }: TextMatch, isSpecific: boolean): Promise<any> {
     let data: Props;
 
     function calc(from: string, to: string, amount: number = 1): string {
@@ -43,7 +43,7 @@ export class MoneyPlugin implements BotPlugin {
       return '*' + n.toFixed(fix) + '*';
     }
 
-    data = await this.getData({cache: isSpecific});
+    data = await this.getData({ cache: isSpecific });
     if (isSpecific) {
       const amount = match[2] != null ? Number(match[2]) : 1;
       const reqFrom = match[3].toUpperCase();
@@ -80,7 +80,7 @@ export class MoneyPlugin implements BotPlugin {
     }
   }
 
-  private async getData(options: {cache: boolean}): Promise<Props> {
+  private async getData(options: { cache: boolean }): Promise<Props> {
     if (options.cache) {
       if (this.lastCacheTime != null && this.lastCacheTime.add(maxCacheTime).isAfter()) {
         logger.debug('Retrieving from cache.');

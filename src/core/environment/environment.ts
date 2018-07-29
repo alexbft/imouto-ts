@@ -12,7 +12,7 @@ export class Environment {
   private _isDisposing = false;
   private _disposeSubscriptions: DisposeSubscription[] = [];
 
-  constructor() {}
+  constructor() { }
 
   get isDisposing(): boolean {
     return this._isDisposing;
@@ -34,7 +34,7 @@ export class Environment {
 
   onDispose(handler: AsyncHandler<any>): ISubscription {
     const subscription: DisposeSubscription =
-        new DisposeSubscription(() => this.removeDisposeSubscription(subscription), handler);
+      new DisposeSubscription(() => this.removeDisposeSubscription(subscription), handler);
     this.addDisposeSubscription(subscription);
     return subscription;
   }
@@ -64,8 +64,8 @@ class DisposeSubscription implements ISubscription {
   private _closed = false;
 
   constructor(
-      private _unsubscribe: () => void,
-      public handler: AsyncHandler<any>) {}
+    private _unsubscribe: () => void,
+    public handler: AsyncHandler<any>) { }
 
   get closed(): boolean {
     return this._closed;

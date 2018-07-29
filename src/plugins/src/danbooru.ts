@@ -12,13 +12,13 @@ export class DanbooruPlugin implements BotPlugin {
   readonly name = 'Danbooru';
 
   constructor(
-      private input: Input,
-      private api: TgApi,
-      private web: Web) {}
+    private input: Input,
+    private api: TgApi,
+    private web: Web) { }
 
   init(): void {
-    this.input.onText(/^!няша\s*$/, ({message}) => this.handle(message), this.onError);
-    this.input.onText(/^!няша\s+(.+)/, ({message, match}) => this.handle(message, match[1]), this.onError);
+    this.input.onText(/^!няша\s*$/, ({ message }) => this.handle(message), this.onError);
+    this.input.onText(/^!няша\s+(.+)/, ({ message, match }) => this.handle(message, match[1]), this.onError);
   }
 
   private async handle(message: Message, query?: string): Promise<void> {
@@ -48,5 +48,5 @@ export class DanbooruPlugin implements BotPlugin {
   }
 
   private onError = (message: Message) =>
-      this.api.reply(message, 'Рано тебе еще такое смотреть!');
+    this.api.reply(message, 'Рано тебе еще такое смотреть!');
 }

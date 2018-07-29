@@ -7,7 +7,7 @@ export interface Props {
 }
 
 export interface PropsOf<T> {
-  [key: string]: T|undefined;
+  [key: string]: T | undefined;
 }
 
 export function random(x: number): number {
@@ -43,4 +43,12 @@ export function formatDate(date: Date) {
   const ms = m < 10 ? `0${m}` : `${m}`;
   const y = date.getFullYear();
   return `${ds}.${ms}.${y} ${date.toLocaleTimeString()}`;
+}
+
+export function fixPattern(pat: RegExp): RegExp {
+  const src = pat.source
+    .replace(/\\b/g, '(?:^|$|\\W)')
+    .replace(/\\w/g, '[a-zA-Zа-яА-Я0-9]')
+    .replace(/\\W/g, '[^a-zA-Zа-яА-Я0-9]');
+  return new RegExp(src, 'i');
 }

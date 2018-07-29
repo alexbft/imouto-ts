@@ -15,18 +15,18 @@ export class GooglePlugin implements BotPlugin {
   readonly name = 'Google';
 
   constructor(
-      private input: Input,
-      private api: TgApi,
-      private web: Web,
-      @Inject(GoogleKey) private googleKey: string,
-      @Inject(GoogleCx) private googleCx: string) {}
+    private input: Input,
+    private api: TgApi,
+    private web: Web,
+    @Inject(GoogleKey) private googleKey: string,
+    @Inject(GoogleCx) private googleCx: string) { }
 
   init(): void {
     this.input.onText(/^!\s?(ищи|г|g|gg)(?:\s+([^]+))?$/, (match) => this.handle(match, 'web'), this.onError);
     this.input.onText(/^!\s?(покажи|пик|pic|img|фото)(?:\s+([^]+))?$/, (match) => this.handle(match, 'image'), this.onError);
   }
 
-  private handle = async ({message, match}: TextMatch, type: 'web'|'image'): Promise<any> => {
+  private handle = async ({ message, match }: TextMatch, type: 'web' | 'image'): Promise<any> => {
     const cmd = match[1];
     let query: string | undefined = match[2];
     if (query == null && message.reply_to_message != null) {
@@ -42,7 +42,7 @@ export class GooglePlugin implements BotPlugin {
     });
   }
 
-  private async getPage(cmd: string, type: 'web'|'image', query: string, results: any[], index: number): Promise<PageResult> {
+  private async getPage(cmd: string, type: 'web' | 'image', query: string, results: any[], index: number): Promise<PageResult> {
     if (index >= results.length) {
       const nextPage = await this.search(query, results.length, pageSize, type);
       results.push(...nextPage);
@@ -74,7 +74,7 @@ export class GooglePlugin implements BotPlugin {
 
   private onError = (message: Message) => this.api.reply(message, 'Поиск не удался');
 
-  private async search(query: string, start: number, num: number, type: 'web'|'image'): Promise<any[]> {
+  private async search(query: string, start: number, num: number, type: 'web' | 'image'): Promise<any[]> {
     const url = toUrl('https://www.googleapis.com/customsearch/v1', {
       key: this.googleKey,
       cx: this.googleCx,

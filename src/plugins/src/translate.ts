@@ -10,7 +10,7 @@ import { TextMatch } from 'core/bot_api/text_match';
 export class TranslatePlugin implements BotPlugin {
   readonly name = 'Translate';
 
-  constructor(private input: Input, private api: TgApi, private web: Web) {}
+  constructor(private input: Input, private api: TgApi, private web: Web) { }
 
   private async translate(
     src: string,
@@ -47,7 +47,7 @@ export class TranslatePlugin implements BotPlugin {
     );
   }
 
-  onMessage = async ({message, match}: TextMatch): Promise<void> => {
+  onMessage = async ({ message, match }: TextMatch): Promise<void> => {
     let src: string;
     let dest: string;
     let text: string;
@@ -87,8 +87,8 @@ export class TranslatePlugin implements BotPlugin {
   }
 
   onError = (msg: Message) =>
-      this.api.sendMessage({
-        chat_id: msg.chat.id,
-        text: 'Не понимаю я эти ваши иероглифы.',
-      });
+    this.api.sendMessage({
+      chat_id: msg.chat.id,
+      text: 'Не понимаю я эти ваши иероглифы.',
+    });
 }

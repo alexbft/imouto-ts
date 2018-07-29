@@ -7,7 +7,7 @@ import { logger } from 'core/logging/logger';
 
 export { WebException };
 
-export function toUrl(url: string|URL, searchParams?: any): URL {
+export function toUrl(url: string | URL, searchParams?: any): URL {
   const url_ = url instanceof URL ? url : new URL(url);
   if (searchParams != null) {
     url_.search = new URLSearchParams(searchParams) as any;
@@ -95,7 +95,7 @@ export class Web {
     return this.readResponseJson(await this.sendRequest(request));
   }
 
-  getAsBrowser(url: string|URL, searchParams?: any): Promise<string> {
+  getAsBrowser(url: string | URL, searchParams?: any): Promise<string> {
     const options = requestOptionsFromUrl(toUrl(url, searchParams));
     options.headers = {
       'User-Agent': 'Mozilla/5.0',
@@ -103,11 +103,11 @@ export class Web {
     return this.fetch(this.request(options));
   }
 
-  get(url: string|URL, searchParams?: any): Promise<string> {
+  get(url: string | URL, searchParams?: any): Promise<string> {
     return this.fetch(this.request(requestOptionsFromUrl(toUrl(url, searchParams))));
   }
 
-  getJson(url: string|URL, searchParams?: any): Promise<any> {
+  getJson(url: string | URL, searchParams?: any): Promise<any> {
     const _url = toUrl(url, searchParams);
     logger.debug('getJson:', _url.href);
     return this.fetchJson(this.request(requestOptionsFromUrl(_url)));

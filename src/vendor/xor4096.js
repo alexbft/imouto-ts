@@ -28,7 +28,7 @@ function XorGen(seed) {
   var me = this;
 
   // Set up generator function.
-  me.next = function() {
+  me.next = function () {
     var w = me.w,
       X = me.X,
       i = me.i,
@@ -121,10 +121,10 @@ function impl(seed, opts) {
   if (seed == null) seed = +new Date();
   var xg = new XorGen(seed),
     state = opts && opts.state,
-    prng = function() {
+    prng = function () {
       return (xg.next() >>> 0) / 0x100000000;
     };
-  prng.double = function() {
+  prng.double = function () {
     do {
       var top = xg.next() >>> 11,
         bot = (xg.next() >>> 0) / 0x100000000,
@@ -136,7 +136,7 @@ function impl(seed, opts) {
   prng.quick = prng;
   if (state) {
     if (state.X) copy(state, xg);
-    prng.state = function() {
+    prng.state = function () {
       return copy(xg, {});
     };
   }

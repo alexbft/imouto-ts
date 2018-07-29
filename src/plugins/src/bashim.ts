@@ -32,24 +32,24 @@ export class BashimPlugin implements BotPlugin {
     private input: Input,
     private api: TgApi,
     private web: Web,
-  ) {}
+  ) { }
 
   init(): void {
     this.input.onText(/^\!\s?(баш|bash)\b[\s]*(\d+)?/, this.onMessage, this.onError);
   }
 
   onError = (msg: Message) =>
-      this.api.respondWithText(msg, 'Баш уже не тот...');
+    this.api.respondWithText(msg, 'Баш уже не тот...');
 
-  onMessage = async ({message, match}: TextMatch): Promise<void> => {
+  onMessage = async ({ message, match }: TextMatch): Promise<void> => {
     const id = match[2];
     const [quoteId, text] =
       id == null
         ? mapRandom(await this.web.getAsBrowser('http://bash.im/forweb/?u'))
         : mapSpecific(
-            id,
-            await this.web.getAsBrowser(`http://bash.im/quote/${id}`),
-          );
+          id,
+          await this.web.getAsBrowser(`http://bash.im/quote/${id}`),
+        );
 
     await this.api.respondWithText(message, `Цитата №${quoteId}\n\n${this.entities.decode(text)}`);
   };

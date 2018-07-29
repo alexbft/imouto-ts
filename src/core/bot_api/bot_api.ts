@@ -25,7 +25,7 @@ export class BotApi {
   }
 
   async initPlugins(): Promise<void> {
-    const pluginInjector = this.injector.subContext([...pluginBindings, provide(Input, {useValue: this.input})]);
+    const pluginInjector = this.injector.subContext([...pluginBindings, provide(Input, { useValue: this.input })]);
     const initializers = [];
     let failed = 0;
     for (const provider of pluginBindings) {

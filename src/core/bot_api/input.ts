@@ -3,6 +3,7 @@ import { Message, CallbackQuery } from 'node-telegram-bot-api';
 import { TextMatch } from 'core/bot_api/text_match';
 import { logger } from 'core/logging/logger';
 import { Subject, Subscription } from 'rxjs';
+import { fixPattern } from 'core/util/misc';
 
 type TextMatchHandler = (match: TextMatch) => PromiseOr<any>;
 
@@ -45,6 +46,7 @@ export class InputImpl extends Input {
   }
 
   onText(regex: RegExp, handler: TextMatchHandler, onError?: MessageErrorHandler): Subscription {
+    regex = fixPattern(regex);
     return this.textSubject.subscribe(wrapHandler(async (msg: Message) => {
       const result = regex.exec(msg.text!);
       if (result !== null) {

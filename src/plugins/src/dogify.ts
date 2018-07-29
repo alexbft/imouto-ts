@@ -8,13 +8,13 @@ import { TextMatch } from 'core/bot_api/text_match';
 export class DogifyPlugin implements BotPlugin {
   readonly name = 'Dogify';
 
-  constructor(private input: Input, private tgApi: TgApi) {}
+  constructor(private input: Input, private tgApi: TgApi) { }
 
   init(): void {
     this.input.onText(/^!\s?dogify\s+(.+)/, this.handle);
   }
 
-  private handle = async ({message, match}: TextMatch): Promise<void> => {
+  private handle = async ({ message, match }: TextMatch): Promise<void> => {
     const parts = match[1].trim().split(/\s+/).map(encodeURIComponent);
     await this.tgApi.respondWithImageFromUrl(message, 'http://dogr.io/' + parts.join('/') + '.png?split=false&.png');
   }

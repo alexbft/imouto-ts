@@ -36,7 +36,7 @@ const allPagers: Pager[] = [];
 const maxPagers = 100;
 
 export async function pager(tgApi: TgApi, input: Input, options: PagerOptions): Promise<Pager> {
-  options = {...defaultPagerOptions, ...options} as any;
+  options = { ...defaultPagerOptions, ...options } as any;
   const result = new Pager(tgApi, input, options);
   allPagers.push(result);
   while (allPagers.length > maxPagers) {
@@ -139,10 +139,10 @@ export class Pager {
         callback_data: 'n',
       });
     }
-    return {inline_keyboard: [keys]};
+    return { inline_keyboard: [keys] };
   }
 
-  private handleCallback = async ({id, data}: CallbackQuery) => {
+  private handleCallback = async ({ id, data }: CallbackQuery) => {
     let newIndex: number;
     switch (data) {
       case 'n':

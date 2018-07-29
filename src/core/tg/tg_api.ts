@@ -5,7 +5,7 @@ import { Message, AnswerCallbackQueryOptions, SendMessageOptions, SendPhotoOptio
 
 @Injectable
 export class TgApi {
-  constructor(private readonly tgClient: TgClient) {}
+  constructor(private readonly tgClient: TgClient) { }
 
   async getMe(): Promise<string> {
     return JSON.stringify(await this.tgClient.send('getMe'));
@@ -48,7 +48,8 @@ export class TgApi {
     return this.sendMessage({
       chat_id: message.chat.id,
       text,
-      ...options});
+      ...options
+    });
   }
 
   replyWithImageFromUrl(message: Message, url: string, options: SendPhotoOptions = {}): Promise<Message> {

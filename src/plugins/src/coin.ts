@@ -11,15 +11,15 @@ import { fixMultiline } from "core/util/misc";
 export class CoinPlugin implements BotPlugin {
   readonly name = 'Coin';
 
-  constructor(private input: Input, private api: TgApi, private web: Web) {}
+  constructor(private input: Input, private api: TgApi, private web: Web) { }
 
   init(): void {
     this.input.onText(/^!\s?(coin|койн|коин|к|c)\s*$/,
-        (match) => new CoinQuery(this.api, this.web).handleOverall(match),
-        this.onError);
+      (match) => new CoinQuery(this.api, this.web).handleOverall(match),
+      this.onError);
     this.input.onText(/^!\s?(coin|койн|коин|к|c)\s+([\d\.]+)?\s*([A-Za-z]+)(?:\s+([A-Za-z]+))?/,
-        (match) => new CoinQuery(this.api, this.web).handleSpecific(match),
-        this.onError);
+      (match) => new CoinQuery(this.api, this.web).handleSpecific(match),
+      this.onError);
   }
 
   onError = (msg: Message) => this.api.reply(msg, 'Just HODL man');
@@ -28,7 +28,7 @@ export class CoinPlugin implements BotPlugin {
 class CoinQuery {
   private data: any[] = [];
 
-  constructor(private api: TgApi, private web: Web) {}
+  constructor(private api: TgApi, private web: Web) { }
 
   private async search(): Promise<void> {
     this.data = await this.web.getJson('https://api.coinmarketcap.com/v1/ticker/');
@@ -72,19 +72,19 @@ class CoinQuery {
     return this.calcBtc(this.getData(from));
   }
 
-  async handleOverall({message}: TextMatch): Promise<void> {
+  async handleOverall({ message }: TextMatch): Promise<void> {
     await this.search();
     const txt = fixMultiline(
-        `1 Bitcoin = ${this.calcUsdCode('BTC')}\$
+      `1 Bitcoin = ${this.calcUsdCode('BTC')}\$
         1 Bitcoin Cash = ${this.calcUsdCode('BCH')}\$
         1 Ethereum = ${this.calcUsdCode('ETH')}\$
         1 Litecoin = ${this.calcBtcCode('LTC')} BTC
         1 Dash = ${this.calcBtcCode('DASH')} BTC
         1 Ripple = ${this.calcBtcCode('XRP')} BTC`);
-    await this.api.respondWithText(message, txt, {parse_mode: 'Markdown'});
+    await this.api.respondWithText(message, txt, { parse_mode: 'Markdown' });
   }
 
-  async handleSpecific({message, match}: TextMatch): Promise<void> {
+  async handleSpecific({ message, match }: TextMatch): Promise<void> {
     await this.search();
     const amount = match[2] != null ? Number(match[2]) : 1;
     const reqFrom = match[3].toUpperCase();
@@ -97,14 +97,14 @@ class CoinQuery {
         let txt: string;
         if (to != null) {
           txt = fixMultiline(
-              `${amount} ${from.name} = ${this.calc(to, from, amount)} ${to.name}
+            `${amount} ${from.name} = ${this.calc(to, from, amount)} ${to.name}
               1h: *${from.percent_change_1h}* 24h: *${from.percent_change_24h}* 7d: *${from.percent_change_7d}*`);
         } else {
           txt = fixMultiline(
-              `${amount} ${from.name} = ${this.calcUsd(from, amount)}\$
+            `${amount} ${from.name} = ${this.calcUsd(from, amount)}\$
               1h: *${from.percent_change_1h}* 24h: *${from.percent_change_24h}* 7d: *${from.percent_change_7d}*`);
         }
-        await this.api.respondWithText(message, txt, {parse_mode: 'Markdown'});
+        await this.api.respondWithText(message, txt, { parse_mode: 'Markdown' });
       } else {
         await this.api.reply(message, 'Не знаю такой монеты!');
       }

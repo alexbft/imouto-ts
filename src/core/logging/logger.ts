@@ -32,7 +32,7 @@ function initLogging(): winston.LoggerInstance {
     },
     transports: [
       new winston.transports.Console({
-        formatter: ({level, message, meta}: any) => {
+        formatter: ({ level, message, meta }: any) => {
           const date = (new Date()).toLocaleString();
           const text = `[${date}] ${message}` + serializeMeta(meta);
           return winston.config.colorize(level, text);

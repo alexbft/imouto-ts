@@ -6,7 +6,7 @@ interface ProviderOptions {
 }
 
 export class Provider {
-  constructor(readonly key: any, private readonly options?: ProviderOptions) {}
+  constructor(readonly key: any, private readonly options?: ProviderOptions) { }
 
   get(injector: Injector): any {
     if (this.options != null) {

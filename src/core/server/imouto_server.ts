@@ -9,9 +9,9 @@ import { BotApi } from 'core/bot_api/bot_api';
 @Injectable
 export class ImoutoServer {
   constructor(
-      private readonly tgClient: TgClient,
-      private readonly environment: Environment,
-      private readonly botApi: BotApi) {}
+    private readonly tgClient: TgClient,
+    private readonly environment: Environment,
+    private readonly botApi: BotApi) { }
 
   async start(): Promise<void> {
     logger.info('Starting...');

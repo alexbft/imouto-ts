@@ -24,9 +24,9 @@ export class TgClient {
   private lastUpdateId = -1;
 
   constructor(
-      private readonly environment: Environment,
-      private readonly web: Web,
-      @Inject(AuthToken) private readonly authToken: string) {}
+    private readonly environment: Environment,
+    private readonly web: Web,
+    @Inject(AuthToken) private readonly authToken: string) { }
 
   public get updateStream(): Observable<Update> {
     return this.updateSubject;
@@ -61,7 +61,7 @@ export class TgClient {
         logger.error('getUpdates returned error:', response);
         if (response.parameters != null && response.parameters.retry_after != null) {
           await pause(
-              moment.duration(response['parameters']['retry_after'], 'seconds'));
+            moment.duration(response['parameters']['retry_after'], 'seconds'));
         } else {
           await pause(updatesErrorDelay);
         }
