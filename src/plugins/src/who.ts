@@ -99,6 +99,7 @@ export class WhoPlugin implements BotPlugin {
 
   private single(rows: UserInfo[]): string {
     rows = rows.slice();
+    const totalMessageCount = rows.map(row => row.message_count).reduce((a, b) => a + b, 0);
     rows.sort((a, b) => b.last_message_date - a.last_message_date);
     const main = rows[0];
     rows = rows.slice(1);
@@ -115,7 +116,7 @@ export class WhoPlugin implements BotPlugin {
     return fixMultiline(`
       Это ${name(main)}
 
-      Сообщений: ${main.message_count}
+      Сообщений: ${totalMessageCount}
       Последнее сообщение: ${formatDate(new Date(main.last_message_date * 1000))}
       ${aka}
     `);

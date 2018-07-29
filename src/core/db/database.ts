@@ -8,6 +8,7 @@ const sqlite = sqlite3.verbose();
 export class Database implements Disposable {
   private db?: sqlite3.Database;
   private connections: number = 0;
+  debugLogging: boolean = false;
 
   constructor(private readonly fileName: string) { }
 
@@ -53,7 +54,9 @@ export class Database implements Disposable {
 
   run(sql: string, args?: any[]): Promise<sqlite3.RunResult> {
     sql = sql.trim();
-    logger.debug('Executing SQL:', sql, args);
+    if (this.debugLogging) {
+      logger.debug('Executing SQL:', sql, args);
+    }
     return new Promise<sqlite3.RunResult>((resolve, reject) => {
       this.db!.run(sql, args, function (err) {
         if (err != null) {
@@ -67,7 +70,9 @@ export class Database implements Disposable {
 
   all(sql: string, args?: any[]): Promise<any[]> {
     sql = sql.trim();
-    logger.debug('Querying SQL:', sql, args);
+    if (this.debugLogging) {
+      logger.debug('Querying SQL:', sql, args);
+    }
     return new Promise<any[]>((resolve, reject) => {
       this.db!.all(sql, args, function (err, rows) {
         if (err != null) {
@@ -81,7 +86,9 @@ export class Database implements Disposable {
 
   get(sql: string, args?: any[]): Promise<any> {
     sql = sql.trim();
-    logger.debug('Querying SQL:', sql, args);
+    if (this.debugLogging) {
+      logger.debug('Querying SQL:', sql, args);
+    }
     return new Promise<any>((resolve, reject) => {
       this.db!.get(sql, args, function (err, row) {
         if (err != null) {
