@@ -18,6 +18,8 @@ import { NyashPlugin } from 'plugins/src/nyash';
 import { QrPlugin } from 'plugins/src/qr';
 import { RollPlugin } from 'plugins/src/roll';
 import { SilencePlugin } from 'plugins/src/silence';
+import { UserCachePlugin } from 'plugins/src/user_cache';
+import { WhoPlugin } from 'plugins/src/who';
 
 export const pluginBindings = [
   provide(A2chPlugin),
@@ -38,4 +40,6 @@ export const pluginBindings = [
   provide(RollPlugin),
   provide(SilencePlugin),
   provide(TranslatePlugin),
+  provide(UserCachePlugin),
+  provide(WhoPlugin),
 ];

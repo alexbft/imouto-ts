@@ -14,6 +14,7 @@ import { provide } from 'core/di/provider';
 import { InputImpl } from 'core/bot_api/input_impl';
 import { FilterFactory } from 'core/filter/filter_factory';
 import { Unfiltered } from 'core/module/keys';
+import { Environment } from 'core/environment/environment';
 
 const pluginInitTimeout = moment.duration(30, 'seconds');
 
@@ -22,7 +23,10 @@ export class BotApi {
   private readonly inputImpl: InputImpl;
   private readonly startMoment: moment.Moment;
 
-  constructor(private injector: Injector, private filters: FilterFactory) {
+  constructor(
+    private injector: Injector,
+    private filters: FilterFactory,
+    private readonly environment: Environment) {
     this.inputImpl = new InputImpl();
     this.startMoment = moment();
   }
@@ -45,6 +49,9 @@ export class BotApi {
           try {
             const initPromise = Promise.resolve(plugin.init());
             await timeout(initPromise, pluginInitTimeout);
+            if (plugin.dispose != null) {
+              this.environment.onDispose(() => plugin.dispose!());
+            }
           } catch (e) {
             if (e instanceof TimeoutError) {
               logger.warn(`Plugin ${plugin.name} has timed out in initialization!`);

@@ -9,6 +9,7 @@ import { Web } from 'core/util/web';
 import { Scheduler } from 'core/util/scheduler';
 import { UserService } from 'core/tg/user_service';
 import { FilterFactory } from 'core/filter/filter_factory';
+import { DatabaseFactory } from 'core/db/database_factory';
 
 export const bindings = [
   provide(ConfigLoader),
@@ -21,4 +22,5 @@ export const bindings = [
   provide(Scheduler),
   provide(UserService),
   provide(FilterFactory),
+  provide(DatabaseFactory, { useValue: new DatabaseFactory(':memory:') }),
 ];
