@@ -104,3 +104,11 @@ export function removeItem<T>(list: T[], item: T): T | undefined {
     return;
   }
 }
+
+export function capitalize(s: string): string {
+  if (s == null || s.trim() === '') {
+    return s;
+  }
+  s = s.trim();
+  return s.charAt(0).toUpperCase() + s.substr(1);
+}

@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import { Provider, provide } from "core/di/provider";
 import { logger } from 'core/logging/logger';
 
-import { AuthToken, GoogleKey, GoogleCx, ExchangeKey, UserId, RoleMap } from "core/config/keys";
+import { AuthToken, GoogleKey, GoogleCx, ExchangeKey, UserId, RoleMap, OpenWeatherMapKey } from "core/config/keys";
 import { Injectable } from 'core/di/injector';
 
 const configFileName = __dirname + '/../../../../config/main.config';
@@ -43,6 +43,7 @@ export class ConfigLoader {
       provide(GoogleCx, { useValue: properties.getRaw('googlecx') }),
       provide(ExchangeKey, { useValue: properties.getRaw('exchangekey') }),
       provide(RoleMap, { useValue: roleMap }),
+      provide(OpenWeatherMapKey, { useValue: properties.getRaw('openweathermapkey') }),
     ];
   }
 

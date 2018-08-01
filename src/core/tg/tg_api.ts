@@ -36,15 +36,16 @@ export class TgApi {
     return this.tgClient.send('sendMediaGroup', args);
   }
 
-  reply(message: Message, text: string): Promise<Message> {
+  reply(message: Message, text: string, options?: SendMessageOptions): Promise<Message> {
     return this.sendMessage({
       chat_id: message.chat.id,
       text,
       reply_to_message_id: message.message_id,
+      ...options
     });
   }
 
-  respondWithText(message: Message, text: string, options: SendMessageOptions = {}): Promise<Message> {
+  respondWithText(message: Message, text: string, options?: SendMessageOptions): Promise<Message> {
     return this.sendMessage({
       chat_id: message.chat.id,
       text,
@@ -52,7 +53,7 @@ export class TgApi {
     });
   }
 
-  replyWithImageFromUrl(message: Message, url: string, options: SendPhotoOptions = {}): Promise<Message> {
+  replyWithImageFromUrl(message: Message, url: string, options?: SendPhotoOptions): Promise<Message> {
     return this.sendPhoto({
       chat_id: message.chat.id,
       reply_to_message_id: message.message_id,
@@ -61,7 +62,7 @@ export class TgApi {
     });
   }
 
-  respondWithImageFromUrl(message: Message, url: string, options: SendPhotoOptions = {}): Promise<Message> {
+  respondWithImageFromUrl(message: Message, url: string, options?: SendPhotoOptions): Promise<Message> {
     return this.sendPhoto({
       chat_id: message.chat.id,
       photo: url,

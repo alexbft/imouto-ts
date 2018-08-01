@@ -20,6 +20,7 @@ import { RollPlugin } from 'plugins/src/roll';
 import { SilencePlugin } from 'plugins/src/silence';
 import { UserCachePlugin } from 'plugins/src/user_cache';
 import { WhoPlugin } from 'plugins/src/who';
+import { WeatherPlugin } from 'plugins/src/weather';
 
 export const pluginBindings = [
   provide(A2chPlugin),
@@ -41,5 +42,6 @@ export const pluginBindings = [
   provide(SilencePlugin),
   provide(TranslatePlugin),
   provide(UserCachePlugin),
+  provide(WeatherPlugin),
   provide(WhoPlugin),
 ];
