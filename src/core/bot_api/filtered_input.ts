@@ -1,5 +1,5 @@
 import { Filter } from 'core/filter/filter';
-import { IFilteredInput, InputSource, TextMatchHandler, MessageErrorHandler, wrapHandler, CallbackHandler, CallbackErrorHandler, TextInput } from 'core/bot_api/input';
+import { IFilteredInput, InputSource, TextMatchHandler, MessageErrorHandler, wrapHandler, CallbackHandler, CallbackErrorHandler, TextInput, MessageHandler } from 'core/bot_api/input';
 import { Observable, Subscription, Subject } from 'rxjs';
 import { Message, CallbackQuery } from 'node-telegram-bot-api';
 import { removeItem, fixPattern } from 'core/util/misc';
@@ -30,6 +30,10 @@ export class FilteredInput implements IFilteredInput {
     return new Subscription(() => {
       removeItem(this.filters, filter);
     });
+  }
+
+  onMessage(handler: MessageHandler, onError?: MessageErrorHandler): Subscription {
+    return this.messages.subscribe(wrapHandler(handler, onError));
   }
 
   onText(regex: RegExp, handler: TextMatchHandler, onError?: MessageErrorHandler): Subscription {

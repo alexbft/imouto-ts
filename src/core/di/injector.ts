@@ -1,4 +1,5 @@
 import { Provider } from 'core/di/provider';
+import { InjectionToken } from 'core/di/injection_token';
 
 export class Injector {
   private bindingMap = new Map<any, Provider>();
@@ -40,7 +41,7 @@ export const injectMetadata = Symbol('injectMetadata');
 
 export const Injectable = (_classFn: any) => { }
 
-export function Inject(key: any) {
+export function Inject(key: InjectionToken<any>) {
   return function (classFn: Object, _propertyKey: any, paramIndex: number) {
     const existing: Map<number, any> = Reflect.getOwnMetadata(injectMetadata, classFn) || new Map<number, any>();
     existing.set(paramIndex, key);

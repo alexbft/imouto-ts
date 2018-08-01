@@ -21,6 +21,7 @@ import { SilencePlugin } from 'plugins/src/silence';
 import { UserCachePlugin } from 'plugins/src/user_cache';
 import { WhoPlugin } from 'plugins/src/who';
 import { WeatherPlugin } from 'plugins/src/weather';
+import { IntroPlugin } from 'plugins/src/intro';
 
 export const pluginBindings = [
   provide(A2chPlugin),
@@ -34,6 +35,7 @@ export const pluginBindings = [
   provide(HelloPlugin),
   provide(HelpPlugin),
   provide(IdPlugin),
+  provide(IntroPlugin),
   provide(IqTestPlugin),
   provide(MoneyPlugin),
   provide(NyashPlugin),

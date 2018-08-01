@@ -136,6 +136,10 @@ export class WeatherPlugin implements BotPlugin {
     this.input.onText(/^!\s?(погода|weather)\s+(.+)$/, this.handle, this.onError);
   }
 
+  dispose(): void {
+    this.subscriptionManager.dispose();
+  }
+
   private handle = async ({ message, match }: TextMatch): Promise<any> => {
     const address = match[2];
     const geoCodeData = await this.geoCode(address);

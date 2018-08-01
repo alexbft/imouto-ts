@@ -44,6 +44,7 @@ export interface TextInput {
 
 export interface IFilteredInput extends InputSource, TextInput {
   readonly textMessages: Observable<Message>;
+  onMessage(handler: MessageHandler, onError?: MessageErrorHandler): Subscription;
   onCallback(message: Message, handler: CallbackHandler, onError?: CallbackErrorHandler): Subscription;
   exclusiveMatch(): TextInput;
   filter(...filters: Filter[]): IFilteredInput;
@@ -54,6 +55,7 @@ export abstract class Input implements IFilteredInput {
   abstract readonly messages: Observable<Message>;
   abstract readonly textMessages: Observable<Message>;
   abstract readonly callbackQueries: Observable<CallbackQuery>;
+  abstract onMessage(handler: MessageHandler, onError?: MessageErrorHandler): Subscription;
   abstract onText(regex: RegExp, handler: TextMatchHandler, onError?: MessageErrorHandler): Subscription;
   abstract onCallback(message: Message, handler: CallbackHandler, onError?: CallbackErrorHandler): Subscription;
   abstract exclusiveMatch(): TextInput;
