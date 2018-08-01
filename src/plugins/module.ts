@@ -22,6 +22,7 @@ import { UserCachePlugin } from 'plugins/src/user_cache';
 import { WhoPlugin } from 'plugins/src/who';
 import { WeatherPlugin } from 'plugins/src/weather';
 import { IntroPlugin } from 'plugins/src/intro';
+import { XkcdPlugin } from 'plugins/src/xkcd';
 
 export const pluginBindings = [
   provide(A2chPlugin),
@@ -46,4 +47,5 @@ export const pluginBindings = [
   provide(UserCachePlugin),
   provide(WeatherPlugin),
   provide(WhoPlugin),
+  provide(XkcdPlugin),
 ];

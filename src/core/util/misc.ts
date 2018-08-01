@@ -1,6 +1,8 @@
 import { AsyncHandler } from "core/util/promises";
 import { logger } from "core/logging/logger";
 import { Duration } from "moment";
+import { promisify } from 'util';
+import * as fs from 'fs';
 
 export interface Props {
   [key: string]: any;
@@ -111,4 +113,13 @@ export function capitalize(s: string): string {
   }
   s = s.trim();
   return s.charAt(0).toUpperCase() + s.substr(1);
+}
+
+export const exists = promisify(fs.exists);
+
+export const readFile = promisify(fs.readFile);
+
+export async function readJson(filename: string): Promise<any> {
+  const raw = await readFile(filename);
+  return JSON.parse(raw.toString());
 }

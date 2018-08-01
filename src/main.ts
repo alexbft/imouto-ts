@@ -1,6 +1,4 @@
-// Hack to resolve non-relative paths in Node.
-process.env.NODE_PATH = __dirname;
-require('module').Module._initPaths();
+import './path_hack';
 
 import { Injector } from 'core/di/injector';
 import { bindings as mainBindings } from 'core/module/main_module';

@@ -5,6 +5,8 @@ import { Injectable } from 'core/di/injector';
 import { TgClient } from 'core/tg/tg_client';
 import { Environment } from 'core/environment/environment';
 import { BotApi } from 'core/bot_api/bot_api';
+import { timeout } from 'core/util/promises';
+import { duration } from 'moment';
 
 @Injectable
 export class ImoutoServer {
@@ -18,9 +20,16 @@ export class ImoutoServer {
     process.on('unhandledRejection', this.onUnhandledRejection.bind(this));
     process.on('uncaughtException', this.onUncaughtException.bind(this));
     process.on('SIGINT', this.onSigInt.bind(this));
-    await this.botApi.initPlugins();
+
+    const pluginsPromise = this.botApi.initPlugins();
+
+    // Listen to updates after 1 second of waiting for initialization.
+    await timeout(pluginsPromise, duration(1, 'second')).catch();
     this.tgClient.updateStream.subscribe(this.onUpdate.bind(this));
     const connection = this.tgClient.connect();
+    // Wait for the rest of the initialization (and throw if there is an error)
+    await pluginsPromise;
+
     logger.info('Ready.');
     await connection;
     logger.info('Finished.');

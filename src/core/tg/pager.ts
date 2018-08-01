@@ -5,6 +5,7 @@ import { Subscription } from "rxjs";
 import { InlineKeyboardMarkup, InlineKeyboardButton, Message, CallbackQuery, SendMessageOptions, SendPhotoOptions } from "node-telegram-bot-api";
 import { SendMessageArgs, SendPhotoArgs, InputMediaPhoto } from "core/tg/tg_types";
 import { logger } from "core/logging/logger";
+import { random } from 'core/util/misc';
 
 type UrlWithCaption = {
   url: string,
@@ -22,14 +23,18 @@ export interface PagerOptions {
   numPages?: number,
   prevCaption?: string,
   nextCaption?: string,
+  randomCaption?: string,
+  enableRandom?: boolean,
   getPage(index: number): PromiseOr<PageResult>,
 }
 
 const defaultPagerOptions = {
   startPage: 0,
-  prevCaption: 'Назад',
-  nextCaption: 'Дальше',
+  prevCaption: '⬅️ Назад',
+  nextCaption: 'Дальше ➡️',
+  randomCaption: '🎲 Случайно',
   type: 'text',
+  enableRandom: false,
 };
 
 const allPagers: Pager[] = [];
@@ -133,6 +138,12 @@ export class Pager {
         callback_data: 'p',
       });
     }
+    if (this.options.enableRandom! && this.options.numPages != null) {
+      keys.push({
+        text: this.options.randomCaption!,
+        callback_data: 'r',
+      });
+    }
     if (this.options.numPages == null || this.index < this.options.numPages - 1) {
       keys.push({
         text: this.options.nextCaption!,
@@ -150,6 +161,9 @@ export class Pager {
         break;
       case 'p':
         newIndex = this.index - 1;
+        break;
+      case 'r':
+        newIndex = random(this.options.numPages!);
         break;
       default:
         throw new Error('Unknown key: ' + data);

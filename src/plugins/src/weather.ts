@@ -4,7 +4,7 @@ import { TextMatch } from 'core/bot_api/text_match';
 import { TgApi } from 'core/tg/tg_api';
 import { Message, InlineKeyboardMarkup } from 'node-telegram-bot-api';
 import { Web } from 'core/util/web';
-import { Inject } from 'core/di/injector';
+import { Inject, Injectable } from 'core/di/injector';
 import { GoogleKey, OpenWeatherMapKey } from 'core/config/keys';
 import { logger } from 'core/logging/logger';
 import * as moment from 'moment';
@@ -119,6 +119,7 @@ const nowMarkup: InlineKeyboardMarkup = {
   }]]
 }
 
+@Injectable
 export class WeatherPlugin implements BotPlugin {
   readonly name = 'Weather';
 
@@ -396,6 +397,6 @@ export class WeatherPlugin implements BotPlugin {
     const temp = block.avgTemperature > 0 ? `+${block.avgTemperature.toFixed()}` : `${block.avgTemperature.toFixed()}`;
     const icons = block.icons.map(getIcon).join('');
     const desc = block.description;
-    return `*${temp} °C* ${icons} ${desc}`;
+    return `*${temp}* °C ${icons} ${desc}`;
   }
 }

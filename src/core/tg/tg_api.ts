@@ -16,15 +16,24 @@ export class TgApi {
   }
 
   editMessageMedia(args: EditMessageMediaArgs): Promise<Message> {
+    if (args.media.caption != null && args.media.caption.length > 200) {
+      args.media.caption = args.media.caption.substr(0, 200);
+    }
     return this.tgClient.send('editMessageMedia', args);
   }
 
   editMessageCaption(args: EditMessageCaptionArgs): Promise<Message> {
+    if (args.caption.length > 200) {
+      args.caption = args.caption.substr(0, 200);
+    }
     return this.tgClient.send('editMessageCaption', args);
   }
 
   sendPhoto(args: SendPhotoArgs): Promise<Message> {
     // TODO: implement sending image from buffer or stream.
+    if (args.caption != null && args.caption.length > 200) {
+      args.caption = args.caption.substr(0, 200);
+    }
     return this.tgClient.send('sendPhoto', args);
   }
 
@@ -33,6 +42,11 @@ export class TgApi {
   }
 
   sendMediaGroup(args: SendMediaGroupArgs): Promise<Message[]> {
+    for (const media of args.media) {
+      if (media.caption != null && media.caption.length > 200) {
+        media.caption = media.caption.substr(0, 200);
+      }
+    }
     return this.tgClient.send('sendMediaGroup', args);
   }
 
