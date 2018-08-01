@@ -6,8 +6,9 @@ import { Database } from 'core/db/database';
 import { TextMatch } from 'core/bot_api/text_match';
 import { Message } from 'node-telegram-bot-api';
 import { UserInfo } from 'plugins/src/user/user_info';
-import { fixMultiline, formatDate, tryParseInt } from 'core/util/misc';
+import { fixMultiline, tryParseInt } from 'core/util/misc';
 import { Injectable } from 'core/di/injector';
+import * as moment from 'moment';
 
 function name(row: UserInfo): string {
   return row.username != '' ? `${row.full_name} (@\u2063${row.username})` : row.full_name;
@@ -117,7 +118,7 @@ export class WhoPlugin implements BotPlugin {
       Это ${name(main)}
 
       Сообщений: ${totalMessageCount}
-      Последнее сообщение: ${formatDate(new Date(main.last_message_date * 1000))}
+      Последнее сообщение: ${moment.unix(main.last_message_date).from(moment())}
       ${aka}
     `);
   }
@@ -132,7 +133,7 @@ export class WhoPlugin implements BotPlugin {
     return fixMultiline(`
       Найдены пользователи: ${m.size}
 
-      ${Array.from(m.values()).map(row => `${row.user_id} - ${name(row)}`).join('\n')}
+      ${ Array.from(m.values()).map(row => `${row.user_id} - ${name(row)}`).join('\n')}
     `);
   }
 

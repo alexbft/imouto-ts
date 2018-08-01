@@ -134,7 +134,7 @@ export class WeatherPlugin implements BotPlugin {
   ) { }
 
   init(): void {
-    this.input.onText(/^!\s?(погода|weather)\s+(.+)$/, this.handle, this.onError);
+    this.input.onText(/^!\s?(погода|weather)\b(?:\s*(.+))?$/, this.handle, this.onError);
   }
 
   dispose(): void {
@@ -142,8 +142,24 @@ export class WeatherPlugin implements BotPlugin {
   }
 
   private handle = async ({ message, match }: TextMatch): Promise<any> => {
-    const address = match[2];
-    const geoCodeData = await this.geoCode(address);
+    let address = match[2];
+    let geoCodeData: GeoCodeData | null = null;
+    if (address == null || address.trim() === '') {
+      if (message.reply_to_message != null && message.reply_to_message.location != null) {
+        const location = message.reply_to_message.location;
+        geoCodeData = {
+          address: `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`,
+          location: {
+            lat: location.latitude,
+            lng: location.longitude
+          }
+        };
+      } else {
+        return this.api.reply(message, `Что "${match[1]}"?`);
+      }
+    } else {
+      geoCodeData = await this.geoCode(address.trim());
+    }
     if (geoCodeData == null) {
       return this.api.reply(message, 'Адрес не найден.');
     }
@@ -384,7 +400,9 @@ export class WeatherPlugin implements BotPlugin {
       blocks.push(`утром ${this.formatForecastBlock(row.morning)}`);
     }
     if (row.afternoon != null) {
-      blocks.push(`днём ${this.formatForecastBlock(row.afternoon)}`);
+      // show highest instead of avg
+      row.afternoon.avgTemperature = Math.max(...row.afternoon.items.map(it => it.temperature));
+      blocks.push(`днём до ${this.formatForecastBlock(row.afternoon)}`);
     }
     if (row.evening != null) {
       blocks.push(`вечером ${this.formatForecastBlock(row.evening)}`);
