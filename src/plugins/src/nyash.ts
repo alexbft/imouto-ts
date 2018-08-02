@@ -32,7 +32,11 @@ export class NyashPlugin implements BotPlugin {
   private sendPost = async ({ message, match }: TextMatch) => {
     const num = match[1] != null ? Number(match[1]) : random(8087) + 1;
     const page = await this.getPage(`http://nya.sh/post/${num}`);
-    const text = this.entities.decode(page.match(/<div class="content">([^]+?)<\/div>/)![1].replace(/<br \/>/g, ''));
+    const matches = findAll(page, /<div class="content">([^]+?)<\/div>/g);
+    if (matches.length === 0) {
+      return this.api.reply(message, `Пост не существует. Попробуй еще раз!`);
+    }
+    const text = matches.map(match => this.entities.decode(match[1].replace(/<br \/>/g, ''))).join('\n\n');
     return this.api.respondWithText(message, `Цитата №${num}\n\n${text}`);
   }
 

@@ -23,6 +23,7 @@ import { WhoPlugin } from 'plugins/src/who';
 import { WeatherPlugin } from 'plugins/src/weather';
 import { IntroPlugin } from 'plugins/src/intro';
 import { XkcdPlugin } from 'plugins/src/xkcd';
+import { YouTubePlugin } from 'plugins/src/youtube';
 
 export const pluginBindings = [
   provide(A2chPlugin),
@@ -48,4 +49,5 @@ export const pluginBindings = [
   provide(WeatherPlugin),
   provide(WhoPlugin),
   provide(XkcdPlugin),
+  provide(YouTubePlugin),
 ];

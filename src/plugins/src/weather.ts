@@ -221,7 +221,7 @@ export class WeatherPlugin implements BotPlugin {
       language: 'ru',
       key: this.googleKey
     });
-    if (data.status !== 'OK') {
+    if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
       logger.warn('Error from GeoCode API', data);
       return null;
     }

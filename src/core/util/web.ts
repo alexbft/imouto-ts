@@ -114,7 +114,9 @@ export class Web {
   }
 
   getAsBrowser(url: string | URL, searchParams?: any): Promise<string> {
-    const options = requestOptionsFromUrl(toUrl(url, searchParams));
+    const _url = toUrl(url, searchParams);
+    logger.debug('getAsBrowser:', _url.href);
+    const options = requestOptionsFromUrl(_url);
     options.headers = {
       'User-Agent': 'Mozilla/5.0',
     };

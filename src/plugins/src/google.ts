@@ -36,45 +36,59 @@ export class GooglePlugin implements BotPlugin {
       return this.api.reply(message, 'Что искать?');
     }
     const results = await this.search(query, 0, 1, type);
+    if (results == null || results.length === 0) {
+      return this.api.reply(message, 'Ничего не найдено!');
+    }
     return pagerReply(message, this.api, this.input, {
       type: type === 'web' ? 'text' : 'imageurl',
-      getPage: (index) => this.getPage(cmd, type, query!, results, index)
+      getPage: this.getPage(cmd, type, query!, results)
     });
   }
 
-  private async getPage(cmd: string, type: 'web' | 'image', query: string, results: any[], index: number): Promise<PageResult> {
-    if (index >= results.length) {
-      const nextPage = await this.search(query, results.length, pageSize, type);
-      results.push(...nextPage);
-    }
-    const result = results[index];
-    if (result == null) {
-      return null;
-    }
-    if (type === 'web') {
-      if (cmd === 'gg') {
-        return `${result.title}\n${result.link}`;
-      } else {
-        return `${result.link}`;
+  private getPage(cmd: string, type: 'web' | 'image', query: string, results: any[]) {
+    let hasMore: boolean = true;
+    return async (index: number): Promise<PageResult> => {
+      if (index >= results.length) {
+        if (hasMore) {
+          const nextPage = await this.search(query, results.length, pageSize, type);
+          if (nextPage == null) {
+            hasMore = false;
+            return null;
+          }
+          results.push(...nextPage);
+        } else {
+          return null;
+        }
       }
-    } else {
-      let link: string = result.link.toString().toLowerCase();
-      let url: string;
-      if (!(link.endsWith('.jpg') || link.endsWith('.jpeg') || link.endsWith('.png'))) {
-        url = result.image.thumbnailLink;
-      } else {
-        url = result.link;
+      const result = results[index];
+      if (result == null) {
+        return null;
       }
-      return {
-        caption: result.title,
-        url: url
-      };
+      if (type === 'web') {
+        if (cmd === 'gg') {
+          return `${result.title}\n${result.link}`;
+        } else {
+          return `${result.link}`;
+        }
+      } else {
+        let link: string = result.link.toString().toLowerCase();
+        let url: string;
+        if (!(link.endsWith('.jpg') || link.endsWith('.jpeg') || link.endsWith('.png'))) {
+          url = result.image.thumbnailLink;
+        } else {
+          url = result.link;
+        }
+        return {
+          caption: result.title,
+          url: url
+        };
+      }
     }
   }
 
   private onError = (message: Message) => this.api.reply(message, 'Поиск не удался');
 
-  private async search(query: string, start: number, num: number, type: 'web' | 'image'): Promise<any[]> {
+  private async search(query: string, start: number, num: number, type: 'web' | 'image'): Promise<any[] | undefined> {
     const url = toUrl('https://www.googleapis.com/customsearch/v1', {
       key: this.googleKey,
       cx: this.googleCx,

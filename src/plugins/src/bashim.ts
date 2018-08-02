@@ -2,7 +2,7 @@ import { Input } from 'core/bot_api/input';
 import { BotPlugin } from 'core/bot_api/bot_plugin';
 import { Injectable } from 'core/di/injector';
 import { TgApi } from 'core/tg/tg_api';
-import { Web } from 'core/util/web';
+import { Web, WebException } from 'core/util/web';
 import { AllHtmlEntities as Entities } from 'html-entities';
 import * as iconv from 'iconv-lite';
 import { Message } from 'node-telegram-bot-api';
@@ -43,14 +43,22 @@ export class BashimPlugin implements BotPlugin {
 
   onMessage = async ({ message, match }: TextMatch): Promise<void> => {
     const id = match[2];
-    const [quoteId, text] =
-      id == null
-        ? mapRandom(await this.web.getAsBrowser('http://bash.im/forweb/?u'))
-        : mapSpecific(
-          id,
-          await this.web.getAsBrowser(`http://bash.im/quote/${id}`),
-        );
+    try {
+      const [quoteId, text] =
+        id == null
+          ? mapRandom(await this.web.getAsBrowser('https://bash.im/forweb/?u'))
+          : mapSpecific(
+            id,
+            await this.web.getAsBrowser(`https://bash.im/quote/${id}`),
+          );
 
-    await this.api.respondWithText(message, `Цитата №${quoteId}\n\n${this.entities.decode(text)}`);
+      await this.api.respondWithText(message, `Цитата №${quoteId}\n\n${this.entities.decode(text)}`);
+    } catch (e) {
+      if (e instanceof WebException) {
+        await this.api.reply(message, 'Цитата не найдена.');
+      } else {
+        throw e;
+      }
+    }
   };
 }
