@@ -10,7 +10,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/html-entities": "^1.2.16",
-    "@types/node": "^8.10.22",
+    "@types/node": "^8.10.25",
     "@types/node-telegram-bot-api": "^0.28.4",
     "@types/properties-reader": "0.0.1",
     "@types/sqlite3": "^3.1.3",

@@ -32,14 +32,33 @@ export class ConfigLoader {
       }
     }
 
+    const googleKey = properties.getRaw('googlekey');
+    const googleCx = properties.getRaw('googlecx');
+    const exchangeKey = properties.getRaw('exchangekey');
+    const openWeatherMapKey = properties.getRaw('openweathermapkey');
+
+    logger.wipeMap.set('AuthToken', authToken);
+    if (googleKey != null) {
+      logger.wipeMap.set('GoogleKey', googleKey);
+    }
+    if (googleCx != null) {
+      logger.wipeMap.set('GoogleCx', googleCx);
+    }
+    if (exchangeKey != null) {
+      logger.wipeMap.set('ExchangeKey', exchangeKey);
+    }
+    if (openWeatherMapKey != null) {
+      logger.wipeMap.set('OpenWeatherMapKey', openWeatherMapKey);
+    }
+
     return [
       provide(AuthToken, { useValue: authToken }),
       provide(UserId, { useValue: userId }),
-      provide(GoogleKey, { useValue: properties.getRaw('googlekey') }),
-      provide(GoogleCx, { useValue: properties.getRaw('googlecx') }),
-      provide(ExchangeKey, { useValue: properties.getRaw('exchangekey') }),
+      provide(GoogleKey, { useValue: googleKey }),
+      provide(GoogleCx, { useValue: googleCx }),
+      provide(ExchangeKey, { useValue: exchangeKey }),
       provide(RoleMap, { useValue: roleMap }),
-      provide(OpenWeatherMapKey, { useValue: properties.getRaw('openweathermapkey') }),
+      provide(OpenWeatherMapKey, { useValue: openWeatherMapKey }),
     ];
   }
 

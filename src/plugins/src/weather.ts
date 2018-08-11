@@ -295,7 +295,7 @@ export class WeatherPlugin implements BotPlugin {
       ${icon} *${capitalize(weather.weather.description)}*
       🌡 Температура: *${temp} °C*
       ☁️ Облачность: *${weather.clouds}%*
-      💦 Влажность: *${weather.humidity}%*
+      💧 Влажность: *${weather.humidity}%*
       💨 Ветер: *${weather.wind.speed} км/ч ${rotation(weather.wind.deg)}*
       📊 Давление: *${(weather.pressure * 0.75006375541921).toFixed()} мм.рт.ст.*
     `);
@@ -397,15 +397,15 @@ export class WeatherPlugin implements BotPlugin {
   private formatForecastRow(row: ForecastRow): string {
     const blocks: string[] = [];
     if (row.morning != null) {
-      blocks.push(`утром ${this.formatForecastBlock(row.morning)}`);
+      blocks.push(`\`утром  \` ${this.formatForecastBlock(row.morning)}`);
     }
     if (row.afternoon != null) {
       // show highest instead of avg
       row.afternoon.avgTemperature = Math.max(...row.afternoon.items.map(it => it.temperature));
-      blocks.push(`днём до ${this.formatForecastBlock(row.afternoon)}`);
+      blocks.push(`\`днём до\` ${this.formatForecastBlock(row.afternoon)}`);
     }
     if (row.evening != null) {
-      blocks.push(`вечером ${this.formatForecastBlock(row.evening)}`);
+      blocks.push(`\`вечером\` ${this.formatForecastBlock(row.evening)}`);
     }
     const date = row.date.format('LL').split(' ').slice(0, 2).join(' ');
     return `*${date}*\n${blocks.join('\n')}`;

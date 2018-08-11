@@ -5,6 +5,8 @@ import { Message, User } from 'node-telegram-bot-api';
 import { Unfiltered } from 'core/module/keys';
 import { Database } from 'core/db/database';
 import { DatabaseFactory } from 'core/db/database_factory';
+import { Environment } from 'core/environment/environment';
+import * as moment from 'moment';
 
 @Injectable
 export class UserCachePlugin implements BotPlugin {
@@ -16,6 +18,7 @@ export class UserCachePlugin implements BotPlugin {
     @Inject(Unfiltered)
     private readonly unfilteredInput: InputSource,
     factory: DatabaseFactory,
+    private readonly environment: Environment,
   ) {
     this.db = factory.create();
   }
@@ -59,32 +62,35 @@ export class UserCachePlugin implements BotPlugin {
     }
   }
 
-  async save(user: User, date: number, incCount: number): Promise<void> {
-    const lastName = user.last_name || '';
-    const username = user.username || '';
-    const count = await this.db.get(`
-      select count(*) c from user_names
-      where user_id = ?
-        and first_name = ?
-        and last_name = ?
-        and username = ?
-    `, [user.id, user.first_name, lastName, username]);
-    if (count.c === 0) {
-      const fullName = user.last_name != null ? `${user.first_name} ${user.last_name}` : user.first_name;
-      await this.db.run(`
-        insert into user_names(user_id, first_name, last_name, username, full_name, message_count, last_message_date)
-          values(?, ?, ?, ?, ?, ?, ?)
-      `, [user.id, user.first_name, lastName, username, fullName, incCount, date]);
-    } else {
-      await this.db.run(`
-        update user_names set
-          message_count = message_count + ?,
-          last_message_date = max(last_message_date, ?)
+  save(user: User, date: number, incCount: number): Promise<void> {
+    date = moment.unix(date).valueOf();
+    return this.environment.runCritical(async () => {
+      const lastName = user.last_name || '';
+      const username = user.username || '';
+      const count = await this.db.get(`
+        select count(*) c from user_names
         where user_id = ?
           and first_name = ?
           and last_name = ?
           and username = ?
-      `, [incCount, date, user.id, user.first_name, lastName, username]);
-    }
+      `, [user.id, user.first_name, lastName, username]);
+      if (count.c === 0) {
+        const fullName = user.last_name != null ? `${user.first_name} ${user.last_name}` : user.first_name;
+        await this.db.run(`
+          insert into user_names(user_id, first_name, last_name, username, full_name, message_count, last_message_date)
+            values(?, ?, ?, ?, ?, ?, ?)
+        `, [user.id, user.first_name, lastName, username, fullName, incCount, date]);
+      } else {
+        await this.db.run(`
+          update user_names set
+            message_count = message_count + ?,
+            last_message_date = max(last_message_date, ?)
+          where user_id = ?
+            and first_name = ?
+            and last_name = ?
+            and username = ?
+        `, [incCount, date, user.id, user.first_name, lastName, username]);
+      }
+    });
   }
 }

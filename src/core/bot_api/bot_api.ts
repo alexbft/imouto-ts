@@ -3,9 +3,8 @@ import { Message, Update, CallbackQuery } from 'node-telegram-bot-api';
 
 import { Injector, Injectable } from 'core/di/injector';
 import { logger } from 'core/logging/logger';
-import * as msg from 'core/tg/message_util';
 import { timeout } from 'core/util/promises';
-import { pluginBindings } from 'plugins/module';
+import { pluginBindings, allBindings } from 'plugins/module';
 
 import { Input } from 'core/bot_api/input';
 import { BotPlugin } from 'core/bot_api/bot_plugin';
@@ -35,7 +34,7 @@ export class BotApi {
     const input = this.inputImpl.input;
     input.installGlobalFilter(this.filters.isNotBanned(), 'User is banned');
     const pluginInjector = this.injector.subContext([
-      ...pluginBindings,
+      ...allBindings,
       provide(Input, { useValue: input }),
       provide(Unfiltered, { useValue: this.inputImpl }),
     ]);
@@ -97,6 +96,6 @@ export class BotApi {
   }
 
   isOldMessage(message: Message): boolean {
-    return msg.moment(message).add(5, 'minutes').isBefore(this.startMoment);
+    return moment.unix(message.date).add(5, 'minutes').isBefore(this.startMoment);
   }
 }

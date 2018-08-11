@@ -30,13 +30,13 @@ export async function safeExecute(action: AsyncHandler<any>): Promise<void> {
   try {
     await action();
   } catch (e) {
-    logger.error(e);
+    logger.error('', e.stack || e);
   }
 }
 
 export function pause(delay: Duration): Promise<void> {
   return new Promise((resolve) => {
-    setTimeout(resolve, delay.milliseconds());
+    setTimeout(resolve, delay.asMilliseconds());
   });
 }
 
@@ -122,4 +122,21 @@ export const readFile = promisify(fs.readFile);
 export async function readJson(filename: string): Promise<any> {
   const raw = await readFile(filename);
   return JSON.parse(raw.toString());
+}
+
+export function last<T>(list: T[]): T | undefined {
+  if (list.length === 0) {
+    return undefined;
+  }
+  return list[list.length - 1];
+}
+
+export function putIfAbsent<K, V>(map: Map<K, V>, key: K, valueFunc: () => V): V {
+  if (map.has(key)) {
+    return map.get(key)!;
+  } else {
+    const value = valueFunc();
+    map.set(key, value);
+    return value;
+  }
 }

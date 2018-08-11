@@ -1,4 +1,14 @@
-import { SendMessageOptions, SendPhotoOptions, EditMessageTextOptions, InlineKeyboardMarkup, SendMediaGroupOptions } from "node-telegram-bot-api";
+import {
+  SendMessageOptions,
+  SendPhotoOptions,
+  EditMessageTextOptions,
+  InlineKeyboardMarkup,
+  SendMediaGroupOptions,
+  Message as _Message,
+  PhotoSize,
+  EditMessageReplyMarkupOptions,
+  ForwardMessageOptions
+} from "node-telegram-bot-api";
 import { Stream } from "stream";
 
 export interface SendMessageArgs extends SendMessageOptions {
@@ -53,7 +63,64 @@ export interface EditMessageCaptionArgs {
   reply_markup?: InlineKeyboardMarkup;
 }
 
+export interface EditMessageReplyMarkupArgs extends EditMessageReplyMarkupOptions {
+  reply_markup?: InlineKeyboardMarkup;
+}
+
 export interface SendMediaGroupArgs extends SendMediaGroupOptions {
   chat_id: number | string;
   media: InputMedia[];
+}
+
+export interface Animation {
+  file_id: string;
+  width: number;
+  height: number;
+  duration: number;
+  thumb?: PhotoSize;
+  file_name?: string;
+  mime_type?: string;
+  file_size?: number;
+}
+
+export interface PassportData {
+  data: EncryptedPassportElement[];
+  credentials: EncryptedCredentials;
+}
+
+export interface EncryptedPassportElement {
+  type: 'personal_details' | 'passport' | 'driver_license' | 'identity_card' | 'internal_passport' | 'address' | 'utility_bill' | 'bank_statement' | 'rental_agreement' | 'passport_registration' | 'temporary_registration' | 'phone_number' | 'email';
+  data?: string;
+  phone_number?: string;
+  email?: string;
+  files?: PassportFile[];
+  front_side: PassportFile;
+  reverse_side: PassportFile;
+  selfie: PassportFile;
+}
+
+export interface PassportFile {
+  file_id: string;
+  file_size: number;
+  file_date: number;
+}
+
+export interface EncryptedCredentials {
+  data: string;
+  hash: string;
+  secret: string;
+}
+
+export interface Message extends _Message {
+  animation?: Animation;
+  connected_website?: string;
+  passport_data?: PassportData;
+  reply_to_message?: Message;
+  pinned_message?: Message;
+}
+
+export interface ForwardMessageArgs extends ForwardMessageOptions {
+  chat_id: number | string;
+  from_chat_id: number | string;
+  message_id: number;
 }

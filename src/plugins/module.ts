@@ -24,6 +24,13 @@ import { WeatherPlugin } from 'plugins/src/weather';
 import { IntroPlugin } from 'plugins/src/intro';
 import { XkcdPlugin } from 'plugins/src/xkcd';
 import { YouTubePlugin } from 'plugins/src/youtube';
+import { MessageCachePlugin } from 'plugins/src/message_cache/message_cache_plugin';
+import { QuotePlugin } from 'plugins/src/quotes/quote_plugin';
+import { MessageCache } from 'plugins/src/message_cache/message_cache';
+
+const helperBindings = [
+  provide(MessageCache),
+];
 
 export const pluginBindings = [
   provide(A2chPlugin),
@@ -39,9 +46,11 @@ export const pluginBindings = [
   provide(IdPlugin),
   provide(IntroPlugin),
   provide(IqTestPlugin),
+  provide(MessageCachePlugin),
   provide(MoneyPlugin),
   provide(NyashPlugin),
   provide(QrPlugin),
+  provide(QuotePlugin),
   provide(RollPlugin),
   provide(SilencePlugin),
   provide(TranslatePlugin),
@@ -50,4 +59,9 @@ export const pluginBindings = [
   provide(WhoPlugin),
   provide(XkcdPlugin),
   provide(YouTubePlugin),
+];
+
+export const allBindings = [
+  ...helperBindings,
+  ...pluginBindings
 ];

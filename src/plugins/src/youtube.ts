@@ -9,8 +9,6 @@ import { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable } from 'core/di/injector';
 import { GoogleKey } from 'core/config/keys';
 
-// TODO: do not log key
-
 @Injectable
 export class YouTubePlugin implements BotPlugin {
   readonly name = 'YouTube';

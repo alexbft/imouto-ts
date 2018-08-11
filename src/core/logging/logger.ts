@@ -1,5 +1,11 @@
 import * as winston from 'winston';
 
+interface LoggerExtensions {
+  wipeMap: Map<string, string>;
+}
+
+type Logger = winston.LoggerInstance & LoggerExtensions;
+
 function serializeMeta(meta: any): string {
   if (meta == null || (typeof meta === 'object' && Object.keys(meta).length === 0)) {
     return '';
@@ -10,8 +16,8 @@ function serializeMeta(meta: any): string {
   }
 }
 
-function initLogging(): winston.LoggerInstance {
-  const result = new winston.Logger({
+function initLogging(): Logger {
+  const result: Logger = new winston.Logger({
     levels: {
       debug: 4,
       verbose: 3,
@@ -34,13 +40,17 @@ function initLogging(): winston.LoggerInstance {
       new winston.transports.Console({
         formatter: ({ level, message, meta }: any) => {
           const date = (new Date()).toLocaleString();
-          const text = `[${date}] ${message}` + serializeMeta(meta);
+          let text = `[${date}] ${message}` + serializeMeta(meta);
+          for (const [k, v] of result.wipeMap.entries()) {
+            text = text.replace(v, `[${k}]`);
+          }
           return winston.config.colorize(level, text);
         },
       }),
     ],
     level: 'debug',
-  });
+  }) as Logger;
+  result.wipeMap = new Map();
   result.on('error', (e) => {
     console.log(`Error in logger: ${e.stack || e}`);
   });

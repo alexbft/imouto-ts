@@ -1,7 +1,23 @@
 import { Injectable } from 'core/di/injector';
 import { TgClient } from 'core/tg/tg_client';
-import { SendMessageArgs, EditMessageTextArgs, EditMessageMediaArgs, SendPhotoArgs, EditMessageCaptionArgs, SendMediaGroupArgs } from 'core/tg/tg_types';
-import { Message, AnswerCallbackQueryOptions, SendMessageOptions, SendPhotoOptions } from 'node-telegram-bot-api';
+import {
+  SendMessageArgs,
+  EditMessageTextArgs,
+  EditMessageMediaArgs,
+  SendPhotoArgs,
+  EditMessageCaptionArgs,
+  SendMediaGroupArgs,
+  EditMessageReplyMarkupArgs,
+  Message,
+  ForwardMessageArgs
+} from 'core/tg/tg_types';
+import {
+  AnswerCallbackQueryOptions,
+  SendMessageOptions,
+  SendPhotoOptions,
+  InlineKeyboardMarkup,
+  EditMessageTextOptions
+} from 'node-telegram-bot-api';
 
 @Injectable
 export class TgApi {
@@ -13,6 +29,15 @@ export class TgApi {
 
   editMessageText(args: EditMessageTextArgs): Promise<Message> {
     return this.tgClient.send('editMessageText', args);
+  }
+
+  editText(message: Message, text: string, options?: EditMessageTextOptions): Promise<Message> {
+    return this.editMessageText({
+      message_id: message.message_id,
+      chat_id: message.chat.id,
+      text,
+      ...options
+    });
   }
 
   editMessageMedia(args: EditMessageMediaArgs): Promise<Message> {
@@ -27,6 +52,18 @@ export class TgApi {
       args.caption = args.caption.substr(0, 200);
     }
     return this.tgClient.send('editMessageCaption', args);
+  }
+
+  editMessageReplyMarkup(args: EditMessageReplyMarkupArgs): Promise<Message> {
+    return this.tgClient.send('editMessageReplyMarkup', args);
+  }
+
+  editReplyMarkup(message: Message, markup: InlineKeyboardMarkup): Promise<Message> {
+    return this.editMessageReplyMarkup({
+      message_id: message.message_id,
+      chat_id: message.chat.id,
+      reply_markup: markup
+    });
   }
 
   sendPhoto(args: SendPhotoArgs): Promise<Message> {
@@ -89,5 +126,9 @@ export class TgApi {
       callback_query_id: callbackId,
       text: text
     });
+  }
+
+  forwardMessage(args: ForwardMessageArgs): Promise<Message> {
+    return this.tgClient.send('forwardMessage', args);
   }
 }

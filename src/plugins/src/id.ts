@@ -16,7 +16,6 @@ export class IdPlugin implements BotPlugin {
 
   onMessage = (msg: Message): Promise<any> => {
     if (msg.reply_to_message != null) {
-      // TODO: add msgCache
       const tmp = msg.reply_to_message;
       if (tmp != null) {
         if (tmp.forward_from != null) {

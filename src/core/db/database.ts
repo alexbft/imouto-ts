@@ -2,6 +2,7 @@ import { Disposable } from 'core/util/disposable';
 import * as sqlite3 from 'sqlite3';
 import { promisify } from 'util';
 import { logger } from 'core/logging/logger';
+import { Props } from 'core/util/misc';
 
 const sqlite = sqlite3.verbose();
 
@@ -52,7 +53,7 @@ export class Database implements Disposable {
     return this.close();
   }
 
-  run(sql: string, args?: any[]): Promise<sqlite3.RunResult> {
+  run(sql: string, args?: any[] | Props): Promise<sqlite3.RunResult> {
     sql = sql.trim();
     if (this.debugLogging) {
       logger.debug('Executing SQL:', sql, args);
@@ -68,7 +69,7 @@ export class Database implements Disposable {
     });
   }
 
-  all(sql: string, args?: any[]): Promise<any[]> {
+  all(sql: string, args?: any[] | Props): Promise<any[]> {
     sql = sql.trim();
     if (this.debugLogging) {
       logger.debug('Querying SQL:', sql, args);
@@ -84,7 +85,7 @@ export class Database implements Disposable {
     });
   }
 
-  get(sql: string, args?: any[]): Promise<any> {
+  get(sql: string, args?: any[] | Props): Promise<any> {
     sql = sql.trim();
     if (this.debugLogging) {
       logger.debug('Querying SQL:', sql, args);

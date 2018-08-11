@@ -48,6 +48,10 @@ export class Environment {
     }
   }
 
+  async runCritical<T>(func: () => Promise<T>): Promise<T> {
+    return this.markCritical(func());
+  }
+
   private addDisposeSubscription(subscription: DisposeSubscription): void {
     this._disposeSubscriptions.push(subscription);
   }
