@@ -7,6 +7,7 @@ interface QuoteRow {
   poster_id?: number;
   poster_name?: string;
   date?: number;
+  tag: string;
 }
 
 interface QuoteMessageRow {
@@ -34,6 +35,7 @@ export async function createTables(db: Database): Promise<void> {
       poster_id integer,
       poster_name text,
       date integer,
+      tag text not null,
       primary key (num)
     );
   `);
@@ -63,11 +65,12 @@ export async function createTables(db: Database): Promise<void> {
 
 export async function saveQuote(db: Database, quote: UnsavedQuote): Promise<Quote> {
   const result = await db.run(`
-      insert into quotes(poster_id, poster_name, date) values($poster_id, $poster_name, $date);
+      insert into quotes(poster_id, poster_name, date, tag) values($poster_id, $poster_name, $date, $tag);
     `, {
       $poster_id: quote.posterId,
       $poster_name: quote.posterName,
-      $date: quote.date == null ? null : quote.date.valueOf()
+      $date: quote.date == null ? null : quote.date.valueOf(),
+      $tag: quote.tag
     });
   const quoteNum = result.lastID;
   const savedQuote: Quote = { ...quote, num: quoteNum, rating: 0, votes: [] };
@@ -112,6 +115,7 @@ export async function getAllQuotes(db: Database): Promise<Map<number, Quote>> {
     messages: [],
     rating: 0,
     votes: [],
+    tag: row.tag,
   }));
   const byNum = new Map<number, Quote>();
   for (const q of all) {
@@ -158,4 +162,8 @@ export async function insertVote(db: Database, quoteNum: number, vote: Vote): Pr
     $quote_num: quoteNum,
     $user_id: vote.userId
   });
+}
+
+export async function updateQuoteTag(db: Database, quoteNum: number, tag: string): Promise<void> {
+  await db.run(`update quotes set tag = ? where num = ?`, [tag, quoteNum]);
 }

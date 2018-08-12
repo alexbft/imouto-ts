@@ -14,16 +14,14 @@ import { last, putIfAbsent, fixMultiline, tryParseInt, safeExecute } from 'core/
 import * as moment from 'moment';
 import { fullName, chatName, isForwarded, isPrivate, messageToString } from 'core/tg/message_util';
 import { Environment } from 'core/environment/environment';
-import { saveQuote, createTables, getAllQuotes, deleteQuote } from 'plugins/src/quotes/quote_sql';
+import { saveQuote, createTables, getAllQuotes, deleteQuote, updateQuoteTag } from 'plugins/src/quotes/quote_sql';
 import { QuotePrivateListener } from 'plugins/src/quotes/quote_private_listener';
 import { Message } from 'core/tg/tg_types';
 import { SubscriptionManager } from 'core/util/subscription_manager';
 import { QuoteShowOptions, QuoteShow, QuoteShowContext } from 'plugins/src/quotes/quote_show';
 import { Scheduler } from 'core/util/scheduler';
 
-// TODO: Tags
 // TODO: Import
-// TODO: Stats
 
 @Injectable
 export class QuotePlugin implements BotPlugin {
@@ -47,7 +45,6 @@ export class QuotePlugin implements BotPlugin {
     readonly scheduler: Scheduler,
   ) {
     this.db = dbFactory.create();
-    this.db.debugLogging = true;
   }
 
   async init(): Promise<void> {
@@ -61,21 +58,23 @@ export class QuotePlugin implements BotPlugin {
     }
 
     const modOnly = this.input.filter(this.filters.hasRole('mod'));
-    modOnly.onText(/^!?\s?save$/, this.handleSave, this.onSaveError);
+    modOnly.onText(/^!?\s?save(?:\s+(.+))?$/, this.handleSave, this.onSaveError);
     modOnly.onText(/^(!)?\s?(del|delete|удали)(?:\s+(.+))?$/, this.handleDelete, this.onDeleteError);
+    modOnly.onText(/^(!)?\s?(tags?|т[эе]ги?)\s+(.+)$/, this.handleTag, (message) => this.api.reply(message, 'Произошла ошибка.'));
     modOnly.onMessage(message => {
       if (isForwarded(message) && isPrivate(message)) {
         this.handleForward(message);
       }
     });
     this.input.onText(/^!\s?(q|ц|цитата|quote)(?:\s+(.+))?$/, this.handleGet, this.onGetError);
+    this.input.onText(/^!\s?qstats(?:\s+(.+))?$/, this.handleStats, (message) => this.api.reply(message, 'Произошла ошибка.'));
   }
 
   dispose(): Promise<void> {
     return this.db.close();
   }
 
-  handleSave = async ({ message }: TextMatch): Promise<any> => {
+  handleSave = async ({ message, match }: TextMatch): Promise<any> => {
     if (message.reply_to_message == null) {
       return;
     }
@@ -83,7 +82,7 @@ export class QuotePlugin implements BotPlugin {
     if (quoteMessages[0].reply_to_message != null) {
       quoteMessages.unshift(quoteMessages[0].reply_to_message!);
     }
-    const quote = this.createQuote(message.from!, quoteMessages);
+    const quote = this.createQuote(message.from!, quoteMessages, match[1] || '');
     if (quote.posterId === last(quote.messages)!.authorId && !this.userService.hasRole(message.from!, 'admin')) {
       return this.api.reply(message, 'Сам себя не похвалишь - никто не похвалит, да?');
     }
@@ -186,7 +185,60 @@ export class QuotePlugin implements BotPlugin {
 
   onDeleteError = (message: Message) => this.api.reply(message, 'Цитата не удаляется...');
 
-  createQuote(poster: User, quoteMessages: Message[]): UnsavedQuote {
+  handleTag = async ({ message, match }: TextMatch): Promise<any> => {
+    let context: QuoteShowContext | undefined;
+    if (message.reply_to_message != null) {
+      const reply = message.reply_to_message;
+      context = this.callbackSubscriptions.subscriptions.find(sub => sub.message.message_id === reply.message_id && sub.message.chat.id === reply.chat.id);
+    }
+    if (context == null) {
+      return;
+    }
+    const quote = context.quote();
+    if (!this.quotes.has(quote.num)) {
+      return;
+    }
+    quote.tag = match[3];
+    await this.environment.markCritical(updateQuoteTag(this.db, quote.num, quote.tag));
+    await context.update();
+    return this.api.reply(message, 'Тэг изменён.');
+  }
+
+  handleStats = ({ message, match }: TextMatch): Promise<any> => {
+    if (match[1] != null) {
+      const query = match[1];
+      const count = Array.from(this.quotes.values()).filter(filterByText(query)).length;
+      return this.api.reply(message, `Цитат с упоминанием '${query}': ${count}`);
+    }
+    if (message.reply_to_message != null && message.reply_to_message.from != null) {
+      const user = message.reply_to_message.from;
+      const count = Array.from(this.quotes.values()).filter(filterByAuthorId(user.id)).length;
+      return this.api.reply(message, `Цитат авторства ${fullName(user)}: ${count}`);
+    }
+    const authors = new Map<string, number>();
+    for (const q of this.quotes.values()) {
+      for (const m of q.messages) {
+        let count = authors.get(m.authorName);
+        if (count == null) {
+          count = 0;
+        }
+        count += 1;
+        authors.set(m.authorName, count);
+      }
+    }
+    const authorTuples = Array.from(authors.entries());
+    const top = authorTuples.sort(([_a, aCount], [_b, bCount]) => bCount - aCount).slice(0, 10);
+    const num = Math.min(top.length, 10);
+    const MOON = '🌚';
+    return this.api.reply(message, fixMultiline(`
+      Всего цитат: ${this.quotes.size}
+      Топ ${num} авторов:
+
+      ${top.map(([a, v]) => `${a} ${MOON} ${v} ${MOON}`).join('\n')}
+    `));
+  }
+
+  createQuote(poster: User, quoteMessages: Message[], tag: string): UnsavedQuote {
     const createQuoteMessage = (message: Message): QuoteMessage => {
       let authorId: number | undefined;
       let authorName: string;
@@ -215,7 +267,8 @@ export class QuotePlugin implements BotPlugin {
       date: moment(),
       posterId: poster.id,
       posterName: fullName(poster),
-      messages: quoteMessages.map(createQuoteMessage)
+      messages: quoteMessages.map(createQuoteMessage),
+      tag: tag,
     };
   }
 
@@ -246,13 +299,14 @@ export class QuotePlugin implements BotPlugin {
     const quoteNum = isSavedQuote(quote) ? `Цитата №${quote.num}` : `Новая цитата`;
     const maybeSavedDate = quote.date != null ? `, сохранена ${quote.date.format('LL')}` : '';
     const maybePoster = quote.posterName != null ? ` от <i>${quote.posterName}</i>` : '';
+    const maybeTag = quote.tag != '' ? `\nТэг: <i>${quote.tag}</i>` : '';
     let maybeRating: string = '';
     if (isSavedQuote(quote)) {
       const ratingStr = quote.rating > 0 ? `+${quote.rating}` : `${quote.rating}`;
       maybeRating = `\nРейтинг цитаты: <b>[ ${ratingStr} ]</b>`;
     }
     return fixMultiline(`
-      <b>${quoteNum}</b>${maybeSavedDate}${maybePoster}${maybeRating}
+      <b>${quoteNum}</b>${maybeSavedDate}${maybePoster}${maybeTag}${maybeRating}
 
       ${quote.messages.map(formatMessage).join('\n\n')}
     `);

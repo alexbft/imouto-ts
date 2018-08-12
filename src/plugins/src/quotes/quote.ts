@@ -15,6 +15,7 @@ export interface UnsavedQuote {
   posterName?: string;
   date?: Moment;
   messages: QuoteMessage[];
+  tag: string;
 }
 
 export interface Vote {
@@ -40,7 +41,10 @@ export function filterByAuthorId(authorId: number): QuoteFilter {
 
 export function filterByText(text: string): QuoteFilter {
   const key = text.toLowerCase();
-  return q => q.messages.some(msg => msg.authorName.toLowerCase() === key || msg.text.toLowerCase().includes(key));
+  return q => q.tag.toLowerCase().includes(key) ||
+    q.messages.some(
+      msg => msg.authorName.toLowerCase() === key ||
+        msg.text.toLowerCase().includes(key));
 }
 
 export function filterByQuoteNum(num: number): QuoteFilter {

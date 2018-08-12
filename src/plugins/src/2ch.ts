@@ -5,6 +5,7 @@ import { randomChoice } from 'core/util/misc';
 import { TextMatch } from 'core/bot_api/text_match';
 import { Injectable } from 'core/di/injector';
 import { TgApi } from 'core/tg/tg_api';
+import { FilterFactory } from 'core/filter/filter_factory';
 
 const HOST = '2ch.hk';
 const BOARD = 'b';
@@ -90,11 +91,15 @@ async function randomPost(threadNum: any): Promise<any> {
 export class A2chPlugin implements BotPlugin {
   readonly name: string = '2ch';
 
-  constructor(private api: TgApi, private input: Input) { }
+  constructor(
+    private readonly api: TgApi,
+    private readonly input: Input,
+    private readonly filters: FilterFactory) { }
 
   init(): void {
-    this.input.onText(/^!\s?(кек|kek)/, this.onKek, (message) => this.api.reply(message, 'ты кек'));
-    this.input.onText(/^!\s?(сас|sas)/, this.onSas, (message) => this.api.reply(message, 'ты сас'));
+    const modOnly = this.input.filter(this.filters.hasRole('mod'));
+    modOnly.onText(/^!\s?(кек|kek)\b/, this.onKek, (message) => this.api.reply(message, 'ты кек'));
+    modOnly.onText(/^!\s?(сас|sas)\b/, this.onSas, (message) => this.api.reply(message, 'ты сас'));
   }
 
   onKek = async ({ message }: TextMatch): Promise<any> => {

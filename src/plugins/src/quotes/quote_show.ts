@@ -71,6 +71,7 @@ export interface QuoteShowOptions {
 export interface QuoteShowContext extends HasSubscription {
   message: Message;
   quote(): Quote;
+  update(): Promise<void>;
 }
 
 export class QuoteShow {
@@ -143,6 +144,7 @@ export class QuoteShow {
     return {
       subscription: this.plugin.input.onCallback(this.sentMessage, this.answerCallback),
       quote: () => this.quote(),
+      update: () => this.update(),
       message: this.sentMessage
     };
   }

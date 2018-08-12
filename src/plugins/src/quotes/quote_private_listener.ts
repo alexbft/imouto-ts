@@ -38,7 +38,7 @@ export class QuotePrivateListener {
   }
 
   handleBatch = async (message: Message) => {
-    const quote = this.plugin.createQuote(message.from!, this.buffer);
+    const quote = this.plugin.createQuote(message.from!, this.buffer, '');
     const quoteText = this.plugin.formatQuote(quote);
     const res = await this.plugin.api.respondWithText(message, quoteText, {
       disable_web_page_preview: true,
