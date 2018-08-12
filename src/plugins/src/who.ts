@@ -118,7 +118,7 @@ export class WhoPlugin implements BotPlugin {
       Это ${name(main)}
 
       Сообщений: ${totalMessageCount}
-      Последнее сообщение: ${moment(main.last_message_date).from(moment())}
+      Последнее сообщение: ${moment().calendar(moment(main.last_message_date))}
       ${aka}
     `);
   }

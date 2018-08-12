@@ -1,4 +1,7 @@
 import * as winston from 'winston';
+import * as moment from 'moment';
+import { logDir } from 'core/module/data_dir';
+import { existsSync, mkdirSync } from 'fs';
 
 interface LoggerExtensions {
   wipeMap: Map<string, string>;
@@ -17,6 +20,9 @@ function serializeMeta(meta: any): string {
 }
 
 function initLogging(): Logger {
+  if (!existsSync(logDir)) {
+    mkdirSync(logDir);
+  }
   const result: Logger = new winston.Logger({
     levels: {
       debug: 4,
@@ -39,7 +45,7 @@ function initLogging(): Logger {
     transports: [
       new winston.transports.Console({
         formatter: ({ level, message, meta }: any) => {
-          const date = (new Date()).toLocaleString();
+          const date = moment().format('Y-MM-DD HH:mm:ss.SSS');
           let text = `[${date}] ${message}` + serializeMeta(meta);
           for (const [k, v] of result.wipeMap.entries()) {
             text = text.replace(v, `[${k}]`);
@@ -47,8 +53,21 @@ function initLogging(): Logger {
           return winston.config.colorize(level, text);
         },
       }),
+      new winston.transports.File({
+        json: false,
+        filename: `${logDir}${moment().format('Y-MM-DD-HH-mm-ss')}.log`,
+        formatter: ({ level, message, meta }: any) => {
+          const date = moment().format('Y-MM-DD HH:mm:ss.SSS');
+          const levelStr = String(level).toUpperCase();
+          let text = `[${date}] [${levelStr}] ${message}` + serializeMeta(meta);
+          for (const [k, v] of result.wipeMap.entries()) {
+            text = text.replace(v, `[${k}]`);
+          }
+          return text;
+        },
+      }),
     ],
-    level: 'debug',
+    level: 'info',
   }) as Logger;
   result.wipeMap = new Map();
   result.on('error', (e) => {

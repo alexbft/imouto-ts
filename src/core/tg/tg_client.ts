@@ -52,7 +52,7 @@ export class TgClient {
       const args = {
         offset: this.lastUpdateId == -1 ? -1 * oldUpdatesLimit : this.lastUpdateId + 1,
         timeout: updatesLongPollingTimeout.asSeconds(),
-        allowed_updates: ['message', 'callback_query'],
+        allowed_updates: ['message', 'callback_query', 'edited_message'],
       };
       const response = await this.sendArgsRaw('getUpdates', args, 'debug');
       if (response.ok) {
@@ -89,19 +89,22 @@ export class TgClient {
   }
 
   private async sendArgs(methodName: string, args: Props): Promise<any> {
-    return this.getResult(await this.sendArgsRaw(methodName, args));
+    return this.getResult(await this.sendArgsRaw(methodName, args, 'info'));
   }
 
   private sendArgsRaw(methodName: string, args: Props, logLevel = 'verbose'): Promise<any> {
     const argsJson = JSON.stringify(args);
-    logger.log(logLevel, `Calling ${methodName} with args: ${argsJson}`);
+    logger.verbose(`Calling ${methodName} with args: ${argsJson}`);
+    if (logLevel !== 'verbose') {
+      logger.log(logLevel, `Calling ${methodName}`);
+    }
     const request = this.makePostRequest(methodName);
     request.write(argsJson);
     return this.web.fetchJson(request);
   }
 
   private async sendNoArgs(methodName: string): Promise<any> {
-    logger.verbose(`Calling ${methodName}`);
+    logger.info(`Calling ${methodName}`);
     const request = this.makeGetRequest(methodName);
     return this.getResult(await this.web.fetchJson(request));
   }

@@ -21,8 +21,6 @@ import { SubscriptionManager } from 'core/util/subscription_manager';
 import { QuoteShowOptions, QuoteShow, QuoteShowContext } from 'plugins/src/quotes/quote_show';
 import { Scheduler } from 'core/util/scheduler';
 
-// TODO: Import
-
 @Injectable
 export class QuotePlugin implements BotPlugin {
   readonly name = 'Quotes';
