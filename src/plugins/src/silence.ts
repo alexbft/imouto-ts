@@ -23,7 +23,7 @@ export class SilencePlugin implements BotPlugin {
   }
 
   private handle = ({ match }: TextMatch) => {
-    const dur = match[1] != null ? duration(30, 'seconds') : duration(5, 'seconds');
+    const dur = match[1] != null ? duration(30, 'minutes') : duration(5, 'minutes');
     const endStr = moment().add(dur).toString();
     logger.info(`Activated silent mode until ${endStr}.`);
     const subscription = this.input.installGlobalFilter(
