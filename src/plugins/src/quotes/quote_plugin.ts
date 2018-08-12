@@ -68,6 +68,7 @@ export class QuotePlugin implements BotPlugin {
     });
     this.input.onText(/^!\s?(q|ц|цитата|quote)(?:\s+(.+))?$/, this.handleGet, this.onGetError);
     this.input.onText(/^!\s?qstats(?:\s+(.+))?$/, this.handleStats, (message) => this.api.reply(message, 'Произошла ошибка.'));
+    modOnly.onText(/^!?\s?пруф/, this.handleProof, (message) => this.api.reply(message, 'Упс...'));
   }
 
   dispose(): Promise<void> {
@@ -236,6 +237,30 @@ export class QuotePlugin implements BotPlugin {
 
       ${top.map(([a, v]) => `${a} ${MOON} ${v} ${MOON}`).join('\n')}
     `));
+  }
+
+  handleProof = async ({ message }: TextMatch): Promise<void> => {
+    let context: QuoteShowContext | undefined;
+    if (message.reply_to_message != null) {
+      const reply = message.reply_to_message;
+      context = this.callbackSubscriptions.subscriptions.find(sub => sub.message.message_id === reply.message_id && sub.message.chat.id === reply.chat.id);
+    }
+    if (context == null) {
+      return;
+    }
+    const quote = context.quote();
+    if (!this.quotes.has(quote.num)) {
+      return;
+    }
+    for (const msg of quote.messages) {
+      if (msg.id != null && msg.chatId != null) {
+        await this.api.forwardMessage({
+          chat_id: message.chat.id,
+          from_chat_id: msg.chatId,
+          message_id: msg.id
+        });
+      }
+    }
   }
 
   createQuote(poster: User, quoteMessages: Message[], tag: string): UnsavedQuote {
