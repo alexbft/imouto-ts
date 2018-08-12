@@ -54,7 +54,8 @@ export function fixPattern(pat: RegExp): RegExp {
     .replace(/\\b/g, '(?:^|$|\\W)')
     .replace(/\\w/g, '[a-zA-Zа-яА-Я0-9]')
     .replace(/\\W/g, '[^a-zA-Zа-яА-Я0-9]');
-  return new RegExp(src, 'i');
+  const flags = pat.flags + 'i';
+  return new RegExp(src, flags);
 }
 
 export function findAll(s: string, regex: RegExp): RegExpExecArray[] {
@@ -139,4 +140,9 @@ export function putIfAbsent<K, V>(map: Map<K, V>, key: K, valueFunc: () => V): V
     map.set(key, value);
     return value;
   }
+}
+
+export function botReference(r: RegExp): RegExp {
+  return new RegExp(r.source.replace('(bot)',
+    '(сестричка|сестрёнка|сестренка|сестра|бот|сис)'));
 }

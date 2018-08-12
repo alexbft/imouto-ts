@@ -27,6 +27,7 @@ import { YouTubePlugin } from 'plugins/src/youtube';
 import { MessageCachePlugin } from 'plugins/src/message_cache/message_cache_plugin';
 import { QuotePlugin } from 'plugins/src/quotes/quote_plugin';
 import { MessageCache } from 'plugins/src/message_cache/message_cache';
+import { AlarmClockPlugin } from 'plugins/src/alarm_clock';
 
 const helperBindings = [
   provide(MessageCache),
@@ -34,6 +35,7 @@ const helperBindings = [
 
 export const pluginBindings = [
   provide(A2chPlugin),
+  provide(AlarmClockPlugin),
   provide(BashimPlugin),
   provide(CatPlugin),
   provide(CoinPlugin),

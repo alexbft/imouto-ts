@@ -4,17 +4,8 @@ import { Injectable, Inject } from 'core/di/injector';
 import { TgApi } from 'core/tg/tg_api';
 import { Message } from 'node-telegram-bot-api';
 import { TextMatch } from 'core/bot_api/text_match';
-import { randomChoice, fixPattern } from 'core/util/misc';
+import { randomChoice, fixPattern, botReference, capitalize } from 'core/util/misc';
 import { UserId } from 'core/config/keys';
-
-function botReference(r: RegExp): RegExp {
-  return new RegExp(r.source.replace('(bot)',
-    '(сестричка|сестрёнка|сестренка|сестра|бот|сис)'));
-}
-
-function capitalize(txt: string): string {
-  return txt.charAt(0).toUpperCase() + txt.substr(1);
-}
 
 @Injectable
 export class HelloPlugin implements BotPlugin {
