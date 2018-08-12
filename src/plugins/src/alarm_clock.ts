@@ -3,7 +3,6 @@ import { Input } from 'core/bot_api/input';
 import { TgApi } from 'core/tg/tg_api';
 import { botReference, fixMultiline, safeExecute, tryParseInt } from 'core/util/misc';
 import { TextMatch } from 'core/bot_api/text_match';
-import { Moment } from 'moment';
 import * as moment from 'moment';
 import { jsParseDate } from 'vendor/date_parse';
 import { fullName, messageToString } from 'core/tg/message_util';
@@ -11,17 +10,9 @@ import { Scheduler } from 'core/util/scheduler';
 import { UserService } from 'core/tg/user_service';
 import { Injectable } from 'core/di/injector';
 import { parseNote } from 'core/util/date_parse_hack';
-
-interface Alarm {
-  id: number;
-  isEnabled: boolean;
-  hasFired: boolean;
-  date: Moment;
-  userId: number;
-  userName: string;
-  chatId: number;
-  message: string;
-}
+import { DatabaseFactory } from 'core/db/database_factory';
+import { Database } from 'core/db/database';
+import { Alarm, createTable, getAlarms, insertAlarm, disableAlarm } from 'plugins/src/alarm_clock_sql';
 
 function showAlarm(alarm: Alarm): string {
   return fixMultiline(`
@@ -31,27 +22,37 @@ function showAlarm(alarm: Alarm): string {
   `);
 }
 
-// TODO: persistence
-
 @Injectable
 export class AlarmClockPlugin implements BotPlugin {
   readonly name = 'Alarm clock';
 
   private readonly alarms = new Map<number, Alarm>();
-  private nextId: number = 1;
+  private readonly db: Database;
 
   constructor(
     private readonly input: Input,
     private readonly api: TgApi,
     private readonly scheduler: Scheduler,
     private readonly userService: UserService,
-  ) { }
+    dbFactory: DatabaseFactory,
+  ) {
+    this.db = dbFactory.create();
+    this.db.debugLogging = true;
+  }
 
-  init(): void {
+  async init(): Promise<void> {
+    await this.db.open();
+    await createTable(this.db);
+    const alarms = await getAlarms(this.db);
+    for (const alarm of alarms) {
+      this.alarms.set(alarm.id, alarm);
+    }
     const regex = botReference(/^(?:(?:(bot),?\s*)|!\s?)(напомни|будильники?|alarms?|напоминани[яе])(?:\s+(.+))?$/);
     this.input.onText(regex, this.handleSetAlarm, (message) => this.api.reply(message, 'Будильник сломался :('));
     this.input.onText(/^\/alarmoff(\d+)/, this.handleStopAlarm, (message) => this.api.reply(message, 'Будильник сломался :('));
   }
+
+  dispose = () => this.db.close();
 
   private handleSetAlarm = async ({ message, match }: TextMatch): Promise<any> => {
     const query = match[3];
@@ -74,7 +75,7 @@ export class AlarmClockPlugin implements BotPlugin {
     }
     const note = message.reply_to_message != null ? messageToString(message.reply_to_message) : parseNote(query);
     const alarm: Alarm = {
-      id: this.nextId++,
+      id: 0,
       chatId: message.chat.id,
       userId: user.id,
       userName: fullName(user),
@@ -83,7 +84,7 @@ export class AlarmClockPlugin implements BotPlugin {
       hasFired: false,
       message: note
     };
-    this.setAlarm(alarm);
+    await this.setAlarm(alarm);
     return this.api.reply(message,
       `Хорошо, я напомню вам об этом ${alarm.date.fromNow()}.\n\n${showAlarm(alarm)}`,
       { parse_mode: 'Markdown' });
@@ -96,7 +97,7 @@ export class AlarmClockPlugin implements BotPlugin {
     const alarm = alarmId != null ? this.alarms.get(alarmId) : null;
     const isAdmin = this.userService.hasRole(user, 'admin');
     if (alarm == null || (!isAdmin && alarm.userId !== user.id)) {
-      return this.api.reply(message, 'Вы можете отменить только свои напоминания.');
+      return this.api.reply(message, 'Напоминание не найдено или недоступно. Вы можете отменить только свои напоминания.');
     }
     if (!alarm.isEnabled) {
       return this.api.reply(message, 'Это напоминание уже отменено.');
@@ -105,6 +106,7 @@ export class AlarmClockPlugin implements BotPlugin {
       return this.api.reply(message, 'Это напоминание уже в прошлом.');
     }
     alarm.isEnabled = false;
+    await disableAlarm(this.db, alarm.id);
     return this.api.reply(message, 'Напоминание отменено.');
   }
 
@@ -112,7 +114,9 @@ export class AlarmClockPlugin implements BotPlugin {
     return Array.from(this.alarms.values());
   }
 
-  private setAlarm(alarm: Alarm): void {
+  private async setAlarm(alarm: Alarm): Promise<void> {
+    const id = await insertAlarm(this.db, alarm);
+    alarm.id = id;
     this.alarms.set(alarm.id, alarm);
     this.scheduler.schedule(() => safeExecute(() => this.fireAlarm(alarm)), moment.duration(alarm.date.diff(moment())));
   }
