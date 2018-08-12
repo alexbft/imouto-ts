@@ -5,7 +5,7 @@ import { TgApi } from 'core/tg/tg_api';
 import { Message, InlineKeyboardMarkup } from 'node-telegram-bot-api';
 import { Web } from 'core/util/web';
 import { Inject, Injectable } from 'core/di/injector';
-import { GoogleKey, OpenWeatherMapKey } from 'core/config/keys';
+import { OpenWeatherMapKey } from 'core/config/keys';
 import { logger } from 'core/logging/logger';
 import * as moment from 'moment';
 import { fixMultiline, capitalize } from 'core/util/misc';
@@ -13,7 +13,7 @@ import { SubscriptionManager } from 'core/util/subscription_manager';
 
 interface GeoCodeData {
   address: string;
-  location: {
+  location?: {
     lat: number;
     lng: number;
   }
@@ -93,7 +93,10 @@ function getIcon(type: string): string {
   }
 }
 
-function rotation(deg: number): string {
+function rotation(deg: number | undefined): string {
+  if (deg == null) {
+    return '';
+  }
   const normalized = (deg + 180) % 360;
   const sectionFrac = normalized * 8 / 360 - 0.5;
   let section: number;
@@ -119,6 +122,8 @@ const nowMarkup: InlineKeyboardMarkup = {
   }]]
 }
 
+// TODO: Google is greedy. Explore OpenStreetMap
+
 @Injectable
 export class WeatherPlugin implements BotPlugin {
   readonly name = 'Weather';
@@ -129,7 +134,6 @@ export class WeatherPlugin implements BotPlugin {
     private readonly input: Input,
     private readonly api: TgApi,
     private readonly web: Web,
-    @Inject(GoogleKey) private readonly googleKey: string,
     @Inject(OpenWeatherMapKey) private readonly openWeatherMapKey: string,
   ) { }
 
@@ -158,12 +162,12 @@ export class WeatherPlugin implements BotPlugin {
         return this.api.reply(message, `Что "${match[1]}"?`);
       }
     } else {
-      geoCodeData = await this.geoCode(address.trim());
+      geoCodeData = { address: capitalize(address.trim()) };
     }
     if (geoCodeData == null) {
       return this.api.reply(message, 'Адрес не найден.');
     }
-    const weatherData = await this.getWeather(geoCodeData.location);
+    const weatherData = await this.getWeather(geoCodeData);
     if (weatherData == null) {
       return this.api.reply(message, 'Ошибка при получении погодных данных.')
     }
@@ -217,34 +221,40 @@ export class WeatherPlugin implements BotPlugin {
 
   private onError = (message: Message) => this.api.reply(message, 'Кажется, дождь начинается...');
 
-  private async geoCode(address: string): Promise<GeoCodeData | null> {
-    const data = await this.web.getJson('https://maps.googleapis.com/maps/api/geocode/json', {
-      address,
-      language: 'ru',
-      key: this.googleKey
-    });
-    if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-      logger.warn('Error from GeoCode API', data);
-      return null;
-    }
-    if (data.results == null || data.results.length < 1) {
-      return null;
-    }
-    const result = data.results[0];
-    return {
-      address: result.formatted_address,
-      location: result.geometry.location
-    };
-  }
+  // private async geoCode(address: string): Promise<GeoCodeData | null> {
+  //   const data = await this.web.getJson('https://maps.googleapis.com/maps/api/geocode/json', {
+  //     address,
+  //     language: 'ru',
+  //     key: this.googleKey
+  //   });
+  //   if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+  //     logger.warn('Error from GeoCode API', data);
+  //     return null;
+  //   }
+  //   if (data.results == null || data.results.length < 1) {
+  //     return null;
+  //   }
+  //   const result = data.results[0];
+  //   return {
+  //     address: result.formatted_address,
+  //     location: result.geometry.location
+  //   };
+  // }
 
-  private async getWeather({ lat, lng }: { lat: number, lng: number }): Promise<WeatherData | null> {
-    const data = await this.web.getJson('http://api.openweathermap.org/data/2.5/weather', {
-      lat: lat,
-      lon: lng,
+  private async getWeather(geoCode: GeoCodeData): Promise<WeatherData | null> {
+    const options = geoCode.location != null ? {
+      lat: geoCode.location.lat,
+      lon: geoCode.location.lng,
       lang: 'ru',
       units: 'metric',
       appid: this.openWeatherMapKey
-    });
+    } : {
+        q: geoCode.address,
+        lang: 'ru',
+        units: 'metric',
+        appid: this.openWeatherMapKey
+      };
+    const data = await this.web.getJson('http://api.openweathermap.org/data/2.5/weather', options);
     if (data.cod !== 200) {
       logger.warn('Error from OpenWeatherMap', data);
       return null;
@@ -289,7 +299,7 @@ export class WeatherPlugin implements BotPlugin {
   private formatResult(geo: GeoCodeData, weather: WeatherData): string {
     const time = moment.unix(weather.date).from(moment());
     const icon = getIcon(weather.weather.icon);
-    const temp = weather.temperature > 0 ? `+${weather.temperature.toFixed()}` : `${weather.temperature.toFixed()}`
+    const temp = weather.temperature > 0 ? `+${weather.temperature.toFixed()}` : `${weather.temperature.toFixed()}`;
     return fixMultiline(`
       Погода в настоящее время (данные получены ${time})
       *${geo.address}* (${weather.name})
@@ -399,7 +409,7 @@ export class WeatherPlugin implements BotPlugin {
   private formatForecastRow(row: ForecastRow): string {
     const blocks: string[] = [];
     if (row.morning != null) {
-      blocks.push(`\`утром  \` ${this.formatForecastBlock(row.morning)}`);
+      blocks.push(`\`  утром\` ${this.formatForecastBlock(row.morning)}`);
     }
     if (row.afternoon != null) {
       // show highest instead of avg
