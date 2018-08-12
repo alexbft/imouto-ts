@@ -4,6 +4,8 @@ import { TextMatch } from "core/bot_api/text_match";
 import { Injectable } from "core/di/injector";
 import { TgApi } from "core/tg/tg_api";
 
+// TODO: pager
+
 @Injectable
 export class CatPlugin implements BotPlugin {
   readonly name = 'Cats';

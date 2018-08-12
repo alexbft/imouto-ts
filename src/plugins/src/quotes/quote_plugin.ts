@@ -110,7 +110,7 @@ export class QuotePlugin implements BotPlugin {
     const filterInfo: string[] = [];
     let queryNum: number | undefined;
     if (message.reply_to_message != null) {
-      const queryAuthor = message.forward_from || message.from;
+      const queryAuthor = message.reply_to_message.forward_from || message.reply_to_message.from;
       if (queryAuthor != null) {
         filters.push(filterByAuthorId(queryAuthor.id));
         filterInfo.push(`Автор: ${fullName(queryAuthor)}`);
