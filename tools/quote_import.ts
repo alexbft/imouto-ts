@@ -38,7 +38,7 @@ async function doWork(db: Database) {
     votes: [],
     messages: (it.messages as any[]).map((msg: any): QuoteMessage => ({
       authorId: msg.sender,
-      authorName: msg.sender_name,
+      authorName: msg.sender_name || msg.saved_name || '???',
       id: msg.id,
       chatId: msg.chat_id,
       date: getDate(msg.date),
@@ -53,7 +53,7 @@ async function doWork(db: Database) {
     votes: [],
     messages: [{
       authorId: it.sender,
-      authorName: it.sender_name,
+      authorName: it.sender_name || it.saved_name || '???',
       id: it.id,
       chatId: it.chat_id,
       hasText: it.text != null && it.text != '',
