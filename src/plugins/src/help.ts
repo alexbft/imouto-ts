@@ -26,6 +26,7 @@ const helptext = fixMultiline(`
   *!кот*(*!cat*) - картинки с котиками
   *!dogify* <text>... - wow, so doge
   *!qr* <text> - сделать QR-код из текста
+  *!напомни*(*!alarm*) \\[<время, событие>] - поставить напоминание
   *!команды*(*!help*) - список команд`);
 
 @Injectable
