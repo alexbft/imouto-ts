@@ -25,6 +25,7 @@
     "properties-reader": "0.0.16",
     "reflect-metadata": "^0.1.12",
     "rxjs": "^5.5.11",
+    "source-map-support": "^0.5.8",
     "sqlite3": "^4.0.2",
     "winston": "^2.4.3"
   }

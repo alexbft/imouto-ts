@@ -72,7 +72,7 @@ export class Web {
   async readResponse(response: http.IncomingMessage): Promise<string> {
     const rawResponse = await this.readResponseRawString(response);
     if (response.statusCode !== 200) {
-      logger.debug(`Response {${rawResponse}}`);
+      logger.info(`Response {${rawResponse}}`);
       throw new WebException(`HTTP Error ${response.statusCode}: ${response.statusMessage}`);
     }
     return rawResponse;
@@ -81,12 +81,12 @@ export class Web {
   async readResponseJson(response: http.IncomingMessage): Promise<any> {
     const rawResponse = await this.readResponseRawString(response);
     if (response.statusCode !== 200) {
-      logger.debug(`Response {${rawResponse}}`);
+      logger.info(`Response {${rawResponse}}`);
       throw new WebException(`HTTP Error ${response.statusCode}: ${response.statusMessage}`);
     }
     const contentType = response.headers['content-type'] as string;
     if (!/^application\/json/.test(contentType)) {
-      logger.debug(`Response {${rawResponse}}`);
+      logger.info(`Response {${rawResponse}}`);
       throw new WebException(`Expected application/json but got ${contentType}`);
     }
     return JSON.parse(rawResponse);

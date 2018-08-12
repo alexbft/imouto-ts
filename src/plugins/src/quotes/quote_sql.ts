@@ -111,7 +111,7 @@ export async function getAllQuotes(db: Database): Promise<Map<number, Quote>> {
     num: row.num,
     posterId: row.poster_id,
     posterName: row.poster_name,
-    date: moment(row.date),
+    date: row.date != null ? moment(row.date) : undefined,
     messages: [],
     rating: 0,
     votes: [],
@@ -129,7 +129,7 @@ export async function getAllQuotes(db: Database): Promise<Map<number, Quote>> {
         authorName: msg.author_name,
         id: msg.message_id,
         chatId: msg.chat_id,
-        date: moment(msg.date),
+        date: msg.date != null ? moment(msg.date) : undefined,
         text: msg.quote_text,
         hasText: msg.has_text == 1
       });

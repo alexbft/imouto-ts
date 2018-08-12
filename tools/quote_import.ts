@@ -6,9 +6,20 @@ import { createTables, insertVote } from 'plugins/src/quotes/quote_sql';
 import { exists, readJson, Props } from 'core/util/misc';
 import { Quote, QuoteMessage } from 'plugins/src/quotes/quote';
 import * as moment from 'moment';
+import { logger } from 'core/logging/logger';
 
 const toImport = dataDir + 'quotes3.txt';
 const toImportVotes = dataDir + 'quote_votes.json';
+
+function getDate(date?: number): moment.Moment | undefined {
+  if (date == null) {
+    return undefined;
+  }
+  if (date < 9999999999) {
+    return moment.unix(date);
+  }
+  return moment(date);
+}
 
 async function doWork(db: Database) {
   if (!await exists(toImport)) {
@@ -17,11 +28,11 @@ async function doWork(db: Database) {
   }
   await createTables(db);
   const quotesJson: any[] = await readJson(toImport);
-  const quotes = quotesJson.map((it: any): Quote => ({
+  const mapQuote = (it: any): Quote => ({
     num: it.num,
     posterId: it.posterId,
     posterName: it.posterName,
-    date: moment(it.date),
+    date: getDate(it.date),
     tag: '',
     rating: 0,
     votes: [],
@@ -30,13 +41,38 @@ async function doWork(db: Database) {
       authorName: msg.sender_name,
       id: msg.id,
       chatId: msg.chat_id,
-      date: moment(msg.date),
+      date: getDate(msg.date),
       hasText: msg.text != null && msg.text != '',
       text: msg.text || '[media]'
     })),
-  }));
+  });
+  const mapQuoteOld = (it: any): Quote => ({
+    num: it.num,
+    tag: '',
+    rating: 0,
+    votes: [],
+    messages: [{
+      authorId: it.sender,
+      authorName: it.sender_name,
+      id: it.id,
+      chatId: it.chat_id,
+      hasText: it.text != null && it.text != '',
+      text: it.text || '[media]'
+    }]
+  });
+  const quotes = quotesJson.map(it => it.version >= 3 ? mapQuote(it) : mapQuoteOld(it));
+  const skipped = new Set<number>();
   for (const quote of quotes) {
-    await db.run(`delete from quotes where num = ?`, [quote.num]);
+    const existing: number = (await db.get(`select count(*) c from quotes where num = ?`, [quote.num]))['c'];
+    if (existing > 0) {
+      if (process.argv.indexOf('--force') !== -1) {
+        await db.run(`delete from quotes where num = ?`, [quote.num]);
+      } else {
+        console.log(`WARNING: skipping quote ${quote}`);
+        skipped.add(quote.num);
+        continue;
+      }
+    }
     await db.run(`
         insert into quotes(num, poster_id, poster_name, date, tag) values($num, $poster_id, $poster_name, $date, $tag);
       `, {
@@ -70,6 +106,9 @@ async function doWork(db: Database) {
   const votesJson: Props = await readJson(toImportVotes);
   for (const key in votesJson) {
     const quoteNum = Number(key);
+    if (skipped.has(quoteNum)) {
+      continue;
+    }
     await db.run(`delete from quote_votes where quote_num = ?`, [quoteNum]);
     const votes: Props = votesJson[key];
     for (const userKey in votes) {
@@ -83,6 +122,7 @@ async function doWork(db: Database) {
 
 async function main() {
   const db = new Database(dataDir + 'db.sqlite3');
+  logger.level = 'debug';
   db.debugLogging = true;
   await db.open();
 

@@ -1,4 +1,5 @@
 import './path_hack';
+import 'source-map-support/register'
 
 import { Injector } from 'core/di/injector';
 import { bindings as mainBindings } from 'core/module/main_module';
