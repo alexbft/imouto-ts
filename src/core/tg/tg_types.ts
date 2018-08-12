@@ -124,3 +124,8 @@ export interface ForwardMessageArgs extends ForwardMessageOptions {
   from_chat_id: number | string;
   message_id: number;
 }
+
+export interface DeleteMessageArgs {
+  chat_id: number | string;
+  message_id: number;
+}

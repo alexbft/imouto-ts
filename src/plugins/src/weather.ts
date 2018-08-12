@@ -171,7 +171,9 @@ export class WeatherPlugin implements BotPlugin {
       parse_mode: 'Markdown',
       reply_markup: forecastMarkup
     });
-    this.subscriptionManager.add(this.input.onCallback(msg, this.makeHandler(msg, geoCodeData, weatherData)));
+    this.subscriptionManager.add({
+      subscription: this.input.onCallback(msg, this.makeHandler(msg, geoCodeData, weatherData))
+    });
   }
 
   private makeHandler(message: Message, geo: GeoCodeData, weather: WeatherData): CallbackHandler {

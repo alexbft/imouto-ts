@@ -6,6 +6,7 @@ import { removeItem, fixPattern } from 'core/util/misc';
 import { LoggingFilter } from 'core/filter/logging_filter';
 import { TextMatch } from 'core/bot_api/text_match';
 import { ExclusiveTextInput } from 'core/bot_api/exclusive_text_input';
+import { isForwarded } from 'core/tg/message_util';
 
 export class FilteredInput implements IFilteredInput {
   readonly messages: Observable<Message>;
@@ -21,7 +22,7 @@ export class FilteredInput implements IFilteredInput {
       .filter(query => filters.every(f => f.allowCallbackQuery(query)))
       .multicast(new Subject())
       .refCount();
-    this.textMessages = this.messages.filter(msg => msg.text != null);
+    this.textMessages = this.messages.filter(msg => msg.text != null && !isForwarded(msg));
   }
 
   installGlobalFilter(filter: Filter, rejectReason?: string): Subscription {

@@ -48,8 +48,7 @@ export async function createTables(db: Database): Promise<void> {
       author_id integer,
       author_name text not null,
       date integer,
-      primary key (id),
-      foreign key (quote_num) references quotes (num)
+      primary key (id)
     );
   `);
   await db.run(`
@@ -57,8 +56,7 @@ export async function createTables(db: Database): Promise<void> {
       quote_num integer not null,
       user_id integer not null,
       value integer not null,
-      primary key (quote_num, user_id),
-      foreign key (quote_num) references quotes (num)
+      primary key (quote_num, user_id)
     );
   `);
 }
@@ -89,6 +87,12 @@ export async function saveQuote(db: Database, quote: UnsavedQuote): Promise<Quot
       });
   }
   return savedQuote;
+}
+
+export async function deleteQuote(db: Database, quoteNum: number): Promise<void> {
+  await db.run(`delete from quotes where num = ?`, [quoteNum]);
+  await db.run(`delete from quote_messages where quote_num = ?`, [quoteNum]);
+  await db.run(`delete from quote_votes where quote_num = ?`, [quoteNum]);
 }
 
 export async function getAllQuotes(db: Database): Promise<Map<number, Quote>> {

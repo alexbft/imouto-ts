@@ -1,10 +1,10 @@
-import { Subscription } from 'rxjs';
 import { Message } from 'core/tg/tg_types';
 import { QuoteFilter, Quote, Vote } from 'plugins/src/quotes/quote';
 import { QuotePlugin } from 'plugins/src/quotes/quote_plugin';
 import { random, fixMultiline } from 'core/util/misc';
 import { InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, User } from 'node-telegram-bot-api';
 import { updateVote, insertVote } from 'plugins/src/quotes/quote_sql';
+import { HasSubscription } from 'core/util/subscription_manager';
 
 const thumbsUp = String.fromCodePoint(0x1f44d) + String.fromCodePoint(0x1f3fb);
 const thumbsDown = String.fromCodePoint(0x1f44e) + String.fromCodePoint(0x1f3fb);
@@ -68,6 +68,11 @@ export interface QuoteShowOptions {
   shouldEdit: boolean
 }
 
+export interface QuoteShowContext extends HasSubscription {
+  message: Message;
+  quote(): Quote;
+}
+
 export class QuoteShow {
   private readonly userId: number;
   private readonly message: Message;
@@ -80,7 +85,7 @@ export class QuoteShow {
   private index: number;
   private keyboard: InlineKeyboardMarkup;
   private showMenu: boolean;
-  private isMediaShown: boolean = false;
+  private isMediaShown = new Set<number>();
 
   constructor(
     private readonly plugin: QuotePlugin,
@@ -100,7 +105,7 @@ export class QuoteShow {
     }
     this.keyboard = defaultKeyboard;
     this.showMenu = false;
-    const total = filters.length > 0 ? `Найдено цитат: ${quoteSet.length}` : `Последняя цитата: №${this.plugin.lastQuoteNum}`;
+    const total = filters.length > 0 ? `Найдено цитат: ${quoteSet.length}` : `Всего цитат: ${this.plugin.lastQuoteNum}`;
     const info = filterInfo.length > 0 ? `\n${filterInfo.join('\n')}` : '';
     this.prefix = `<code>${total}${info}</code>`;
   }
@@ -125,7 +130,7 @@ export class QuoteShow {
     `);
   }
 
-  async handle(): Promise<Subscription | null> {
+  async handle(): Promise<QuoteShowContext | null> {
     if (this.index === -1) {
       await this.plugin.api.reply(this.message, 'Цитата не найдена :(');
       return null;
@@ -135,7 +140,11 @@ export class QuoteShow {
     } else {
       this.sentMessage = await this.plugin.api.respondWithText(this.message, this.format(), this.getSendOptions());
     }
-    return this.plugin.input.onCallback(this.sentMessage, this.answerCallback);
+    return {
+      subscription: this.plugin.input.onCallback(this.sentMessage, this.answerCallback),
+      quote: () => this.quote(),
+      message: this.sentMessage
+    };
   }
 
   private answerCallback = async (cb: CallbackQuery) => {
@@ -174,11 +183,16 @@ export class QuoteShow {
 
   private async handleVote({ id, from }: CallbackQuery, value: number): Promise<void> {
     const quote = this.quote();
+    if (!this.plugin.quotes.has(quote.num)) {
+      // Quote was deleted.
+      await this.answer(id, 'Цитата удалена.');
+      return;
+    }
     const existingVote = quote.votes.find(v => v.userId === from.id);
     const icon = value > 0 ? thumbsUp : thumbsDown;
     if (existingVote != null) {
       if (existingVote.value === value) {
-        await this.plugin.api.answerCallback(id, `Вы уже проголосовали ${icon} за эту цитату.`);
+        await this.answer(id, `Вы уже проголосовали ${icon} за эту цитату.`);
         return;
       } else {
         existingVote.value = value;
@@ -278,14 +292,18 @@ export class QuoteShow {
     if (!this.checkSender(from)) {
       return this.wrongSender(id);
     }
-    if (this.isMediaShown) {
+    const quote = this.quote();
+    if (!this.plugin.quotes.has(quote.num)) {
+      // Quote was deleted.
+      return this.answer(id, 'Цитата удалена.');
+    }
+    if (this.isMediaShown.has(quote.num)) {
       return this.answer(id, 'Уже показано');
     }
-    const quote = this.quote();
     if (quote.messages.every(msg => msg.id == null || msg.hasText)) {
       return this.answer(id, 'В цитате нет изображений');
     }
-    this.isMediaShown = true;
+    this.isMediaShown.add(quote.num);
     await this.answer(id, '');
     for (const msg of quote.messages) {
       if (msg.id != null && msg.chatId != null && !msg.hasText) {

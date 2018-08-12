@@ -10,20 +10,20 @@ import { UserService } from 'core/tg/user_service';
 import { MessageCache } from 'plugins/src/message_cache/message_cache';
 import { UnsavedQuote, QuoteMessage, Quote, isSavedQuote, QuoteFilter, filterByAuthorId, filterByText, filterByQuoteNum } from 'plugins/src/quotes/quote';
 import { User } from 'node-telegram-bot-api';
-import { last, putIfAbsent, fixMultiline, tryParseInt } from 'core/util/misc';
+import { last, putIfAbsent, fixMultiline, tryParseInt, safeExecute } from 'core/util/misc';
 import * as moment from 'moment';
 import { fullName, chatName, isForwarded, isPrivate, messageToString } from 'core/tg/message_util';
 import { Environment } from 'core/environment/environment';
-import { saveQuote, createTables, getAllQuotes } from 'plugins/src/quotes/quote_sql';
+import { saveQuote, createTables, getAllQuotes, deleteQuote } from 'plugins/src/quotes/quote_sql';
 import { QuotePrivateListener } from 'plugins/src/quotes/quote_private_listener';
 import { Message } from 'core/tg/tg_types';
 import { SubscriptionManager } from 'core/util/subscription_manager';
-import { QuoteShowOptions, QuoteShow } from 'plugins/src/quotes/quote_show';
+import { QuoteShowOptions, QuoteShow, QuoteShowContext } from 'plugins/src/quotes/quote_show';
 import { Scheduler } from 'core/util/scheduler';
 
-// TODO: Delete quotes
 // TODO: Tags
 // TODO: Import
+// TODO: Stats
 
 @Injectable
 export class QuotePlugin implements BotPlugin {
@@ -31,7 +31,7 @@ export class QuotePlugin implements BotPlugin {
 
   readonly db: Database;
   private readonly listeners: Map<number, QuotePrivateListener> = new Map();
-  private readonly callbackSubscriptions = new SubscriptionManager();
+  private readonly callbackSubscriptions = new SubscriptionManager<QuoteShowContext>();
 
   quotes: Map<number, Quote> = new Map();
   lastQuoteNum: number = 0;
@@ -47,7 +47,7 @@ export class QuotePlugin implements BotPlugin {
     readonly scheduler: Scheduler,
   ) {
     this.db = dbFactory.create();
-    //this.db.debugLogging = true;
+    this.db.debugLogging = true;
   }
 
   async init(): Promise<void> {
@@ -62,6 +62,7 @@ export class QuotePlugin implements BotPlugin {
 
     const modOnly = this.input.filter(this.filters.hasRole('mod'));
     modOnly.onText(/^!?\s?save$/, this.handleSave, this.onSaveError);
+    modOnly.onText(/^(!)?\s?(del|delete|удали)(?:\s+(.+))?$/, this.handleDelete, this.onDeleteError);
     modOnly.onMessage(message => {
       if (isForwarded(message) && isPrivate(message)) {
         this.handleForward(message);
@@ -87,7 +88,14 @@ export class QuotePlugin implements BotPlugin {
       return this.api.reply(message, 'Сам себя не похвалишь - никто не похвалит, да?');
     }
     const saved = await this.saveQuote(quote);
-    await this.api.reply(message, `Запомнила под номером ${saved.num}.`);
+    return this.showQuote({
+      userId: message.from!.id,
+      message,
+      filters: [],
+      filterInfo: [],
+      queryNum: saved.num,
+      shouldEdit: false
+    });
   }
 
   onSaveError = (message: Message) => this.api.reply(message, 'Ошибка при сохранении цитаты.');
@@ -142,6 +150,42 @@ export class QuotePlugin implements BotPlugin {
 
   onGetError = (message: Message) => this.api.reply(message, 'Цитата не цитируется...');
 
+  handleDelete = async ({ message, match }: TextMatch): Promise<any> => {
+    let num: number | undefined | null;
+    let context: QuoteShowContext | undefined;
+    if (match[1] != null && match[3] != null) {
+      num = tryParseInt(match[3]);
+    } else if (message.reply_to_message != null) {
+      const reply = message.reply_to_message;
+      context = this.callbackSubscriptions.subscriptions.find(sub => sub.message.message_id === reply.message_id && sub.message.chat.id === reply.chat.id);
+      if (context != null) {
+        num = context.quote().num;
+      }
+    }
+    if (num == null) {
+      if (match[1] != null) {
+        return this.api.reply(message, 'Что удалить?');
+      } else {
+        return;
+      }
+    }
+    if (!this.quotes.has(num)) {
+      return this.api.reply(message, `Цитата №${num} не найдена.`);
+    }
+    const quote = this.quotes.get(num)!;
+    if (quote.posterId != message.from!.id && !this.userService.hasRole(message.from!, 'admin')) {
+      return this.api.reply(message, `Нельзя удалить чужую цитату.`);
+    }
+    await this.deleteQuote(num);
+    if (context != null) {
+      this.callbackSubscriptions.delete(context);
+      await safeExecute(() => this.api.delete(context!.message));
+    }
+    await this.api.reply(message, `Цитата №${num} удалена.`);
+  }
+
+  onDeleteError = (message: Message) => this.api.reply(message, 'Цитата не удаляется...');
+
   createQuote(poster: User, quoteMessages: Message[]): UnsavedQuote {
     const createQuoteMessage = (message: Message): QuoteMessage => {
       let authorId: number | undefined;
@@ -182,6 +226,11 @@ export class QuotePlugin implements BotPlugin {
       this.lastQuoteNum = saved.num;
     }
     return saved;
+  }
+
+  async deleteQuote(quoteNum: number): Promise<void> {
+    await this.environment.markCritical(deleteQuote(this.db, quoteNum));
+    this.quotes.delete(quoteNum);
   }
 
   getQuoteText(message: Message): string {

@@ -1,21 +1,36 @@
 import { Disposable } from 'core/util/disposable';
 import { Subscription } from 'rxjs';
+import { removeItem } from 'core/util/misc';
 
-export class SubscriptionManager implements Disposable {
-  private subscriptions: Subscription[] = [];
+export interface HasSubscription {
+  subscription: Subscription;
+}
+
+export class SubscriptionManager<T extends HasSubscription> implements Disposable {
+  subscriptions: T[] = [];
 
   constructor(private readonly subscriptionLimit: number = 20) { }
 
-  add(subscription: Subscription): void {
+  add(subscription: T): void {
     if (this.subscriptions.length >= this.subscriptionLimit) {
-      this.subscriptions.shift()!.unsubscribe();
+      this.subscriptions.shift()!.subscription.unsubscribe();
     }
     this.subscriptions.push(subscription);
   }
 
+  delete(subscription: T): boolean {
+    const sub = removeItem(this.subscriptions, subscription);
+    if (sub != null) {
+      sub.subscription.unsubscribe();
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   dispose(): void {
     for (const sub of this.subscriptions) {
-      sub.unsubscribe();
+      sub.subscription.unsubscribe();
     }
     this.subscriptions = [];
   }

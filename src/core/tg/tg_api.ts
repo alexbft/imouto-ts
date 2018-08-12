@@ -9,7 +9,8 @@ import {
   SendMediaGroupArgs,
   EditMessageReplyMarkupArgs,
   Message,
-  ForwardMessageArgs
+  ForwardMessageArgs,
+  DeleteMessageArgs
 } from 'core/tg/tg_types';
 import {
   AnswerCallbackQueryOptions,
@@ -130,5 +131,16 @@ export class TgApi {
 
   forwardMessage(args: ForwardMessageArgs): Promise<Message> {
     return this.tgClient.send('forwardMessage', args);
+  }
+
+  deleteMessage(args: DeleteMessageArgs): Promise<boolean> {
+    return this.tgClient.send('deleteMessage', args);
+  }
+
+  delete(message: Message): Promise<boolean> {
+    return this.deleteMessage({
+      message_id: message.message_id,
+      chat_id: message.chat.id
+    });
   }
 }
