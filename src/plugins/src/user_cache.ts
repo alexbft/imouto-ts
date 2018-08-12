@@ -25,7 +25,6 @@ export class UserCachePlugin implements BotPlugin {
 
   async init(): Promise<void> {
     await this.db.open();
-    return;
     await this.db.run(`
       create table if not exists user_names (
         user_id integer not null,

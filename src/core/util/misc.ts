@@ -4,6 +4,8 @@ import { Duration } from "moment";
 import { promisify } from 'util';
 import * as fs from 'fs';
 
+export const maxDelayNodeJs = 2147483647;
+
 export interface Props {
   [key: string]: any;
 }
@@ -34,10 +36,18 @@ export async function safeExecute(action: AsyncHandler<any>): Promise<void> {
   }
 }
 
-export function pause(delay: Duration): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, delay.asMilliseconds());
-  });
+export async function pause(delay: Duration): Promise<void> {
+  const _pause = (delay: number): Promise<void> =>
+    new Promise((resolve) => {
+      setTimeout(resolve, delay);
+    });
+  const delayMs = delay.asMilliseconds();
+  const fullWait = Math.floor(delayMs / maxDelayNodeJs);
+  const restWait = delayMs % maxDelayNodeJs;
+  for (let i = 0; i < fullWait; ++i) {
+    await _pause(maxDelayNodeJs);
+  }
+  await _pause(restWait);
 }
 
 export function formatDate(date: Date) {

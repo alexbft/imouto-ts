@@ -1,8 +1,8 @@
 import { Duration, duration } from 'moment';
-import { Scheduler as RxScheduler, Subscription, Subject } from 'rxjs';
+import { Subscription, Subject } from 'rxjs';
 import { Injectable } from 'core/di/injector';
 import { PromiseOr } from 'core/util/promises';
-import { safeExecute } from 'core/util/misc';
+import { safeExecute, maxDelayNodeJs, pause } from 'core/util/misc';
 
 type Action = () => void;
 type AsyncAction = () => PromiseOr<any>;
@@ -18,7 +18,21 @@ export class Scheduler {
   }
 
   schedule(action: Action, delay: Duration): Subscription {
-    return RxScheduler.async.schedule(action, delay.asMilliseconds());
+    const delayMs = delay.asMilliseconds();
+    if (delayMs < maxDelayNodeJs) {
+      const timer = setTimeout(action, delayMs);
+      return new Subscription(() => clearTimeout(timer));
+    } else {
+      let isCancelled: boolean = false;
+      const wait = async () => {
+        await pause(delay);
+        if (!isCancelled) {
+          action();
+        }
+      }
+      wait();
+      return new Subscription(() => isCancelled = true);
+    }
   }
 
   scheduleLowPriority(action: AsyncAction): void {

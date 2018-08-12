@@ -14,9 +14,19 @@ import { DatabaseFactory } from 'core/db/database_factory';
 import { Database } from 'core/db/database';
 import { Alarm, createTable, getAlarms, insertAlarm, disableAlarm } from 'plugins/src/alarm_clock_sql';
 
+// TODO: time zone support
+
 function showAlarm(alarm: Alarm): string {
+  let date: string;
+  if (alarm.date.year() === moment().year() && alarm.date.dayOfYear() === moment().dayOfYear()) {
+    date = alarm.date.format('HH:mm:ss');
+  } else if (alarm.date.year() === moment().year()) {
+    date = alarm.date.format('LL').split(' ').slice(0, 2).join(' ') + ' ' + alarm.date.format('HH:mm');
+  } else {
+    date = alarm.date.format('LLL');
+  }
   return fixMultiline(`
-    ⏰ *${alarm.date.format('LLL')}*
+    ⏰ *${date}*
     _${alarm.message}_
     Отменить: /alarmoff${alarm.id}
   `);
@@ -37,7 +47,6 @@ export class AlarmClockPlugin implements BotPlugin {
     dbFactory: DatabaseFactory,
   ) {
     this.db = dbFactory.create();
-    this.db.debugLogging = true;
   }
 
   async init(): Promise<void> {
@@ -46,6 +55,9 @@ export class AlarmClockPlugin implements BotPlugin {
     const alarms = await getAlarms(this.db);
     for (const alarm of alarms) {
       this.alarms.set(alarm.id, alarm);
+      if (alarm.isEnabled) {
+        this.scheduleAlarm(alarm);
+      }
     }
     const regex = botReference(/^(?:(?:(bot),?\s*)|!\s?)(напомни|будильники?|alarms?|напоминани[яе])(?:\s+(.+))?$/);
     this.input.onText(regex, this.handleSetAlarm, (message) => this.api.reply(message, 'Будильник сломался :('));
@@ -84,7 +96,7 @@ export class AlarmClockPlugin implements BotPlugin {
       hasFired: false,
       message: note
     };
-    await this.setAlarm(alarm);
+    await this.addAlarm(alarm);
     return this.api.reply(message,
       `Хорошо, я напомню вам об этом ${alarm.date.fromNow()}.\n\n${showAlarm(alarm)}`,
       { parse_mode: 'Markdown' });
@@ -114,9 +126,13 @@ export class AlarmClockPlugin implements BotPlugin {
     return Array.from(this.alarms.values());
   }
 
-  private async setAlarm(alarm: Alarm): Promise<void> {
+  private async addAlarm(alarm: Alarm): Promise<void> {
     const id = await insertAlarm(this.db, alarm);
     alarm.id = id;
+    this.scheduleAlarm(alarm);
+  }
+
+  private scheduleAlarm(alarm: Alarm): void {
     this.alarms.set(alarm.id, alarm);
     this.scheduler.schedule(() => safeExecute(() => this.fireAlarm(alarm)), moment.duration(alarm.date.diff(moment())));
   }
