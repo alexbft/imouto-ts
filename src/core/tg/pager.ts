@@ -31,7 +31,7 @@ export interface PagerOptions {
 const defaultPagerOptions = {
   startPage: 0,
   prevCaption: '⬅️ Назад',
-  nextCaption: 'Дальше ➡️',
+  nextCaption: '➡️ Дальше',
   randomCaption: '🎲 Случайно',
   type: 'text',
   enableRandom: false,
