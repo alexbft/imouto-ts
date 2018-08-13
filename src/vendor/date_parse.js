@@ -29,11 +29,11 @@ export function jsParseDate(title) {
   matches = title.match(shablon);
   if (matches) {
     shablon = /(\d{4})/g;
-    matches2 = title.match(shablon); //найти год
+    var matches2 = title.match(shablon); //найти год
     shablon = /(янв)|(фев)|(мар)|(апр)|(мая)|(май)|(июн)|(июл)|(авг)|(сен)|(окт)|(ноя)|(дек)/g;
-    matches3 = title.match(shablon); //найти месяц
+    var matches3 = title.match(shablon); //найти месяц
     shablon = /(\d{1,2})/g;
-    matches4 = matches[0].match(shablon); //найти дату
+    var matches4 = matches[0].match(shablon); //найти дату
     if (matches3[0] == "янв") var mymonth = 1;
     if (matches3[0] == "фев") var mymonth = 2;
     if (matches3[0] == "мар") var mymonth = 3;
