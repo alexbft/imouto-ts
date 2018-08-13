@@ -152,7 +152,10 @@ export function putIfAbsent<K, V>(map: Map<K, V>, key: K, valueFunc: () => V): V
   }
 }
 
+export function replaceInPattern(r: RegExp, searchString: string, replaceValue: string): RegExp {
+  return new RegExp(r.source.replace(searchString, replaceValue), r.flags);
+}
+
 export function botReference(r: RegExp): RegExp {
-  return new RegExp(r.source.replace('(bot)',
-    '(сестричка|сестрёнка|сестренка|сестра|бот|сис)'));
+  return replaceInPattern(r, '(bot)', '(сестричка|сестрёнка|сестренка|сестра|бот|сис)');
 }

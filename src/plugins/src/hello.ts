@@ -4,8 +4,9 @@ import { Injectable, Inject } from 'core/di/injector';
 import { TgApi } from 'core/tg/tg_api';
 import { Message } from 'node-telegram-bot-api';
 import { TextMatch } from 'core/bot_api/text_match';
-import { randomChoice, fixPattern, botReference, capitalize } from 'core/util/misc';
+import { randomChoice, fixPattern, botReference, capitalize, replaceInPattern } from 'core/util/misc';
 import { UserId } from 'core/config/keys';
+import { messageFilter } from 'core/filter/message_filter';
 
 @Injectable
 export class HelloPlugin implements BotPlugin {
@@ -18,14 +19,30 @@ export class HelloPlugin implements BotPlugin {
 
   init(): void {
     const input = this.input.exclusiveMatch();
+    const replaceTriggerAndBot = (r: RegExp) => replaceInPattern(botReference(r), '(trigger)',
+      '(привет|пока|спасибо|спс|споки|спокойной ночи|как дела|глупая|глупый|тупая|тупой|дура|дурак|бака|умная|умный|умница|няша)');
     input.onText(botReference(/^\W*\b(bot)\b\W*$/), (match) =>
       this.reply(match).randomPong());
-    input.onText(/\?\s*$/, (match) =>
-      this.reply(match).maybeAnswer());
+    input.onText(/^\W*(bot)\b[^]+\?\s*$/, (match) =>
+      this.reply(match).answer());
+    input.onText(replaceTriggerAndBot(/\b(trigger)\W+(ты\W+)?(bot)\b/), (match) =>
+      this.reply(match).onTrigger(match.match[1]));
+    input.onText(replaceTriggerAndBot(/\b(bot)\W+(ты\W+)?(trigger)\b/), (match) =>
+      this.reply(match).onTrigger(match.match[3]));
+
+    const filter = messageFilter(
+      message => message.chat.type === 'private' ||
+        (message.reply_to_message != null &&
+          message.reply_to_message.from != null &&
+          message.reply_to_message.from.id === this.userId));
+    const privateInput = input.filter(filter);
+    privateInput.onText(replaceTriggerAndBot(/\b(trigger)\b/), (match) =>
+      this.reply(match).onTrigger(match.match[1]));
+    privateInput.onText(/\?\s*$/, (match) => this.reply(match).answer());
   }
 
   private reply(match: TextMatch): Reply {
-    return new Reply(this.api, match.message, this.userId);
+    return new Reply(this.api, match.message);
   }
 }
 
@@ -34,8 +51,7 @@ class Reply {
 
   constructor(
     private readonly api: TgApi,
-    private readonly message: Message,
-    private readonly userId: number) {
+    private readonly message: Message) {
     this.you = message.from!.first_name;
   }
 
@@ -45,18 +61,8 @@ class Reply {
     return this.api.reply(this.message, reply);
   }
 
-  private isReplyToMe(): boolean {
-    return this.message.reply_to_message != null &&
-      this.message.reply_to_message.from != null &&
-      this.message.reply_to_message.from.id === this.userId;
-  }
-
-  maybeAnswer(): Promise<any> {
+  answer(): Promise<any> {
     const text = this.message.text!.trim();
-    const shouldAnswer = this.message.chat.type === 'private' || this.isReplyToMe() || fixPattern(botReference(/^(bot)\b/)).test(text);
-    if (!shouldAnswer) {
-      return Promise.resolve();
-    }
     const orMatch = fixPattern(/([a-zA-Zа-яА-ЯёЁ0-9\s,\-_]+)\bили\b([a-zA-Zа-яА-ЯёЁ0-9\s\-_]+)/).exec(text);
     let ans: string;
     if (orMatch != null) {
@@ -78,5 +84,58 @@ class Reply {
       }
     }
     return this.api.reply(this.message, ans);
+  }
+
+  onTrigger(trigger: string): Promise<any> {
+    trigger = trigger.toLowerCase();
+    const you = this.you;
+    let reply: string;
+    switch (trigger) {
+      case 'привет':
+      case 'прив':
+        reply = `Привет, ${you}!`;
+        break;
+      case 'как дела':
+        reply = randomChoice(['Хорошо!', 'Хорошо.', 'Плохо!', 'Плохо.', 'Как всегда.', 'А у тебя?', 'Чем занимаешься?', 'Я креветко', 'Истинно познавшие дзен не используют оценочных суждений.']);
+        break;
+      case 'пока':
+        reply = `Пока, ${you}!`;
+        break;
+      case 'спасибо':
+      case 'спс':
+        reply = randomChoice([`Не за что, ${you}!`, `Пожалуйста, ${you}!`]);
+        break;
+      case 'споки':
+      case 'спокойной ночи':
+        const night = randomChoice(['Спокойной ночи', 'Сладких снов', 'До завтра']);
+        reply = `${night}, ${you}!`;
+        break;
+      case 'глупая':
+      case 'глупый':
+        reply = 'Я не глупая!';
+        break;
+      case 'тупая':
+      case 'тупой':
+        reply = 'Я не тупая!';
+        break;
+      case 'дура':
+      case 'дурак':
+        reply = 'Я не дура!';
+        break;
+      case 'бака':
+        reply = 'Я не бака!';
+        break;
+      case 'умная':
+      case 'умный':
+      case 'умница':
+        reply = 'Да, я умная :3';
+        break;
+      case 'няша':
+        reply = `Спасибо, ${you}, ты тоже няша!`;
+        break;
+      default:
+        reply = 'Спасибо, не поняла!';
+    }
+    return this.api.reply(this.message, reply);
   }
 }

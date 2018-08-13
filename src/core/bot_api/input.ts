@@ -42,11 +42,15 @@ export interface TextInput {
   onText(regex: RegExp, handler: TextMatchHandler, onError?: MessageErrorHandler): Subscription;
 }
 
+export interface ExclusiveInput extends TextInput {
+  filter(...filters: Filter[]): ExclusiveInput;
+}
+
 export interface IFilteredInput extends InputSource, TextInput {
   readonly textMessages: Observable<Message>;
   onMessage(handler: MessageHandler, onError?: MessageErrorHandler): Subscription;
   onCallback(message: Message, handler: CallbackHandler, onError?: CallbackErrorHandler): Subscription;
-  exclusiveMatch(): TextInput;
+  exclusiveMatch(): ExclusiveInput;
   filter(...filters: Filter[]): IFilteredInput;
   installGlobalFilter(filter: Filter, rejectReason?: string): Subscription;
 }
@@ -58,7 +62,7 @@ export abstract class Input implements IFilteredInput {
   abstract onMessage(handler: MessageHandler, onError?: MessageErrorHandler): Subscription;
   abstract onText(regex: RegExp, handler: TextMatchHandler, onError?: MessageErrorHandler): Subscription;
   abstract onCallback(message: Message, handler: CallbackHandler, onError?: CallbackErrorHandler): Subscription;
-  abstract exclusiveMatch(): TextInput;
+  abstract exclusiveMatch(): ExclusiveInput;
   abstract filter(...filters: Filter[]): IFilteredInput;
   abstract installGlobalFilter(filter: Filter, rejectReason?: string): Subscription;
 }

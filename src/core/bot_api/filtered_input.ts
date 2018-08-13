@@ -1,5 +1,5 @@
 import { Filter } from 'core/filter/filter';
-import { IFilteredInput, InputSource, TextMatchHandler, MessageErrorHandler, wrapHandler, CallbackHandler, CallbackErrorHandler, TextInput, MessageHandler } from 'core/bot_api/input';
+import { IFilteredInput, InputSource, TextMatchHandler, MessageErrorHandler, wrapHandler, CallbackHandler, CallbackErrorHandler, MessageHandler, ExclusiveInput } from 'core/bot_api/input';
 import { Observable, Subscription, Subject } from 'rxjs';
 import { Message, CallbackQuery } from 'node-telegram-bot-api';
 import { removeItem, fixPattern } from 'core/util/misc';
@@ -14,14 +14,19 @@ export class FilteredInput implements IFilteredInput {
   readonly textMessages: Observable<Message>;
 
   constructor(parent: InputSource, private readonly filters: Filter[]) {
-    this.messages = parent.messages
-      .filter(msg => filters.every(f => f.allowMessage(msg)))
-      .multicast(new Subject())
-      .refCount();
-    this.callbackQueries = parent.callbackQueries
-      .filter(query => filters.every(f => f.allowCallbackQuery(query)))
-      .multicast(new Subject())
-      .refCount();
+    if (filters.length === 0) {
+      this.messages = parent.messages;
+      this.callbackQueries = parent.callbackQueries;
+    } else {
+      this.messages = parent.messages
+        .filter(msg => filters.every(f => f.allowMessage(msg)))
+        .multicast(new Subject())
+        .refCount();
+      this.callbackQueries = parent.callbackQueries
+        .filter(query => filters.every(f => f.allowCallbackQuery(query)))
+        .multicast(new Subject())
+        .refCount();
+    }
     this.textMessages = this.messages.filter(msg => msg.text != null && !isForwarded(msg));
   }
 
@@ -57,7 +62,7 @@ export class FilteredInput implements IFilteredInput {
     }, onError));
   }
 
-  exclusiveMatch(): TextInput {
+  exclusiveMatch(): ExclusiveInput {
     return new ExclusiveTextInput(this);
   }
 
