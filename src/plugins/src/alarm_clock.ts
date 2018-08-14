@@ -85,13 +85,17 @@ export class AlarmClockPlugin implements BotPlugin {
     if (date == null) {
       return this.api.reply(message, 'Не могу разобрать дату.');
     }
+    const momentDate = moment(date);
+    if (momentDate.isBefore()) {
+      return this.api.reply(message, `Это было ${momentDate.fromNow()}. Машина времени не найдена.`);
+    }
     const note = message.reply_to_message != null ? messageToString(message.reply_to_message) : parseNote(query);
     const alarm: Alarm = {
       id: 0,
       chatId: message.chat.id,
       userId: user.id,
       userName: fullName(user),
-      date: moment(date),
+      date: momentDate,
       isEnabled: true,
       hasFired: false,
       message: note

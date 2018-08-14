@@ -22,7 +22,7 @@ async function start(): Promise<void> {
     const server: ImoutoServer = configuredInjector.get(ImoutoServer);
     await server.start();
   } catch (err) {
-    logger.error(`Initialization error: `, err.stack || err, () => {
+    logger.error(`Initialization error:`, err.stack || err, () => {
       process.exit();
     });
   }
