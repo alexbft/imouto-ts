@@ -3,14 +3,14 @@ import { Input } from 'core/bot_api/input';
 import { TgApi } from 'core/tg/tg_api';
 import { Message } from 'core/tg/tg_types';
 import { TextMatch } from 'core/bot_api/text_match';
-import * as mathjs from 'mathjs';
 import { Injectable } from 'core/di/injector';
-import { putIfAbsent } from 'core/util/misc';
+import { pool, WorkerPool } from 'workerpool';
 
 @Injectable
 export class MathPlugin implements BotPlugin {
   readonly name = 'MathJS';
-  readonly parsers = new Map<number, mathjs.Parser>();
+  private workers?: WorkerPool;
+  private firstRun: boolean = true;
 
   constructor(
     private readonly input: Input,
@@ -18,16 +18,23 @@ export class MathPlugin implements BotPlugin {
   ) { }
 
   init(): void {
+    this.workers = pool(__dirname + '/worker/mathjs_worker.js');
+
     this.input.onText(/^!\s?(калк|кальк|калькулятор|calc|math)\b\s*([^]+)$/, this.handle, this.onError);
     this.input.onText(/^(\$)\s*([^]+)$/, this.handle, this.onError);
   }
 
-  handle = ({ message, match }: TextMatch) => {
+  handle = async ({ message, match }: TextMatch) => {
     const from = message.from!.id;
-    const parser = putIfAbsent(this.parsers, from, () => mathjs.parser());
     let result: any;
     try {
-      result = parser.eval(match[2]);
+      const work = this.workers!.exec('evalForUser', [from, match[2]]);
+      if (this.firstRun) {
+        this.firstRun = false;
+        result = await work.timeout(15000);
+      } else {
+        result = await work.timeout(1000);
+      }
     } catch (e) {
       return this.api.reply(message, `${e}`);
     }
