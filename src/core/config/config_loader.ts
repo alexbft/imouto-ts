@@ -19,6 +19,11 @@ export class ConfigLoader {
     const properties: PropertiesReader.Reader = (PropertiesReader as any)(null);
     properties.read(configText.toString());
 
+    const logLevel = properties.getRaw('loglevel');
+    if (logLevel != null) {
+      logger.level = logLevel;
+    }
+
     const authToken = properties.getRaw('token');
     if (authToken == null) {
       throw new Error('No auth token in configuration file');

@@ -159,3 +159,11 @@ export function replaceInPattern(r: RegExp, searchString: string, replaceValue: 
 export function botReference(r: RegExp): RegExp {
   return replaceInPattern(r, '(bot)', '(сестричка|сестрёнка|сестренка|сестра|бот|сис)');
 }
+
+export function repeatString(s: string, n: number): string {
+  let buf = '';
+  for (let i = 0; i < n; ++i) {
+    buf += s;
+  }
+  return buf;
+}
