@@ -118,3 +118,20 @@ export function messageToString(message: Message): string {
   }
   return '[Неизвестный тип сообщения]';
 }
+
+interface LogMessageOptions {
+  isEdited?: boolean;
+  my?: boolean;
+}
+
+export function logMessage(message: Message, options?: LogMessageOptions): string {
+  options = { isEdited: false, my: false, ...options };
+  const fromId = message.from != null ? message.from.id : null;
+  const chatStr = fromId === message.chat.id ? 'private' : `${message.chat.id},${chatName(message.chat)}`;
+  let name = options.my ? 'out' : (message.from != null ? `${fromId},${fullName(message.from)}` : '');
+  if (isForwarded(message)) {
+    const forwardStr = message.forward_from != null ? `${message.forward_from.id},${fullName(message.forward_from)}` : `${chatName(message.forward_from_chat!)}`;
+    name += `,from(${forwardStr})`;
+  }
+  return `[${message.message_id}${options.isEdited ? ',edit' : ',msg'}] [${chatStr}] [${name}] ${messageToString(message)}`;
+}

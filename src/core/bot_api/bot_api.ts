@@ -14,7 +14,7 @@ import { InputImpl } from 'core/bot_api/input_impl';
 import { FilterFactory } from 'core/filter/filter_factory';
 import { Unfiltered } from 'core/module/keys';
 import { Environment } from 'core/environment/environment';
-import { chatName, fullName, messageToString, isForwarded } from 'core/tg/message_util';
+import { fullName, logMessage } from 'core/tg/message_util';
 
 const pluginInitTimeout = moment.duration(30, 'seconds');
 
@@ -86,19 +86,8 @@ export class BotApi {
     }
   }
 
-  private logMessage(message: Message, isEdited: boolean): void {
-    const fromId = message.from != null ? message.from.id : null;
-    const chatStr = fromId === message.chat.id ? 'private' : `${message.chat.id},${chatName(message.chat)}`;
-    let name = message.from != null ? `${fromId},${fullName(message.from)}` : '';
-    if (isForwarded(message)) {
-      const forwardStr = message.forward_from != null ? `${message.forward_from.id},${fullName(message.forward_from)}` : `${chatName(message.forward_from_chat!)}`;
-      name += `,from(${forwardStr})`;
-    }
-    logger.info(`[${message.message_id}${isEdited ? ',edit' : ',msg'}] [${chatStr}] [${name}] ${messageToString(message)}`);
-  }
-
   onMessage(message: Message): void {
-    this.logMessage(message, false);
+    logger.info(logMessage(message, { isEdited: false }));
     if (this.isOldMessage(message)) {
       logger.debug('Old message ignored');
       return;
@@ -112,7 +101,7 @@ export class BotApi {
   }
 
   onEditedMessage(message: Message): void {
-    this.logMessage(message, true);
+    logger.info(logMessage(message, { isEdited: true }));
   }
 
   isOldMessage(message: Message): boolean {

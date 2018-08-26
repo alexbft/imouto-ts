@@ -19,13 +19,17 @@ import {
   InlineKeyboardMarkup,
   EditMessageTextOptions
 } from 'node-telegram-bot-api';
+import { logger } from 'core/logging/logger';
+import { logMessage } from 'core/tg/message_util';
 
 @Injectable
 export class TgApi {
   constructor(private readonly tgClient: TgClient) { }
 
-  sendMessage(args: SendMessageArgs): Promise<Message> {
-    return this.tgClient.send('sendMessage', args);
+  async sendMessage(args: SendMessageArgs): Promise<Message> {
+    const result = await this.tgClient.send('sendMessage', args);
+    logger.info(logMessage(result, { my: true }));
+    return result;
   }
 
   editMessageText(args: EditMessageTextArgs): Promise<Message> {
@@ -67,25 +71,31 @@ export class TgApi {
     });
   }
 
-  sendPhoto(args: SendPhotoArgs): Promise<Message> {
+  async sendPhoto(args: SendPhotoArgs): Promise<Message> {
     // TODO: implement sending image from buffer or stream.
     if (args.caption != null && args.caption.length > 200) {
       args.caption = args.caption.substr(0, 200);
     }
-    return this.tgClient.send('sendPhoto', args);
+    const result = await this.tgClient.send('sendPhoto', args);
+    logMessage(result, { my: true });
+    return result;
   }
 
   answerCallbackQuery(args: AnswerCallbackQueryOptions): Promise<boolean> {
     return this.tgClient.send('answerCallbackQuery', args);
   }
 
-  sendMediaGroup(args: SendMediaGroupArgs): Promise<Message[]> {
+  async sendMediaGroup(args: SendMediaGroupArgs): Promise<Message[]> {
     for (const media of args.media) {
       if (media.caption != null && media.caption.length > 200) {
         media.caption = media.caption.substr(0, 200);
       }
     }
-    return this.tgClient.send('sendMediaGroup', args);
+    const result = await this.tgClient.send('sendMediaGroup', args);
+    for (const msg of result) {
+      logMessage(msg, { my: true });
+    }
+    return result;
   }
 
   reply(message: Message, text: string, options?: SendMessageOptions): Promise<Message> {
