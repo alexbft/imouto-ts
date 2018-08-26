@@ -23,7 +23,7 @@ export class HelloPlugin implements BotPlugin {
       '(привет|пока|спасибо|спс|споки|спокойной ночи|как дела|глупая|глупый|тупая|тупой|дура|дурак|бака|умная|умный|умница|няша)');
     input.onText(botReference(/^\W*\b(bot)\b\W*$/), (match) =>
       this.reply(match).randomPong());
-    input.onText(/^\W*(bot)\b[^]+\?\s*$/, (match) =>
+    input.onText(botReference(/^\W*(bot)\b[^]+\?\s*$/), (match) =>
       this.reply(match).answer());
     input.onText(replaceTriggerAndBot(/\b(trigger)\W+(ты\W+)?(bot)\b/), (match) =>
       this.reply(match).onTrigger(match.match[1]));
