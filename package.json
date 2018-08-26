@@ -10,6 +10,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/html-entities": "^1.2.16",
+    "@types/mathjs": "^4.4.1",
     "@types/node": "^8.10.25",
     "@types/node-telegram-bot-api": "^0.28.4",
     "@types/properties-reader": "0.0.1",
@@ -21,6 +22,7 @@
     "cloudscraper": "^1.5.0",
     "html-entities": "^1.2.1",
     "iconv-lite": "^0.4.19",
+    "mathjs": "^5.1.1",
     "moment": "^2.22.2",
     "properties-reader": "0.0.16",
     "reflect-metadata": "^0.1.12",

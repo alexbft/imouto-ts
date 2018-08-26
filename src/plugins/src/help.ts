@@ -27,6 +27,7 @@ const helptext = fixMultiline(`
   *!dogify* <text>... - wow, so doge
   *!qr* <text> - сделать QR-код из текста
   *!напомни*(*!alarm*) \\[<время, событие>] - поставить напоминание
+  *!кальк*(*!calc*, *$*) - калькулятор
   *!команды*(*!help*) - список команд`);
 
 @Injectable
@@ -36,7 +37,7 @@ export class HelpPlugin implements BotPlugin {
   constructor(private input: Input, private api: TgApi) { }
 
   init(): void {
-    this.input.onText(/^[!\/]\s?(help|помощь|команды|хэлп|хелп)\b/, this.onMessage);
+    this.input.onText(/^[!\/]\s?(help|помощь|команды|хэлп|хелп|start)\b/, this.onMessage);
   }
 
   onMessage = async ({ message }: TextMatch) => {

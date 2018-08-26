@@ -29,6 +29,7 @@ import { QuotePlugin } from 'plugins/src/quotes/quote_plugin';
 import { MessageCache } from 'plugins/src/message_cache/message_cache';
 import { AlarmClockPlugin } from 'plugins/src/alarm_clock';
 import { CalcPlugin } from 'plugins/src/calc';
+import { MathPlugin } from 'plugins/src/math';
 
 const helperBindings = [
   provide(MessageCache),
@@ -50,6 +51,7 @@ export const pluginBindings = [
   provide(IdPlugin),
   provide(IntroPlugin),
   provide(IqTestPlugin),
+  provide(MathPlugin),
   provide(MessageCachePlugin),
   provide(MoneyPlugin),
   provide(NyashPlugin),
