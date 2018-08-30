@@ -39,10 +39,13 @@ export class CalcPlugin implements BotPlugin {
 
   handle = ({ message, match }: TextMatch) => {
     const source = match[0];
-    if (!/[\+\-\/\*\^]/.test(source)) {
+    if (source.trim().length <= 3 || !/[\+\-\/\*\^]/.test(source)) {
       return Promise.resolve();
     }
     const [tokens, tokenError] = tokenize(source);
+    if (tokens != null && tokens.length <= 2) {
+      return Promise.resolve();
+    }
     if (tokenError != null) {
       return this.api.reply(message, tokenError, { parse_mode: 'HTML' });
     }
