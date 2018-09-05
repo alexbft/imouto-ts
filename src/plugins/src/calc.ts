@@ -47,12 +47,14 @@ export class CalcPlugin implements BotPlugin {
       return Promise.resolve();
     }
     if (tokenError != null) {
-      return this.api.reply(message, tokenError, { parse_mode: 'HTML' });
+      logger.debug('Token error:', tokenError);
+      return Promise.resolve();
     }
     logger.debug('Tokens:', tokens);
     const [ast, parseError] = makeAst(source, tokens!);
     if (parseError != null) {
-      return this.api.reply(message, parseError, { parse_mode: 'HTML' });
+      logger.debug('Parse error:', parseError);
+      return Promise.resolve();
     }
     logger.debug('AST:', ast);
     return this.api.reply(message, `${show(ast!)} = ${evaluate(ast!)}`);
