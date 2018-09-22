@@ -72,15 +72,35 @@ class CoinQuery {
     return this.calcBtc(this.getData(from));
   }
 
+  private showDelta(coin: string): string {
+    const data = this.getData(coin);
+    const deltaH: number = +data.percent_change_1h;
+    const deltaD: number = +data.percent_change_24h;
+    const deltaW: number = +data.percent_change_7d;
+    let period = 'за час';
+    let delta = deltaH;
+    if (Math.abs(delta * 2) < Math.abs(deltaD)) {
+      period = 'за день';
+      delta = deltaD;
+    }
+    if (Math.abs(delta * 2) < Math.abs(deltaW)) {
+      period = 'за неделю';
+      delta = deltaW;
+    }
+    const bold = Math.abs(delta) >= 5 ? '*' : '';
+    const plus = delta > 0 ? '+' : '';
+    return `${bold}(${plus}${delta}% ${period})${bold}`;
+  }
+
   async handleOverall({ message }: TextMatch): Promise<void> {
     await this.search();
     const txt = fixMultiline(
-      `1 Bitcoin = ${this.calcUsdCode('BTC')}\$
-        1 Bitcoin Cash = ${this.calcUsdCode('BCH')}\$
-        1 Ethereum = ${this.calcUsdCode('ETH')}\$
-        1 Litecoin = ${this.calcBtcCode('LTC')} BTC
-        1 Dash = ${this.calcBtcCode('DASH')} BTC
-        1 Ripple = ${this.calcBtcCode('XRP')} BTC`);
+      `1 Bitcoin = ${this.calcUsdCode('BTC')}\$ ${this.showDelta('BTC')}
+        1 Bitcoin Cash = ${this.calcUsdCode('BCH')}\$ ${this.showDelta('BCH')}
+        1 Ethereum = ${this.calcUsdCode('ETH')}\$ ${this.showDelta('ETH')}
+        1 Litecoin = ${this.calcBtcCode('LTC')} BTC ${this.showDelta('LTC')}
+        1 Dash = ${this.calcBtcCode('DASH')} BTC ${this.showDelta('DASH')}
+        1 Ripple = ${this.calcBtcCode('XRP')} BTC ${this.showDelta('XRP')}`);
     await this.api.respondWithText(message, txt, { parse_mode: 'Markdown' });
   }
 
