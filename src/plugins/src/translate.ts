@@ -56,8 +56,8 @@ export class TranslatePlugin implements BotPlugin {
       src = 'auto';
       dest = match[2].trim();
     } else {
-      src = (match[2] && 'auto').trim();
-      dest = (match[3] && 'ru').trim();
+      src = (match[2] || 'auto').trim();
+      dest = (match[3] || 'ru').trim();
     }
 
     if (src === 'auto' && match[1].toLowerCase() === 'расшифруй') {
