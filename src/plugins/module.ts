@@ -59,7 +59,7 @@ export const pluginBindings = [
   provide(QuotePlugin),
   provide(RollPlugin),
   provide(SilencePlugin),
-  provide(TranslatePlugin),
+  // provide(TranslatePlugin), // turned off by default
   provide(UserCachePlugin),
   provide(WeatherPlugin),
   provide(WhoPlugin),
