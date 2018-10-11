@@ -5,7 +5,7 @@ import { HelloPlugin } from 'plugins/src/hello';
 import { HelpPlugin } from 'plugins/src/help';
 import { IdPlugin } from 'plugins/src/id';
 import { IqTestPlugin } from 'plugins/src/iq_test';
-import { TranslatePlugin } from 'plugins/src/translate';
+// import { TranslatePlugin } from 'plugins/src/translate';
 import { A2chPlugin } from 'plugins/src/2ch';
 import { CatPlugin } from 'plugins/src/cat';
 import { CoinPlugin } from 'plugins/src/coin';
