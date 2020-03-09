@@ -43,7 +43,7 @@ class CoinQuery {
     if (convertTo == null) {
       convertTo = 'USD'
     }
-    const options = requestOptionsFromUrl(toUrl('https://sandbox-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest', {
+    const options = requestOptionsFromUrl(toUrl('https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest', {
       symbol: symbols.join(','),
       convert: convertTo,
       // skip_invalid: true,
