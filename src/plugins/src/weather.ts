@@ -324,7 +324,7 @@ export class WeatherPlugin implements BotPlugin {
   }
 
   private groupItems(items: ForecastItem[]): ForecastRow[] {
-    function getPeriod(item: ForecastItem): keyof ForecastRow {
+    function getPeriod(item: ForecastItem) {
       const hour = item.date.hour();
       if (hour < 11) {
         return 'morning';

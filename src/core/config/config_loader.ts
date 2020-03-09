@@ -2,7 +2,7 @@ import * as PropertiesReader from 'properties-reader';
 
 import { Provider, provide } from "core/di/provider";
 import { logger } from 'core/logging/logger';
-import { AuthToken, GoogleKey, GoogleCx, ExchangeKey, UserId, RoleMap, OpenWeatherMapKey } from "core/config/keys";
+import { AuthToken, GoogleKey, GoogleCx, ExchangeKey, UserId, RoleMap, OpenWeatherMapKey, CmcKey } from "core/config/keys";
 import { Injectable } from 'core/di/injector';
 import { exists, readFile } from 'core/util/misc';
 
@@ -41,6 +41,7 @@ export class ConfigLoader {
     const googleCx = properties.getRaw('googlecx');
     const exchangeKey = properties.getRaw('exchangekey');
     const openWeatherMapKey = properties.getRaw('openweathermapkey');
+    const cmcKey = properties.getRaw('cmckey');
 
     logger.wipeMap.set('AuthToken', authToken);
     if (googleKey != null) {
@@ -64,6 +65,7 @@ export class ConfigLoader {
       provide(ExchangeKey, { useValue: exchangeKey }),
       provide(RoleMap, { useValue: roleMap }),
       provide(OpenWeatherMapKey, { useValue: openWeatherMapKey }),
+      provide(CmcKey, { useValue: cmcKey }),
     ];
   }
 

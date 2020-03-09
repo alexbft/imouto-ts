@@ -78,9 +78,13 @@ export class Web {
     return rawResponse;
   }
 
-  async readResponseJson(response: http.IncomingMessage): Promise<any> {
+  async readResponseJson(response: http.IncomingMessage, options?: { checkStatusCode?: boolean }): Promise<any> {
+    options = {
+      checkStatusCode: true,
+      ...options
+    };
     const rawResponse = await this.readResponseRawString(response);
-    if (response.statusCode !== 200) {
+    if (options.checkStatusCode && response.statusCode !== 200) {
       logger.info(`Response {${rawResponse}}`);
       throw new WebException(`HTTP Error ${response.statusCode}: ${response.statusMessage}`);
     }

@@ -10,27 +10,27 @@
   "license": "ISC",
   "devDependencies": {
     "@types/html-entities": "^1.2.16",
-    "@types/mathjs": "^4.4.1",
-    "@types/node": "^8.10.25",
+    "@types/mathjs": "^4.4.5",
+    "@types/node": "^8.10.59",
     "@types/node-telegram-bot-api": "^0.28.4",
     "@types/properties-reader": "0.0.1",
-    "@types/sqlite3": "^3.1.3",
-    "@types/winston": "^2.3.9",
-    "@types/workerpool": "^2.3.0",
+    "@types/sqlite3": "^3.1.6",
+    "@types/winston": "^2.4.4",
+    "@types/workerpool": "^2.3.1",
     "typescript": "^2.9.2"
   },
   "dependencies": {
-    "cloudscraper": "^1.5.0",
+    "cloudscraper": "^1.5.1",
     "html-entities": "^1.2.1",
-    "iconv-lite": "^0.4.19",
-    "mathjs": "^5.1.1",
-    "moment": "^2.22.2",
+    "iconv-lite": "^0.4.24",
+    "mathjs": "^5.10.3",
+    "moment": "^2.24.0",
     "properties-reader": "0.0.16",
-    "reflect-metadata": "^0.1.12",
-    "rxjs": "^5.5.11",
-    "source-map-support": "^0.5.8",
-    "sqlite3": "^4.0.2",
-    "winston": "^2.4.3",
-    "workerpool": "^2.3.1"
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^5.5.12",
+    "source-map-support": "^0.5.16",
+    "sqlite3": "^4.1.1",
+    "winston": "^2.4.4",
+    "workerpool": "^2.3.3"
   }
 }

@@ -7,3 +7,4 @@ export const ExchangeKey = new InjectionToken<string | null>('ExchangeKey');
 export const UserId = new InjectionToken<number>('UserId');
 export const RoleMap = new InjectionToken<Map<string, number[]>>('RoleMap');
 export const OpenWeatherMapKey = new InjectionToken<string | null>('OpenWeatherMapKey');
+export const CmcKey = new InjectionToken<string | null>('CmcKey');
