@@ -27,7 +27,7 @@ export function chatName(chat: Chat): string {
 }
 
 export function isForwarded(message: Message): boolean {
-  return message.forward_from != null || message.forward_from_chat != null;
+  return message.forward_from != null || message.forward_from_chat != null || message.forward_sender_name != null;
 }
 
 export function isPrivate(message: Message): boolean {
@@ -130,7 +130,16 @@ export function logMessage(message: Message, options?: LogMessageOptions): strin
   const chatStr = fromId === message.chat.id ? 'private' : `${message.chat.id},${chatName(message.chat)}`;
   let name = options.my ? 'out' : (message.from != null ? `${fromId},${fullName(message.from)}` : '');
   if (isForwarded(message)) {
-    const forwardStr = message.forward_from != null ? `${message.forward_from.id},${fullName(message.forward_from)}` : `${chatName(message.forward_from_chat!)}`;
+    let forwardStr: string;
+    if (message.forward_from != null) {
+      forwardStr = `${message.forward_from.id},${fullName(message.forward_from)}`;
+    } else if (message.forward_sender_name != null) {
+      forwardStr = `unknownId,${message.forward_sender_name}`;
+    } else if (message.forward_from_chat != null) {
+      forwardStr = `${chatName(message.forward_from_chat!)}`;
+    } else {
+      forwardStr = '???';
+    }
     name += `,from(${forwardStr})`;
   }
   return `[${message.message_id}${options.isEdited ? ',edit' : ',msg'}] [${chatStr}] [${name}] ${messageToString(message)}`;

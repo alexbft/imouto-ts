@@ -2,7 +2,7 @@ import { Message } from 'core/tg/tg_types';
 import { QuoteFilter, Quote, Vote } from 'plugins/src/quotes/quote';
 import { QuotePlugin } from 'plugins/src/quotes/quote_plugin';
 import { random, fixMultiline } from 'core/util/misc';
-import { InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, User } from 'node-telegram-bot-api';
+import { InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, User, EditMessageTextOptions } from 'node-telegram-bot-api';
 import { updateVote, insertVote } from 'plugins/src/quotes/quote_sql';
 import { HasSubscription } from 'core/util/subscription_manager';
 
@@ -111,7 +111,7 @@ export class QuoteShow {
     this.prefix = `<code>${total}${info}</code>`;
   }
 
-  private getSendOptions() {
+  private getSendOptions(): EditMessageTextOptions {
     return {
       disable_web_page_preview: true,
       parse_mode: 'HTML',

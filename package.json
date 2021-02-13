@@ -11,26 +11,27 @@
   "devDependencies": {
     "@types/html-entities": "^1.2.16",
     "@types/mathjs": "^4.4.5",
-    "@types/node": "^8.10.59",
-    "@types/node-telegram-bot-api": "^0.28.4",
+    "@types/node": "^8.10.66",
+    "@types/node-telegram-bot-api": "^0.51.1",
     "@types/properties-reader": "0.0.1",
-    "@types/sqlite3": "^3.1.6",
+    "@types/sqlite3": "^3.1.7",
     "@types/winston": "^2.4.4",
     "@types/workerpool": "^2.3.1",
     "typescript": "^2.9.2"
   },
   "dependencies": {
     "cloudscraper": "^1.5.1",
-    "html-entities": "^1.2.1",
+    "html-entities": "^1.4.0",
     "iconv-lite": "^0.4.24",
     "mathjs": "^5.10.3",
-    "moment": "^2.24.0",
+    "moment": "^2.29.1",
+    "node-telegram-bot-api": "^0.51.0",
     "properties-reader": "0.0.16",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^5.5.12",
-    "source-map-support": "^0.5.16",
-    "sqlite3": "^4.1.1",
-    "winston": "^2.4.4",
+    "source-map-support": "^0.5.19",
+    "sqlite3": "^4.2.0",
+    "winston": "^2.4.5",
     "workerpool": "^2.3.3"
   }
 }

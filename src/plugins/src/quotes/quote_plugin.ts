@@ -270,6 +270,8 @@ export class QuotePlugin implements BotPlugin {
         authorName = fullName(message.forward_from);
       } else if (message.forward_from_chat != null) {
         authorName = message.forward_signature || chatName(message.forward_from_chat);
+      } else if (message.forward_sender_name != null) {
+        authorName = message.forward_sender_name;
       } else if (message.from != null) {
         authorId = message.from.id;
         authorName = fullName(message.from);

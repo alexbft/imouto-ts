@@ -4,7 +4,6 @@ import {
   EditMessageTextOptions,
   InlineKeyboardMarkup,
   SendMediaGroupOptions,
-  Message as _Message,
   PhotoSize,
   EditMessageReplyMarkupOptions,
   ForwardMessageOptions
@@ -111,13 +110,7 @@ export interface EncryptedCredentials {
   secret: string;
 }
 
-export interface Message extends _Message {
-  animation?: Animation;
-  connected_website?: string;
-  passport_data?: PassportData;
-  reply_to_message?: Message;
-  pinned_message?: Message;
-}
+export { Message } from "node-telegram-bot-api";
 
 export interface ForwardMessageArgs extends ForwardMessageOptions {
   chat_id: number | string;
