@@ -31,6 +31,8 @@ export class CoinPlugin implements BotPlugin {
   onError = (msg: Message) => this.api.reply(msg, 'Just HODL man');
 }
 
+const defaultSymbols = ['BTC', 'ETH', 'LTC', 'XMR', 'NANO', 'XRP', 'NEAR', 'BNB', 'DASH', 'TRX', 'DOGE', 'LINK', 'ADA'];
+
 class CoinQuery {
   private data: CmcQuotesResponse | null = null;
 
@@ -38,10 +40,10 @@ class CoinQuery {
 
   private async search(symbols?: string[], convertTo?: string): Promise<void> {
     if (symbols == null) {
-      symbols = ['BTC', 'ETH', 'LTC', 'XMR', 'NANO', 'XRP']
+      symbols = defaultSymbols;
     }
     if (convertTo == null) {
-      convertTo = 'USD'
+      convertTo = 'USD';
     }
     const options = requestOptionsFromUrl(toUrl('https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest', {
       symbol: symbols.join(','),
@@ -74,16 +76,13 @@ class CoinQuery {
     return `*${n.toFixed(fix)}*`;
   }
 
-  private calc(from: CmcQuote, to: CmcQuote, amount: number = 1): string {
-    const f = from.price;
-    const t = to.price;
-    const n = f / t * amount;
-    return this.toFixed(n, 4);
-  }
-
   private calcUsd(from: CmcQuote, amount: number = 1): string {
     const n = from.price * amount;
-    return this.toFixed(n, 2);
+    if (n >= 10) {
+      return this.toFixed(n, 2);
+    } else {
+      return this.toFixed(n, 4);
+    }
   }
 
   private calcRaw(from: CmcQuote, amount: number = 1): string {
@@ -91,17 +90,24 @@ class CoinQuery {
     return this.toFixed(n, 4);
   }
 
-  private calcBtc(from: CmcQuote, amount: number = 1): string {
-    return this.calc(from, this.getData('BTC')!.quote['USD'], amount);
-  }
-
   private calcUsdCode(from: string): string {
     return this.calcUsd(this.getData(from)!.quote['USD']);
   }
 
-  private calcBtcCode(from: string): string {
-    return this.calcBtc(this.getData(from)!.quote['USD']);
-  }
+  // private calcBtc(from: CmcQuote, amount: number = 1): string {
+  //   return this.calc(from, this.getData('BTC')!.quote['USD'], amount);
+  // }
+
+  // private calcBtcCode(from: string): string {
+  //   return this.calcBtc(this.getData(from)!.quote['USD']);
+  // }
+
+  // private calc(from: CmcQuote, to: CmcQuote, amount: number = 1): string {
+  //   const f = from.price;
+  //   const t = to.price;
+  //   const n = f / t * amount;
+  //   return this.toFixed(n, 4);
+  // }
 
   private showDelta(coin: string): string {
     const data = this.getData(coin);
@@ -125,13 +131,10 @@ class CoinQuery {
 
   async handleOverall({ message }: TextMatch): Promise<void> {
     await this.search();
-    const txt = fixMultiline(
-      `1 Bitcoin = ${this.calcUsdCode('BTC')}\$ ${this.showDelta('BTC')}
-       1 Ethereum = ${this.calcUsdCode('ETH')}\$ ${this.showDelta('ETH')}
-       1 Litecoin = ${this.calcUsdCode('LTC')}\$ ${this.showDelta('LTC')}
-       1 Monero = ${this.calcUsdCode('XMR')}\$ ${this.showDelta('XMR')}
-       1 Nano = ${this.calcUsdCode('NANO')}\$ ${this.showDelta('NANO')}
-       1 Ripple = ${this.calcBtcCode('XRP')} BTC = ${this.calcUsdCode('XRP')}\$ ${this.showDelta('XRP')}`);
+    const txt = defaultSymbols.map(c => {
+      const data = this.getData(c);
+      return `1 ${data?.name} = ${this.calcUsdCode(c)}\$ ${this.showDelta(c)}`;
+    }).join('\n');
     await this.api.respondWithText(message, txt, { parse_mode: 'Markdown' });
   }
 
