@@ -1,7 +1,7 @@
 import { PromiseOr } from 'core/util/promises';
 
 export class Completer<T> {
-  resolve: (value?: PromiseOr<T>) => void = _ => { };
+  resolve: (value: PromiseOr<T>) => void = _ => { };
   reject: (reason?: any) => void = _ => { };
 
   readonly promise = new Promise<T>((resolve, reject) => {

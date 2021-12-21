@@ -112,7 +112,7 @@ export class Pager {
       }
     }
     if (this.options.numPages != null && this.options.numPages <= 1) {
-      delete messageOptions.reply_markup;
+      delete (messageOptions as any).reply_markup;
       await this.sendMessage(messageOptions);
       return;
     }
@@ -203,7 +203,7 @@ export class Pager {
           media,
           reply_markup: this.getKeyboard()
         });
-      } catch (e) {
+      } catch (e: any) {
         logger.info('Sending image failed', e.message || e);
         await this.api.editMessageCaption({
           message_id: this.message!.message_id,

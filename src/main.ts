@@ -21,7 +21,7 @@ async function start(): Promise<void> {
     const configuredInjector = injector.subContext(configBindings);
     const server: ImoutoServer = configuredInjector.get(ImoutoServer);
     await server.start();
-  } catch (err) {
+  } catch (err: any) {
     logger.error(`Initialization error:`, err.stack || err, () => {
       process.exit();
     });

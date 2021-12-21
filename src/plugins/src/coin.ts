@@ -31,7 +31,7 @@ export class CoinPlugin implements BotPlugin {
   onError = (msg: Message) => this.api.reply(msg, 'Just HODL man');
 }
 
-const defaultSymbols = ['BTC', 'ETH', 'LTC', 'XMR', 'NANO', 'XRP', 'NEAR', 'BNB', 'DASH', 'TRX', 'DOGE', 'LINK', 'ADA'];
+const defaultSymbols = ['BTC', 'ETH', 'BNB', 'NEAR', 'DOGE', 'SHIB'];
 
 class CoinQuery {
   private data: CmcQuotesResponse | null = null;

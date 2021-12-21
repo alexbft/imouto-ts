@@ -19,7 +19,7 @@ export function wrapHandler<T>(handler: (data: T) => any, errorHandler?: (data: 
   return async (msg) => {
     try {
       await handler(msg);
-    } catch (e) {
+    } catch (e: any) {
       logger.error(e.stack || e);
       if (errorHandler != null) {
         await errorHandler(msg, e);

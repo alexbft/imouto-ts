@@ -66,7 +66,7 @@ export class TgClient {
           await pause(updatesErrorDelay);
         }
       }
-    } catch (e) {
+    } catch (e: any) {
       logger.error('Exception in getUpdates:', e.stack || e);
       await pause(updatesErrorDelay);
     }

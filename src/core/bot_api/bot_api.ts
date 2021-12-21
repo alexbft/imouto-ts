@@ -52,7 +52,7 @@ export class BotApi {
             if (plugin.dispose != null) {
               this.environment.onDispose(() => plugin.dispose!());
             }
-          } catch (e) {
+          } catch (e: any) {
             if (e instanceof TimeoutError) {
               logger.warn(`Plugin ${plugin.name} has timed out in initialization!`);
             } else {
@@ -61,7 +61,7 @@ export class BotApi {
             failed++;
           }
         });
-      } catch (e) {
+      } catch (e: any) {
         logger.warn(`Error in plugin provider: ${provider}`, e.stack || e);
         failed++;
       }

@@ -29,7 +29,7 @@ export class ExclusiveTextInput implements ExclusiveInput {
       if (result !== null) {
         try {
           await handler(new TextMatch(msg, result));
-        } catch (e) {
+        } catch (e: any) {
           logger.error(e.stack || e);
           if (onError != null) {
             await onError(msg, e);

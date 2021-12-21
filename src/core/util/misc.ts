@@ -31,7 +31,7 @@ export function fixMultiline(s: string): string {
 export async function safeExecute(action: AsyncHandler<any>): Promise<void> {
   try {
     await action();
-  } catch (e) {
+  } catch (e: any) {
     logger.error('', e.stack || e);
   }
 }

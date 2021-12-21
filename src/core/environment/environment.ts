@@ -26,7 +26,7 @@ export class Environment {
     try {
       const disposeWait = Promise.all(this._disposeSubscriptions.map(s => safeExecute(s.handler)));
       await timeout(disposeWait, disposeTimeout);
-    } catch (e) {
+    } catch (e: any) {
       logger.error(e.stack || e);
     }
     process.exit();
