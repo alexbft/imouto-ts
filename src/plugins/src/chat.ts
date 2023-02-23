@@ -43,7 +43,6 @@ export class ChatPlugin implements BotPlugin {
     if (userPrompt.endsWith('?')) {
       userPrompt = `Answer as a shy introverted little sister character. ${userPrompt}`
     }
-    userPrompt += '\n\n';
     return this.respond(message, userPrompt);
   }
 
@@ -51,7 +50,6 @@ export class ChatPlugin implements BotPlugin {
     const answerId = message.reply_to_message!.message_id;
     const prev = this.answers.get(answerId) ?? '';
     let userPrompt = prev + '\n\n' + match[1].trim();
-    userPrompt += '\n\n';
     return this.respond(message, userPrompt);
   }
 
@@ -64,22 +62,23 @@ export class ChatPlugin implements BotPlugin {
       }
       prompt = userPromptParts.slice(1).join('\n\n');
     }
+    prompt = prompt.trim() + '\n\n';
     const responseText = await this.queryAi(`${message.from!.id}`, prompt);
-    const replyMsg = await this.api.reply(message, responseText);
+    const replyMsg = await this.api.reply(message, responseText.trim());
     this.answers.set(replyMsg.message_id, prompt + responseText);
   }
 
   private async queryAi(userId: string, query: string): Promise<string> {
     const request: CreateCompletionRequest = {
       model: 'text-davinci-003',
-      prompt: query.trim(),
+      prompt: query,
       user: userId,
       max_tokens: 256,
       temperature: 1.2,
     };
     logger.debug(`OpenAI request: ${JSON.stringify(request)}`);
     const response = await this.openAiApi.createCompletion(request);
-    return (response.data.choices[0].text ?? '[empty]').trim();
+    return (response.data.choices[0].text ?? '[empty]');
   }
 
   private onError = (message: Message) => this.api.reply(message, 'Ошибка');
