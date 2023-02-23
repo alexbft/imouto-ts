@@ -69,7 +69,8 @@ export class ChatPlugin implements BotPlugin {
     prompt = `Write a chat message from a little sister anime character.\n\n${dialog}`;
     const responseText = await this.queryAi(`${message.from!.id}`, prompt);
     if (responseText.trim() !== '') {
-      const replyMsg = await this.api.reply(message, responseText.trim());
+      const magic = responseText.trim().replace(/Little sister:/ig, 'Сестрёнка:');
+      const replyMsg = await this.api.reply(message, magic);
       this.answers.set(replyMsg.message_id, dialog + responseText);
     } else {
       logger.info('OpenAI: empty response');
