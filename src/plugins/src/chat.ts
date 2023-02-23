@@ -69,11 +69,12 @@ export class ChatPlugin implements BotPlugin {
   }
 
   private async queryAi(userId: string, query: string): Promise<string> {
+    const maxTokens = /[А-Яа-я]/.test(query) ? 1024 : 256;
     const request: CreateCompletionRequest = {
       model: 'text-davinci-003',
       prompt: query,
       user: userId,
-      max_tokens: 256,
+      max_tokens: maxTokens,
       temperature: 1.2,
     };
     logger.debug(`OpenAI request: ${JSON.stringify(request)}`);
