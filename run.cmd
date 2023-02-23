@@ -1,1 +1,1 @@
-node dist/src/main.js & exit
+node dist/src/main.js

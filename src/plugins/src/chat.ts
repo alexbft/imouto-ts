@@ -39,18 +39,17 @@ export class ChatPlugin implements BotPlugin {
   }
 
   private handle = ({ message, match }: TextMatch): Promise<void> => {
-    let userPrompt = match[1].trim();
-    if (userPrompt.endsWith('?')) {
-      userPrompt = `Answer as a shy introverted little sister character. ${userPrompt}`
-    }
-    return this.respond(message, userPrompt);
+    const userPrompt = match[1].trim();
+    const prompt = `Me: ${userPrompt}`;
+    return this.respond(message, prompt);
   }
 
   private handleReply = ({ message, match }: TextMatch): Promise<void> => {
     const answerId = message.reply_to_message!.message_id;
     const prev = this.answers.get(answerId) ?? '';
-    let userPrompt = prev.trim() + '\n\n' + match[1].trim();
-    return this.respond(message, userPrompt);
+    const userPrompt = match[1].trim();
+    const prompt = prev.trim() + '\n\n' + `Me: ` + userPrompt;
+    return this.respond(message, prompt);
   }
 
   private async respond(message: Message, prompt: string): Promise<void> {
@@ -66,13 +65,14 @@ export class ChatPlugin implements BotPlugin {
     if (prompt === '') {
       return;
     }
-    prompt = prompt + '\n\n';
+    const dialog = `${prompt}\n\nLittle sister: `;
+    prompt = `Write a chat message from a little sister anime character.\n\n${dialog}`;
     const responseText = await this.queryAi(`${message.from!.id}`, prompt);
     if (responseText.trim() !== '') {
       const replyMsg = await this.api.reply(message, responseText.trim());
-      this.answers.set(replyMsg.message_id, prompt + responseText);
+      this.answers.set(replyMsg.message_id, dialog + responseText);
     } else {
-      logger.info('OpenAI: empty response')
+      logger.info('OpenAI: empty response');
     }
   }
 
