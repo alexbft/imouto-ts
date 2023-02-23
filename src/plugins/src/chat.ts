@@ -68,8 +68,10 @@ export class ChatPlugin implements BotPlugin {
     }
     prompt = prompt + '\n\n';
     const responseText = await this.queryAi(`${message.from!.id}`, prompt);
-    const replyMsg = await this.api.reply(message, responseText.trim());
-    this.answers.set(replyMsg.message_id, prompt + responseText);
+    if (responseText.trim() !== '') {
+      const replyMsg = await this.api.reply(message, responseText.trim());
+      this.answers.set(replyMsg.message_id, prompt + responseText);
+    }
   }
 
   private async queryAi(userId: string, query: string): Promise<string> {
@@ -83,7 +85,7 @@ export class ChatPlugin implements BotPlugin {
     };
     logger.info(`OpenAI request: ${JSON.stringify(request)}`);
     const response = await this.openAiApi.createCompletion(request);
-    return (response.data.choices[0].text ?? '[empty]');
+    return response.data.choices[0].text ?? '';
   }
 
   private onError = (message: Message) => this.api.reply(message, 'Ошибка');
