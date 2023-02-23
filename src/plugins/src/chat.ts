@@ -71,6 +71,8 @@ export class ChatPlugin implements BotPlugin {
     if (responseText.trim() !== '') {
       const replyMsg = await this.api.reply(message, responseText.trim());
       this.answers.set(replyMsg.message_id, prompt + responseText);
+    } else {
+      logger.info('OpenAI: empty response')
     }
   }
 
