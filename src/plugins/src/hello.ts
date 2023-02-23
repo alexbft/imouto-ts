@@ -6,7 +6,7 @@ import { Message } from 'node-telegram-bot-api';
 import { TextMatch } from 'core/bot_api/text_match';
 import { randomChoice, fixPattern, botReference, capitalize, replaceInPattern } from 'core/util/misc';
 import { UserId } from 'core/config/keys';
-import { messageFilter } from 'core/filter/message_filter';
+//import { messageFilter } from 'core/filter/message_filter';
 
 @Injectable
 export class HelloPlugin implements BotPlugin {
@@ -15,7 +15,7 @@ export class HelloPlugin implements BotPlugin {
   constructor(
     private readonly input: Input,
     private readonly api: TgApi,
-    @Inject(UserId) private readonly userId: number) { }
+    @Inject(UserId) readonly _userId: number) { }
 
   init(): void {
     const input = this.input.exclusiveMatch();
@@ -30,7 +30,7 @@ export class HelloPlugin implements BotPlugin {
     input.onText(replaceTriggerAndBot(/\b(bot)\W+(ты\W+)?(trigger)\b/), (match) =>
       this.reply(match).onTrigger(match.match[3]));
 
-    const filter = messageFilter(
+    /*const filter = messageFilter(
       message => message.chat.type === 'private' ||
         (message.reply_to_message != null &&
           message.reply_to_message.from != null &&
@@ -38,7 +38,7 @@ export class HelloPlugin implements BotPlugin {
     const privateInput = input.filter(filter);
     privateInput.onText(replaceTriggerAndBot(/\b(trigger)\b/), (match) =>
       this.reply(match).onTrigger(match.match[1]));
-    privateInput.onText(/\?\s*$/, (match) => this.reply(match).answer());
+    privateInput.onText(/\?\s*$/, (match) => this.reply(match).answer());*/
   }
 
   private reply(match: TextMatch): Reply {

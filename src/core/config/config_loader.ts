@@ -2,7 +2,7 @@ import * as PropertiesReader from 'properties-reader';
 
 import { Provider, provide } from "core/di/provider";
 import { logger } from 'core/logging/logger';
-import { AuthToken, GoogleKey, GoogleCx, ExchangeKey, UserId, RoleMap, OpenWeatherMapKey, CmcKey } from "core/config/keys";
+import { AuthToken, GoogleKey, GoogleCx, ExchangeKey, UserId, RoleMap, OpenWeatherMapKey, CmcKey, OpenAiKey } from "core/config/keys";
 import { Injectable } from 'core/di/injector';
 import { exists, readFile } from 'core/util/misc';
 
@@ -33,7 +33,7 @@ export class ConfigLoader {
     const roleMap: Map<string, number[]> = new Map();
     for (let key of Object.keys(properties.getAllProperties())) {
       if (key.startsWith('role_')) {
-        roleMap.set(key.substr(5), this.getIdList(properties.getRaw(key)));
+        roleMap.set(key.substring(5), this.getIdList(properties.getRaw(key)));
       }
     }
 
@@ -42,6 +42,7 @@ export class ConfigLoader {
     const exchangeKey = properties.getRaw('exchangekey');
     const openWeatherMapKey = properties.getRaw('openweathermapkey');
     const cmcKey = properties.getRaw('cmckey');
+    const openAiKey = properties.getRaw('openaikey');
 
     logger.wipeMap.set('AuthToken', authToken);
     if (googleKey != null) {
@@ -56,6 +57,9 @@ export class ConfigLoader {
     if (openWeatherMapKey != null) {
       logger.wipeMap.set('OpenWeatherMapKey', openWeatherMapKey);
     }
+    if (openAiKey != null) {
+      logger.wipeMap.set('OpenAiKey', openAiKey);
+    }
 
     return [
       provide(AuthToken, { useValue: authToken }),
@@ -66,6 +70,7 @@ export class ConfigLoader {
       provide(RoleMap, { useValue: roleMap }),
       provide(OpenWeatherMapKey, { useValue: openWeatherMapKey }),
       provide(CmcKey, { useValue: cmcKey }),
+      provide(OpenAiKey, { useValue: openAiKey }),
     ];
   }
 
