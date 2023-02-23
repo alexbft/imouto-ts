@@ -49,11 +49,12 @@ export class ChatPlugin implements BotPlugin {
   private handleReply = ({ message, match }: TextMatch): Promise<void> => {
     const answerId = message.reply_to_message!.message_id;
     const prev = this.answers.get(answerId) ?? '';
-    let userPrompt = prev + '\n\n' + match[1].trim();
+    let userPrompt = prev.trim() + '\n\n' + match[1].trim();
     return this.respond(message, userPrompt);
   }
 
   private async respond(message: Message, prompt: string): Promise<void> {
+    prompt = prompt.trim();
     while (prompt.length > 2048) {
       const userPromptParts = prompt.split('\n\n');
       if (userPromptParts.length <= 1) {
@@ -62,7 +63,10 @@ export class ChatPlugin implements BotPlugin {
       }
       prompt = userPromptParts.slice(1).join('\n\n');
     }
-    prompt = prompt.trim() + '\n\n';
+    if (prompt === '') {
+      return;
+    }
+    prompt = prompt + '\n\n';
     const responseText = await this.queryAi(`${message.from!.id}`, prompt);
     const replyMsg = await this.api.reply(message, responseText.trim());
     this.answers.set(replyMsg.message_id, prompt + responseText);
@@ -77,7 +81,7 @@ export class ChatPlugin implements BotPlugin {
       max_tokens: maxTokens,
       temperature: 1.2,
     };
-    logger.debug(`OpenAI request: ${JSON.stringify(request)}`);
+    logger.info(`OpenAI request: ${JSON.stringify(request)}`);
     const response = await this.openAiApi.createCompletion(request);
     return (response.data.choices[0].text ?? '[empty]');
   }
