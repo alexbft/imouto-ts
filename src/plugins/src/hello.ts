@@ -15,7 +15,7 @@ export class HelloPlugin implements BotPlugin {
   constructor(
     private readonly input: Input,
     private readonly api: TgApi,
-    @Inject(UserId) readonly _userId: number) { }
+    @Inject(UserId) readonly userId: number) { }
 
   init(): void {
     const input = this.input.exclusiveMatch();
@@ -31,10 +31,9 @@ export class HelloPlugin implements BotPlugin {
       this.reply(match).onTrigger(match.match[3]));
 
     /*const filter = messageFilter(
-      message => message.chat.type === 'private' ||
-        (message.reply_to_message != null &&
-          message.reply_to_message.from != null &&
-          message.reply_to_message.from.id === this.userId));
+      message => (message.reply_to_message != null &&
+        message.reply_to_message.from != null &&
+        message.reply_to_message.from.id === this.userId));
     const privateInput = input.filter(filter);
     privateInput.onText(replaceTriggerAndBot(/\b(trigger)\b/), (match) =>
       this.reply(match).onTrigger(match.match[1]));

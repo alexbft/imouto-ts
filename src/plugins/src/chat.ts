@@ -1,23 +1,26 @@
 import { BotPlugin } from "core/bot_api/bot_plugin";
 import { Input } from "core/bot_api/input";
 import { TextMatch } from "core/bot_api/text_match";
-import { OpenAiKey } from 'core/config/keys';
+import { OpenAiKey, UserId } from 'core/config/keys';
 import { Inject, Injectable } from "core/di/injector";
 import { logger } from 'core/logging/logger';
 import { TgApi } from "core/tg/tg_api";
 import { Message } from 'core/tg/tg_types';
 import { Configuration, OpenAIApi } from 'openai';
 import { CreateCompletionRequest } from 'openai/dist/api';
+import { messageFilter } from 'core/filter/message_filter';
 
 @Injectable
 export class ChatPlugin implements BotPlugin {
   readonly name = 'Chat';
   private openAiApi!: OpenAIApi;
+  private readonly answers = new Map<number, string>();
 
   constructor(
     private readonly input: Input,
     private readonly api: TgApi,
-    @Inject(OpenAiKey) private openAiKey: string) { }
+    @Inject(OpenAiKey) private openAiKey: string,
+    @Inject(UserId) private readonly userId: number) { }
 
   init(): void {
     const openAiConfig = new Configuration({
@@ -26,24 +29,57 @@ export class ChatPlugin implements BotPlugin {
     this.openAiApi = new OpenAIApi(openAiConfig);
 
     this.input.onText(/^!!([^]+)/, this.handle, this.onError);
+    const filter = messageFilter(
+      message => message.reply_to_message != null &&
+        message.reply_to_message.from != null &&
+        message.reply_to_message.from.id === this.userId &&
+        this.answers.has(message.reply_to_message.message_id));
+    const privateInput = this.input.filter(filter);
+    privateInput.onText(/([^]+)/, this.handleReply, this.onError);
   }
 
-  private handle = async ({ message, match }: TextMatch): Promise<void> => {
-    const userPrompt = match[1].trim();
+  private handle = ({ message, match }: TextMatch): Promise<void> => {
+    let userPrompt = match[1].trim();
+    if (userPrompt.endsWith('?')) {
+      userPrompt = `Answer as a shy introverted little sister character. ${userPrompt}`
+    }
+    userPrompt += '\n\n';
+    return this.respond(message, userPrompt);
+  }
+
+  private handleReply = ({ message, match }: TextMatch): Promise<void> => {
+    const answerId = message.reply_to_message!.message_id;
+    const prev = this.answers.get(answerId) ?? '';
+    let userPrompt = prev + '\n\n' + match[1].trim();
+    userPrompt += '\n\n';
+    return this.respond(message, userPrompt);
+  }
+
+  private async respond(message: Message, prompt: string): Promise<void> {
+    while (prompt.length > 512) {
+      const userPromptParts = prompt.split('\n\n');
+      if (userPromptParts.length <= 1) {
+        prompt = prompt.substring(prompt.length - 512);
+        break;
+      }
+      prompt = userPromptParts.slice(1).join('\n\n');
+    }
+    const responseText = await this.queryAi(`${message.from!.id}`, prompt);
+    const replyMsg = await this.api.reply(message, responseText);
+    this.answers.set(replyMsg.message_id, prompt + responseText);
+  }
+
+  private async queryAi(userId: string, query: string): Promise<string> {
     const request: CreateCompletionRequest = {
       model: 'text-davinci-003',
-      prompt: `Answer as a friendly mascot little sister character. ${userPrompt}`,
-      user: `${message.from!.id}`,
+      prompt: query.trim(),
+      user: userId,
       max_tokens: 256,
+      temperature: 1.2,
     };
     logger.debug(`OpenAI request: ${JSON.stringify(request)}`);
     const response = await this.openAiApi.createCompletion(request);
-    if (response.status !== 200) {
-      await this.api.reply(message, `Ошибка ${response.status}`);
-      return;
-    }
-    const responseText = response.data.choices[0].text ?? '[empty]';
-    await this.api.reply(message, responseText.trim());
+    return (response.data.choices[0].text ?? '[empty]').trim();
   }
 
   private onError = (message: Message) => this.api.reply(message, 'Ошибка');
