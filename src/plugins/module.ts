@@ -1,7 +1,7 @@
 import { provide } from 'core/di/provider';
 
 import { BashimPlugin } from 'plugins/src/bashim';
-import { HelloPlugin } from 'plugins/src/hello';
+// import { HelloPlugin } from 'plugins/src/hello';
 import { HelpPlugin } from 'plugins/src/help';
 import { IdPlugin } from 'plugins/src/id';
 import { IqTestPlugin } from 'plugins/src/iq_test';
@@ -26,7 +26,6 @@ import { QrPlugin } from 'plugins/src/qr';
 import { QuotePlugin } from 'plugins/src/quotes/quote_plugin';
 import { RollPlugin } from 'plugins/src/roll';
 import { SilencePlugin } from 'plugins/src/silence';
-import { UserCachePlugin } from 'plugins/src/user_cache';
 import { WeatherPlugin } from 'plugins/src/weather';
 import { WhoPlugin } from 'plugins/src/who';
 import { XkcdPlugin } from 'plugins/src/xkcd';
@@ -48,7 +47,7 @@ export const pluginBindings = [
   provide(DogifyPlugin),
   provide(EchoPlugin),
   provide(GooglePlugin),
-  provide(HelloPlugin),
+  //provide(HelloPlugin),
   provide(HelpPlugin),
   provide(IdPlugin),
   provide(IntroPlugin),
@@ -63,7 +62,7 @@ export const pluginBindings = [
   provide(RollPlugin),
   provide(SilencePlugin),
   // provide(TranslatePlugin), // turned off by default
-  provide(UserCachePlugin),
+  // provide(UserCachePlugin), // crap
   provide(WeatherPlugin),
   provide(WhoPlugin),
   provide(XkcdPlugin),
