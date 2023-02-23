@@ -56,10 +56,10 @@ export class ChatPlugin implements BotPlugin {
   }
 
   private async respond(message: Message, prompt: string): Promise<void> {
-    while (prompt.length > 512) {
+    while (prompt.length > 2048) {
       const userPromptParts = prompt.split('\n\n');
       if (userPromptParts.length <= 1) {
-        prompt = prompt.substring(prompt.length - 512);
+        prompt = prompt.substring(prompt.length - 2048);
         break;
       }
       prompt = userPromptParts.slice(1).join('\n\n');
