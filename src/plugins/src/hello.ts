@@ -34,8 +34,9 @@ class Reply {
   answer(query: string): Promise<any> {
     const text = query.trim();
     const orMatch = fixPattern(/([a-zA-Zа-яА-ЯёЁ0-9\s,\-_]+)\bили\b([a-zA-Zа-яА-ЯёЁ0-9\s\-_]+)/).exec(text);
+    const choiceMatch = /([a-zA-Zа-яА-ЯёЁ0-9\s,\-_]+)/.exec(text);
     let ans: string;
-    if (text.includes(',') || orMatch != null) {
+    if ((text.includes(',') && choiceMatch != null) || orMatch != null) {
       let ors: string[];
       if (orMatch != null) {
         let or1 = orMatch[1].trim();
@@ -47,7 +48,7 @@ class Reply {
         ors = or1.split(',').filter(s => s.trim() != '');
         ors.push(or2);
       } else {
-        ors = text.split(',').filter(s => s.trim() != '');
+        ors = choiceMatch![1].trim().split(',').filter(s => s.trim() != '');
       }
       ors = ors.map(s => capitalize(s.trim()) + '.');
       ans = randomChoice(ors);
