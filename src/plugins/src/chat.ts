@@ -73,6 +73,8 @@ export class ChatPlugin implements BotPlugin {
     }
     if (!match[0].startsWith('!!') && replyToId != null && this.dialogCache.getById(replyToId) != null) {
       prompt = this.dialogCache.getById(replyToId)!.trim() + '\n\n' + prompt;
+    } else if (message.reply_to_message?.from?.id === this.userId && message.reply_to_message.text != null) {
+      prompt = `Imouto: ${message.reply_to_message.text}\n\n${prompt}`;
     }
     return this.respond(message, prompt);
   }
