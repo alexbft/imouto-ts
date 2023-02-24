@@ -62,6 +62,7 @@ export class ChatPlugin implements BotPlugin {
         message.reply_to_message?.from?.id === this.userId);
     const privateInput = input.filter(filter);
     privateInput.onText(/^([^!][^]*)/, this.handle, this.onError);
+    this.input.onText(/^!\s?(ии|ai)\s+([^]+)/, this.handleRaw, this.onError);
   }
 
   private handle = ({ message, match }: TextMatch): Promise<void> => {
@@ -77,6 +78,19 @@ export class ChatPlugin implements BotPlugin {
       prompt = `Imouto: ${message.reply_to_message.text}\n\n${prompt}`;
     }
     return this.respond(message, prompt);
+  }
+
+  private handleRaw = async ({ message, match }: TextMatch): Promise<void> => {
+    const prompt = match[2].trim();
+    if (prompt === '') {
+      return;
+    }
+    const result = await this.queryAi(`${message.from!.id}`, prompt, 0.8);
+    if (message.chat.type !== 'private') {
+      await this.api.reply(message, result);
+    } else {
+      await this.api.respondWithText(message, result);
+    }
   }
 
   private randomPong = ({ message, match }: TextMatch): Promise<void> => {
@@ -118,14 +132,14 @@ export class ChatPlugin implements BotPlugin {
     }
   }
 
-  private async queryAi(userId: string, query: string): Promise<string> {
+  private async queryAi(userId: string, query: string, temperature: number = 1.2): Promise<string> {
     const maxTokens = 1024;
     const request: CreateCompletionRequest = {
       model: 'text-davinci-003',
       prompt: query,
       user: userId,
       max_tokens: maxTokens,
-      temperature: 1.2,
+      temperature: temperature,
     };
     logger.info(`OpenAI request: ${JSON.stringify(request)}`);
     const response = await this.openAiApi.createCompletion(request);
