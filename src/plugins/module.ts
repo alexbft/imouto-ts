@@ -1,7 +1,7 @@
 import { provide } from 'core/di/provider';
 
 import { BashimPlugin } from 'plugins/src/bashim';
-// import { HelloPlugin } from 'plugins/src/hello';
+import { HelloPlugin } from 'plugins/src/hello';
 import { HelpPlugin } from 'plugins/src/help';
 import { IdPlugin } from 'plugins/src/id';
 import { IqTestPlugin } from 'plugins/src/iq_test';
@@ -47,7 +47,7 @@ export const pluginBindings = [
   provide(DogifyPlugin),
   provide(EchoPlugin),
   provide(GooglePlugin),
-  //provide(HelloPlugin),
+  provide(HelloPlugin),
   provide(HelpPlugin),
   provide(IdPlugin),
   provide(IntroPlugin),

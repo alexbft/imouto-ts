@@ -41,7 +41,7 @@ export class ChatPlugin implements BotPlugin {
   constructor(
     private readonly input: Input,
     private readonly api: TgApi,
-    @Inject(OpenAiKey) private openAiKey: string,
+    @Inject(OpenAiKey) private readonly openAiKey: string,
     @Inject(UserId) private readonly userId: number) {
     this.dialogCache = new DialogCache();
   }
@@ -54,14 +54,14 @@ export class ChatPlugin implements BotPlugin {
 
     this.input.onText(/^!!([^]+)/, this.handle, this.onError);
     const input = this.input.exclusiveMatch();
-    input.onText(botReference(/^\W*\b(bot)\b\W*$/), this.randomPong, this.onError);
-    input.onText(botReference(/^\W*((bot)\b[^]+)\s*$/), this.handle, this.onError);
+    input.onText(botReference(/^[^!\w]*\b(bot)\b\W*$/), this.randomPong, this.onError);
+    input.onText(botReference(/^[^!\w]*((bot)\b[^]+)\s*$/), this.handle, this.onError);
     const filter = messageFilter(
       message =>
         (message.chat.type === 'private' && message.from != null) ||
         message.reply_to_message?.from?.id === this.userId);
     const privateInput = input.filter(filter);
-    privateInput.onText(/([^]+)/, this.handle, this.onError);
+    privateInput.onText(/^([^!][^]*)/, this.handle, this.onError);
   }
 
   private handle = ({ message, match }: TextMatch): Promise<void> => {
