@@ -54,8 +54,8 @@ export class ChatPlugin implements BotPlugin {
 
     this.input.onText(/^!!([^]+)/, this.handle, this.onError);
     const input = this.input.exclusiveMatch();
-    input.onText(botReference(/^[^!\w]*\b(bot)\b\W*$/), this.randomPong, this.onError);
-    input.onText(botReference(/^[^!\w]*((bot)\b[^]+)\s*$/), this.handle, this.onError);
+    input.onText(botReference(/^[^!a-zA-Zа-яА-Я0-9]*\b(bot)\b\W*$/), this.randomPong, this.onError);
+    input.onText(botReference(/^[^!a-zA-Zа-яА-Я0-9]*((bot)\b[^]+)\s*$/), this.handle, this.onError);
     const filter = messageFilter(
       message =>
         (message.chat.type === 'private' && message.from != null) ||

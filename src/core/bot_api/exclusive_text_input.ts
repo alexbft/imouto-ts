@@ -26,6 +26,7 @@ export class ExclusiveTextInput implements ExclusiveInput {
     const _filters = filters;
     const wrapped: WrappedTextHandler = async (msg: Message) => {
       const result = fixedRegex.exec(msg.text!);
+      //logger.debug(`checking ${fixedRegex} - ${result}`);
       if (result !== null) {
         try {
           await handler(new TextMatch(msg, result));
