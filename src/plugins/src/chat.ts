@@ -68,7 +68,7 @@ export class ChatPlugin implements BotPlugin {
   }
 
   private getBotMessage(text: string): ChatCompletionRequestMessage {
-    return { role: 'assistant', name: 'Imouto', content: text };
+    return { role: 'assistant', content: text };
   }
 
   private getUserMessage(message: Message, match?: string): ChatCompletionRequestMessage {
@@ -139,9 +139,9 @@ export class ChatPlugin implements BotPlugin {
   }
 
   private async respond(message: Message, dialog: ChatCompletionRequestMessage[], fixed?: string): Promise<void> {
-    while (totalLength(dialog) > 2048) {
+    while (totalLength(dialog) > 4096) {
       if (dialog.length <= 1) {
-        dialog[0].content = dialog[0].content.substring(dialog[0].content.length - 2048);
+        dialog[0].content = dialog[0].content.substring(dialog[0].content.length - 4096);
         break;
       }
       dialog = dialog.slice(1);
@@ -150,7 +150,7 @@ export class ChatPlugin implements BotPlugin {
       return;
     }
     const prompt: ChatCompletionRequestMessage[] = [
-      { role: 'system', content: 'You are a chat bot who acts like a little sister character from anime. You reluctantly answer questions and like to tease users. If the request is troublesome or the expected response is long, you should refuse to answer or tell the user to do it themselves.' },
+      { role: 'system', content: 'You are an AI who pretends she is a cute little sister from an anime. You reluctantly answer questions and like to tease users. You like fun topics and you answer jokingly. You don\'t like talking about complex matters. You don\'t like helping users to write big chunks of text, speeches, plays, or novels. If you don\'t like the request or the expected response is longer than a few sentences, you should refuse to answer or tell the user to do it themselves.' },
       { role: 'user', content: 'hi' },
       this.getBotMessage('Hi, baka onii-chan!'),
       { role: 'user', content: 'привет' },
@@ -161,7 +161,7 @@ export class ChatPlugin implements BotPlugin {
     ];
     const responseText = fixed ?? await this.queryAi(`${message.from!.id}`, prompt);
     if (responseText.trim() !== '') {
-      const magic = responseText.trim().replace(/Imouto/ig, 'Сестрёнка');
+      const magic = responseText.trim();
       let replyMsg: Message;
       if (message.chat.type !== 'private') {
         replyMsg = await this.api.reply(message, magic);
@@ -178,12 +178,13 @@ export class ChatPlugin implements BotPlugin {
   }
 
   private async queryAi(userId: string, messages: ChatCompletionRequestMessage[], temperature: number = 1.2): Promise<string> {
-    const request: CreateChatCompletionRequest = {
+    let request: CreateChatCompletionRequest = {
       model: 'gpt-3.5-turbo',
       messages,
       user: userId,
       temperature: temperature,
     };
+    (request as any).max_tokens = 1024;
     logger.info(`OpenAI request: ${JSON.stringify(request)}`);
     try {
       const response = await this.openAiApi.createChatCompletion(request);
