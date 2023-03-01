@@ -9,15 +9,16 @@ import { TgApi } from "core/tg/tg_api";
 import { Message } from 'core/tg/tg_types';
 import { botReference, randomChoice } from 'core/util/misc';
 import { Configuration, OpenAIApi } from 'openai';
-import { CreateCompletionRequest } from 'openai/dist/api';
+import { ChatCompletionRequestMessage, CreateChatCompletionRequest, CreateCompletionRequest } from 'openai/dist/api';
+import { messageToString } from 'core/tg/message_util';
 
 const cacheLimit = 1000;
 
 class DialogCache {
   private readonly messageIds: number[] = [];
-  private readonly dialogs: Map<number, string> = new Map();
+  private readonly dialogs: Map<number, ChatCompletionRequestMessage[]> = new Map();
 
-  add(messageId: number, dialog: string): void {
+  add(messageId: number, dialog: ChatCompletionRequestMessage[]): void {
     if (this.messageIds.length >= cacheLimit) {
       const idToDelete = this.messageIds.shift();
       this.dialogs.delete(idToDelete!);
@@ -26,7 +27,7 @@ class DialogCache {
     this.messageIds.push(messageId);
   }
 
-  getById(id: number): string | undefined {
+  getById(id: number): ChatCompletionRequestMessage[] | undefined {
     return this.dialogs.get(id);
   }
 }
@@ -52,6 +53,7 @@ export class ChatPlugin implements BotPlugin {
     });
     this.openAiApi = new OpenAIApi(openAiConfig);
 
+    this.input.onText(/^!models/, this.handleModels, this.onError);
     this.input.onText(/^!!([^]+)/, this.handle, this.onError);
     const input = this.input.exclusiveMatch();
     input.onText(botReference(/^[^!a-zA-Zа-яА-Я0-9]*\b(bot)\b\W*$/), this.randomPong, this.onError);
@@ -65,17 +67,34 @@ export class ChatPlugin implements BotPlugin {
     this.input.onText(/^!\s?(ии|ai)\s+([^]+)/, this.handleRaw, this.onError);
   }
 
+  private getBotMessage(text: string): ChatCompletionRequestMessage {
+    return { role: 'assistant', name: 'Imouto', content: text };
+  }
+
+  private getUserMessage(message: Message, match?: string): ChatCompletionRequestMessage {
+    let name: string | undefined = message.forward_from?.first_name ?? message.from?.first_name;
+    if (name == null || /^[a-zA-Z0-9_-]{1,64}$/.exec(name) == null) {
+      const id = message.forward_from?.id ?? message.from?.id;
+      name = id != null ? `user${id}` : undefined;
+    }
+    return { role: 'user', name, content: match ?? messageToString(message).trim() };
+  }
+
   private handle = ({ message, match }: TextMatch): Promise<void> => {
     const userPrompt = match[1].trim();
-    let prompt = `You: ${userPrompt}`;
+    let prompt: ChatCompletionRequestMessage[] = [this.getUserMessage(message, userPrompt)];
     let replyToId = message.reply_to_message?.message_id;
     if (replyToId == null && message.chat.type === 'private') {
       replyToId = this.lastMessageIdForChat.get(message.from!.id);
     }
     if (!match[0].startsWith('!!') && replyToId != null && this.dialogCache.getById(replyToId) != null) {
-      prompt = this.dialogCache.getById(replyToId)!.trim() + '\n\n' + prompt;
-    } else if (message.reply_to_message?.from?.id === this.userId && message.reply_to_message.text != null) {
-      prompt = `Imouto: ${message.reply_to_message.text}\n\n${prompt}`;
+      prompt = [...this.dialogCache.getById(replyToId)!, ...prompt];
+    } else if (message.reply_to_message?.text != null) {
+      if (message.reply_to_message.from?.id === this.userId) {
+        prompt = [this.getBotMessage(message.reply_to_message.text), ...prompt];
+      } else {
+        prompt = [this.getUserMessage(message.reply_to_message), ...prompt];
+      }
     }
     return this.respond(message, prompt);
   }
@@ -85,35 +104,61 @@ export class ChatPlugin implements BotPlugin {
     if (prompt === '') {
       return;
     }
-    const result = await this.queryAi(`${message.from!.id}`, prompt, 0.8);
-    if (message.chat.type !== 'private') {
-      await this.api.reply(message, result);
-    } else {
-      await this.api.respondWithText(message, result);
+    const request: CreateCompletionRequest = {
+      model: 'text-davinci-003',
+      prompt,
+      user: `${message.from!.id}`,
+      temperature: 0.8,
+      max_tokens: 1024,
+    };
+    logger.info(`OpenAI request: ${JSON.stringify(request)}`);
+    try {
+      const response = await this.openAiApi.createCompletion(request);
+      logger.info(`OpenAI response: ${JSON.stringify(response.data)}`);
+      const result = response.data.choices[0].text ?? '(empty)';
+      if (message.chat.type !== 'private') {
+        await this.api.reply(message, result);
+      } else {
+        await this.api.respondWithText(message, result);
+      }
+    } catch (error) {
+      if ((error as any).response != null) {
+        const response = (error as any).response;
+        logger.error(`OpenAI response status: ${response.status} data: ${JSON.stringify(response.data)}`);
+      }
+      throw error;
     }
   }
 
   private randomPong = ({ message, match }: TextMatch): Promise<void> => {
+    const userPrompt = match[0].trim();
+    let prompt: ChatCompletionRequestMessage[] = [this.getUserMessage(message, userPrompt)];
     const reply = randomChoice(
       ['Что?', 'Что?', 'Что?', 'Да?', 'Да?', 'Да?', message.from!.first_name, 'Слушаю', 'Я тут', 'Няя~', 'С Л А В А   Р О Б О Т А М']);
-    return this.respond(message, `You: ${match[0].trim()}`, reply);
+    return this.respond(message, prompt, reply);
   }
 
-  private async respond(message: Message, prompt: string, fixed?: string): Promise<void> {
-    prompt = prompt.trim();
-    while (prompt.length > 2048) {
-      const userPromptParts = prompt.split('\n\n');
-      if (userPromptParts.length <= 1) {
-        prompt = prompt.substring(prompt.length - 2048);
+  private async respond(message: Message, dialog: ChatCompletionRequestMessage[], fixed?: string): Promise<void> {
+    while (totalLength(dialog) > 2048) {
+      if (dialog.length <= 1) {
+        dialog[0].content = dialog[0].content.substring(dialog[0].content.length - 2048);
         break;
       }
-      prompt = userPromptParts.slice(1).join('\n\n');
+      dialog = dialog.slice(1);
     }
-    if (prompt === '') {
+    if (dialog.length === 0) {
       return;
     }
-    const dialog = `${prompt}\n\nImouto: `;
-    prompt = `Imouto is a chat bot who acts like a little sister character from anime. She reluctantly answers questions and likes to tease you.\n\nYou: hi\n\nImouto: Hi, baka onii-chan!\n\nYou: привет\n\nImouto: Привет, глупый братик!\n\nYou: write a book about bears\n\nImouto: No, write it yourself.\n\n${dialog}`;
+    const prompt: ChatCompletionRequestMessage[] = [
+      { role: 'system', content: 'You are a chat bot who acts like a little sister character from anime. You reluctantly answer questions and like to tease users. If the request is troublesome or the expected response is long, you should refuse to answer or tell the user to do it themselves.' },
+      { role: 'user', content: 'hi' },
+      this.getBotMessage('Hi, baka onii-chan!'),
+      { role: 'user', content: 'привет' },
+      this.getBotMessage('Привет, глупый братик!'),
+      { role: 'user', content: 'write a book about bears' },
+      this.getBotMessage('No, write it yourself.'),
+      ...dialog,
+    ];
     const responseText = fixed ?? await this.queryAi(`${message.from!.id}`, prompt);
     if (responseText.trim() !== '') {
       const magic = responseText.trim().replace(/Imouto/ig, 'Сестрёнка');
@@ -123,7 +168,7 @@ export class ChatPlugin implements BotPlugin {
       } else {
         replyMsg = await this.api.respondWithText(message, magic);
       }
-      this.dialogCache.add(replyMsg.message_id, dialog + responseText);
+      this.dialogCache.add(replyMsg.message_id, [...dialog, this.getBotMessage(magic)]);
       if (message.chat.type === 'private') {
         this.lastMessageIdForChat.set(message.from!.id, replyMsg.message_id);
       }
@@ -132,19 +177,36 @@ export class ChatPlugin implements BotPlugin {
     }
   }
 
-  private async queryAi(userId: string, query: string, temperature: number = 1.2): Promise<string> {
-    const maxTokens = 1024;
-    const request: CreateCompletionRequest = {
-      model: 'text-davinci-003',
-      prompt: query,
+  private async queryAi(userId: string, messages: ChatCompletionRequestMessage[], temperature: number = 1.2): Promise<string> {
+    const request: CreateChatCompletionRequest = {
+      model: 'gpt-3.5-turbo',
+      messages,
       user: userId,
-      max_tokens: maxTokens,
       temperature: temperature,
     };
     logger.info(`OpenAI request: ${JSON.stringify(request)}`);
-    const response = await this.openAiApi.createCompletion(request);
-    return response.data.choices[0].text ?? '';
+    try {
+      const response = await this.openAiApi.createChatCompletion(request);
+      logger.info(`OpenAI response: ${JSON.stringify(response.data)}`);
+      return response.data.choices[0].message?.content ?? '';
+    } catch (error) {
+      if ((error as any).response != null) {
+        const response = (error as any).response;
+        logger.error(`OpenAI response status: ${response.status} data: ${JSON.stringify(response.data)}`);
+      }
+      throw error;
+    }
   }
 
   private onError = (message: Message) => this.api.reply(message, 'Ошибка');
+
+  private handleModels = async ({ message }: TextMatch): Promise<void> => {
+    const response = await this.openAiApi.retrieveModel('gpt-3.5-turbo');
+    logger.info(`OpenAI models response: ${JSON.stringify(response.data)}`);
+    await this.api.reply(message, response.data.id);
+  }
+}
+
+function totalLength(dialog: ChatCompletionRequestMessage[]) {
+  return dialog.reduce((acc, x) => acc + x.content.length, 0);
 }
