@@ -93,7 +93,7 @@ export class ChatPlugin implements BotPlugin {
     if (replyToId == null && message.chat.type === 'private') {
       replyToId = this.lastMessageIdForChat.get(message.from!.id);
     }
-    if (!match[0].startsWith('!!') && replyToId != null && this.dialogCache.getById(replyToId) != null) {
+    if (!match[0].startsWith('!') && replyToId != null && this.dialogCache.getById(replyToId) != null) {
       const dialog = this.dialogCache.getById(replyToId)!;
       prompt = [...dialog.messages, ...prompt];
       isRaw = isRaw || dialog.isRaw;
