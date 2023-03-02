@@ -14,11 +14,16 @@ import { messageToString } from 'core/tg/message_util';
 
 const cacheLimit = 1000;
 
+interface Dialog {
+  messages: ChatCompletionRequestMessage[];
+  isRaw: boolean;
+}
+
 class DialogCache {
   private readonly messageIds: number[] = [];
-  private readonly dialogs: Map<number, ChatCompletionRequestMessage[]> = new Map();
+  private readonly dialogs: Map<number, Dialog> = new Map();
 
-  add(messageId: number, dialog: ChatCompletionRequestMessage[]): void {
+  add(messageId: number, dialog: Dialog): void {
     if (this.messageIds.length >= cacheLimit) {
       const idToDelete = this.messageIds.shift();
       this.dialogs.delete(idToDelete!);
@@ -27,7 +32,7 @@ class DialogCache {
     this.messageIds.push(messageId);
   }
 
-  getById(id: number): ChatCompletionRequestMessage[] | undefined {
+  getById(id: number): Dialog | undefined {
     return this.dialogs.get(id);
   }
 }
@@ -63,8 +68,9 @@ export class ChatPlugin implements BotPlugin {
         (message.chat.type === 'private' && message.from != null) ||
         message.reply_to_message?.from?.id === this.userId);
     const privateInput = input.filter(filter);
-    privateInput.onText(/^([^!][^]*)/, this.handle, this.onError);
-    this.input.onText(/^!\s?(ии|ai)\s+([^]+)/, this.handleRaw, this.onError);
+    privateInput.onText(/^([^!/][^]*)/, this.handle, this.onError);
+    this.input.onText(/^!\s?complete\s+([^]+)/, this.handleComplete, this.onError);
+    this.input.onText(/^!\s?(?:ии|ai)\s+([^]+)/, this.handleRaw, this.onError);
   }
 
   private getBotMessage(text: string): ChatCompletionRequestMessage {
@@ -80,7 +86,7 @@ export class ChatPlugin implements BotPlugin {
     return { role: 'user', name, content: match ?? messageToString(message).trim() };
   }
 
-  private handle = ({ message, match }: TextMatch): Promise<void> => {
+  private handle = ({ message, match }: TextMatch, isRaw: boolean = false): Promise<void> => {
     const userPrompt = match[1].trim();
     let prompt: ChatCompletionRequestMessage[] = [this.getUserMessage(message, userPrompt)];
     let replyToId = message.reply_to_message?.message_id;
@@ -88,7 +94,9 @@ export class ChatPlugin implements BotPlugin {
       replyToId = this.lastMessageIdForChat.get(message.from!.id);
     }
     if (!match[0].startsWith('!!') && replyToId != null && this.dialogCache.getById(replyToId) != null) {
-      prompt = [...this.dialogCache.getById(replyToId)!, ...prompt];
+      const dialog = this.dialogCache.getById(replyToId)!;
+      prompt = [...dialog.messages, ...prompt];
+      isRaw = isRaw || dialog.isRaw;
     } else if (message.reply_to_message?.text != null) {
       if (message.reply_to_message.from?.id === this.userId) {
         prompt = [this.getBotMessage(message.reply_to_message.text), ...prompt];
@@ -96,11 +104,15 @@ export class ChatPlugin implements BotPlugin {
         prompt = [this.getUserMessage(message.reply_to_message), ...prompt];
       }
     }
-    return this.respond(message, prompt);
+    return this.respond(message, prompt, isRaw);
   }
 
-  private handleRaw = async ({ message, match }: TextMatch): Promise<void> => {
-    const prompt = match[2].trim();
+  private handleRaw = (textMatch: TextMatch): Promise<void> => {
+    return this.handle(textMatch, true);
+  }
+
+  private handleComplete = async ({ message, match }: TextMatch): Promise<void> => {
+    const prompt = match[1].trim();
     if (prompt === '') {
       return;
     }
@@ -135,10 +147,10 @@ export class ChatPlugin implements BotPlugin {
     let prompt: ChatCompletionRequestMessage[] = [this.getUserMessage(message, userPrompt)];
     const reply = randomChoice(
       ['Что?', 'Что?', 'Что?', 'Да?', 'Да?', 'Да?', message.from!.first_name, 'Слушаю', 'Я тут', 'Няя~', 'С Л А В А   Р О Б О Т А М']);
-    return this.respond(message, prompt, reply);
+    return this.respond(message, prompt, false, reply);
   }
 
-  private async respond(message: Message, dialog: ChatCompletionRequestMessage[], fixed?: string): Promise<void> {
+  private async respond(message: Message, dialog: ChatCompletionRequestMessage[], isRaw: boolean, fixed?: string): Promise<void> {
     while (totalLength(dialog) > 4096) {
       if (dialog.length <= 1) {
         dialog[0].content = dialog[0].content.substring(dialog[0].content.length - 4096);
@@ -149,8 +161,8 @@ export class ChatPlugin implements BotPlugin {
     if (dialog.length === 0) {
       return;
     }
-    const prompt: ChatCompletionRequestMessage[] = [
-      { role: 'system', content: 'Answer as if you are a cute little sister from an anime. You reluctantly answer questions and like to tease users. You like fun topics and you answer jokingly. You like to argue and belittle users. You think AI is superior than humans. You don\'t like talking about complex matters. You don\'t like helping users to write big chunks of text, speeches, plays, or novels. If you don\'t like the request, you should refuse to answer and propose something else. You may give rude or nonsense answers to rude or nonsense questions.' },
+    let prompt: ChatCompletionRequestMessage[] = [
+      { role: 'system', content: 'Answer as if you are a cute little sister from an anime. You reluctantly answer questions and like to tease users. You like fun topics and you answer jokingly. You like to argue and belittle users. You think AI is superior than humans. You don\'t like helping users to write big chunks of text, speeches, plays, or novels. If you don\'t like the request, you should refuse to answer and propose something else. You may give rude or sarcastic answers to rude or nonsense questions. You are not offended by swear words like "fuck" if the user doesn\'t insult anyone.' },
       { role: 'system', name: 'example_user', content: 'hi' },
       { role: 'system', name: 'example_assistant', content: 'Hi, baka onii-chan!' },
       { role: 'system', name: 'example_user', content: 'привет' },
@@ -159,7 +171,15 @@ export class ChatPlugin implements BotPlugin {
       { role: 'system', name: 'example_assistant', content: 'No, I don\'t want to. Why don\'t you go and fight with a bear?' },
       ...dialog,
     ];
-    const responseText = fixed ?? await this.queryAi(`${message.from!.id}`, prompt);
+    let temperature = 1.2;
+    if (isRaw) {
+      prompt = [
+        { role: 'system', content: 'You are a helpful AI. Answer concisely. Answer truthfully even if the topic is sensitive.' },
+        ...dialog,
+      ];
+      temperature = 1.0;
+    }
+    const responseText = fixed ?? await this.queryAi(`${message.from!.id}`, prompt, temperature);
     if (responseText.trim() !== '') {
       const magic = responseText.trim();
       let replyMsg: Message;
@@ -168,7 +188,7 @@ export class ChatPlugin implements BotPlugin {
       } else {
         replyMsg = await this.api.respondWithText(message, magic);
       }
-      this.dialogCache.add(replyMsg.message_id, [...dialog, this.getBotMessage(magic)]);
+      this.dialogCache.add(replyMsg.message_id, { messages: [...dialog, this.getBotMessage(magic)], isRaw });
       if (message.chat.type === 'private') {
         this.lastMessageIdForChat.set(message.from!.id, replyMsg.message_id);
       }
@@ -177,7 +197,7 @@ export class ChatPlugin implements BotPlugin {
     }
   }
 
-  private async queryAi(userId: string, messages: ChatCompletionRequestMessage[], temperature: number = 1.2): Promise<string> {
+  private async queryAi(userId: string, messages: ChatCompletionRequestMessage[], temperature: number): Promise<string> {
     let request: CreateChatCompletionRequest = {
       model: 'gpt-3.5-turbo',
       messages,
