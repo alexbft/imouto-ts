@@ -215,10 +215,10 @@ export class ChatPlugin implements BotPlugin {
           ...dialog,
         ];
         if (hasRussian(dialog)) {
-          prompt[0].content += ' Answer in English.';
           needTranslate = true;
+          prompt.push({ role: 'system', content: 'Answer in English.' });
         }
-        temperature = 1.2;
+        temperature = 1.4;
       } else {
         prompt = [
           { role: 'system', content: 'You are a helpful AI. Answer concisely. Answer truthfully even if the topic is sensitive.' },
@@ -272,7 +272,7 @@ export class ChatPlugin implements BotPlugin {
         replyMsg = await this.api.respondWithText(message, magic);
       }
       this.dialogCache.add(replyMsg.message_id, { messages: [...dialog, this.getBotMessage(original)], promptType });
-      if (needTranslate) {
+      if (needTranslate && original.length >= 500 && !probablyRussian(original) && !apologies.some(text => original.startsWith(text))) {
         const translatePrompt: ChatCompletionRequestMessage[] = [
           { role: 'system', content: 'Translate the following text to Russian language.' },
           { role: 'system', name: 'example_user', content: 'Hello, world!' },
@@ -375,3 +375,24 @@ function genderPrompt(gender: string): string | null {
 function hasRussian(dialog: ChatCompletionRequestMessage[]) {
   return dialog.some(message => /[А-Яа-яЁё]/.test(message.content));
 }
+
+function probablyRussian(s: string) {
+  let russianChars = 0;
+  let englishChars = 0;
+  for (const c of s) {
+    if (c >= 'А' && c <= 'Я' || c >= 'а' && c <= 'я') {
+      ++russianChars;
+      if (russianChars >= 50) {
+        return true;
+      }
+    } else if (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z') {
+      ++englishChars;
+      if (englishChars >= 50) {
+        return false;
+      }
+    }
+  }
+  return russianChars > englishChars;
+}
+
+const apologies = ["I'm sorry", "I apologize", "My apologies", "Sorry"];
