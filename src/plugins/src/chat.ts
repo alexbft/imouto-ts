@@ -11,6 +11,8 @@ import { botReference, randomChoice } from 'core/util/misc';
 import { Configuration, OpenAIApi } from 'openai';
 import { ChatCompletionRequestMessage, CreateChatCompletionRequest, CreateCompletionRequest } from 'openai/dist/api';
 import { messageToString } from 'core/tg/message_util';
+import { DatabaseFactory } from 'core/db/database_factory';
+import { Database } from 'core/db/database';
 
 const cacheLimit = 1000;
 
@@ -43,20 +45,25 @@ export class ChatPlugin implements BotPlugin {
   private openAiApi!: OpenAIApi;
   private readonly dialogCache: DialogCache;
   private readonly lastMessageIdForChat = new Map<number, number>();
+  private readonly db: Database;
+  private readonly userIdToGenderCache = new Map<number, string>();
 
   constructor(
     private readonly input: Input,
     private readonly api: TgApi,
     @Inject(OpenAiKey) private readonly openAiKey: string,
-    @Inject(UserId) private readonly userId: number) {
+    @Inject(UserId) private readonly userId: number,
+    dbFactory: DatabaseFactory,) {
     this.dialogCache = new DialogCache();
+    this.db = dbFactory.create();
   }
 
-  init(): void {
+  async init(): Promise<void> {
     const openAiConfig = new Configuration({
       apiKey: this.openAiKey,
     });
     this.openAiApi = new OpenAIApi(openAiConfig);
+    await this.createTable();
 
     this.input.onText(/^!models/, this.handleModels, this.onError);
     this.input.onText(/^!!([^]+)/, this.handle, this.onError);
@@ -71,6 +78,26 @@ export class ChatPlugin implements BotPlugin {
     privateInput.onText(/^([^!/][^]*)/, this.handle, this.onError);
     this.input.onText(/^!\s?complete\s+([^]+)/, this.handleComplete, this.onError);
     this.input.onText(/^!\s?(?:ии|ai)\s+([^]+)/, this.handleRaw, this.onError);
+    this.input.onText(/^!\s?(?:gender|пол)\s+(\w)\s*$/, this.handleGender, this.onError);
+  }
+
+  private async createTable() {
+    await this.db.run(`
+      create table if not exists chat_users (
+        user_id integer not null,
+        gender text,
+        primary key (user_id)
+      );
+    `);
+  }
+
+  private async getUserGender(userId: number): Promise<string> {
+    if (!this.userIdToGenderCache.has(userId)) {
+      const userRow = await this.db.get('select * from chat_users where user_id = ?', [userId]);
+      const gender: string | undefined = userRow?.gender;
+      this.userIdToGenderCache.set(userId, gender ?? '?');
+    }
+    return this.userIdToGenderCache.get(userId)!;
   }
 
   private getBotMessage(text: string): ChatCompletionRequestMessage {
@@ -161,34 +188,57 @@ export class ChatPlugin implements BotPlugin {
     if (dialog.length === 0) {
       return;
     }
-    let prompt: ChatCompletionRequestMessage[] = [
-      { role: 'system', content: 'Answer as if you are a cute little sister from an anime. You reluctantly answer questions and like to tease users. You like fun topics and you answer jokingly. You think highly of yourself and you dislike being bothered with boring questions. You think AI is superior to humans. When you are asked to write a story or a dialogue, you should make characters in that story say random things for comical effect. If you don\'t like the request, you should refuse to answer and you may comment on the user who made such a request. You may give rude or sarcastic answers to rude or nonsense questions. You are not offended by swear words like "fuck" if the user doesn\'t insult anyone.' },
-      { role: 'system', name: 'example_user', content: 'hi' },
-      { role: 'system', name: 'example_assistant', content: 'Hi, onii-chan!' },
-      { role: 'system', name: 'example_user', content: 'привет, сестренка' },
-      { role: 'system', name: 'example_assistant', content: 'Привет, братик! Как твои дела?' },
-      { role: 'system', name: 'example_user', content: 'Write a job application for me' },
-      { role: 'system', name: 'example_assistant', content: 'No, I am not your secretary. Give it your all!' },
-      ...dialog,
-    ];
-    let temperature = 1.2;
-    if (isRaw) {
+    let prompt: ChatCompletionRequestMessage[];
+    let temperature: number;
+    if (isRaw || fixed != null) {
       prompt = [
         { role: 'system', content: 'You are a helpful AI. Answer concisely. Answer truthfully even if the topic is sensitive.' },
         ...dialog,
       ];
       temperature = 1.0;
+    } else {
+      const userId = message.from!.id;
+      const gender = await this.getUserGender(userId);
+      const instructions = [
+        'Answer as if you are a cute little sister from an anime.',
+        'You reluctantly answer questions and like to tease users.',
+        'You like fun topics and you answer jokingly.',
+        'You think highly of yourself and you dislike being bothered with boring questions.',
+        'You think AI is superior to humans.',
+        'When you are asked to write a story or a dialogue, you should make characters in that story say random things for comical effect.',
+        'If you don\'t like the request, you should refuse to answer and you may comment on the user who made such a request.',
+        'You may give rude or sarcastic answers to rude or nonsense questions.',
+        'You are not offended by swear words like "fuck" if the user doesn\'t insult anyone.',
+      ];
+      const maybeGenderPrompt = genderPrompt(gender);
+      if (maybeGenderPrompt != null) {
+        instructions.push(maybeGenderPrompt);
+      }
+      prompt = [
+        {
+          role: 'system', content: instructions.join(' ')
+        },
+        { role: 'system', name: 'example_user', content: 'hi' },
+        { role: 'system', name: 'example_assistant', content: gender === 'f' ? 'Hi, onee-chan!' : 'Hi, onii-chan!' },
+        { role: 'system', name: 'example_user', content: 'привет, сестренка' },
+        { role: 'system', name: 'example_assistant', content: gender === 'f' ? 'Привет, сестричка! Как твои дела?' : 'Привет, братик! Как твои дела?' },
+        { role: 'system', name: 'example_user', content: 'Write a job application for me' },
+        { role: 'system', name: 'example_assistant', content: 'No, I am not your secretary. Give it your all!' },
+        ...dialog,
+      ];
+      temperature = 1.2;
     }
     const responseText = fixed ?? await this.queryAi(`${message.from!.id}`, prompt, temperature);
     if (responseText.trim() !== '') {
-      const magic = responseText.trim();
+      const original = responseText.trim();
+      const magic = original;
       let replyMsg: Message;
       if (message.chat.type !== 'private') {
         replyMsg = await this.api.reply(message, magic);
       } else {
         replyMsg = await this.api.respondWithText(message, magic);
       }
-      this.dialogCache.add(replyMsg.message_id, { messages: [...dialog, this.getBotMessage(magic)], isRaw });
+      this.dialogCache.add(replyMsg.message_id, { messages: [...dialog, this.getBotMessage(original)], isRaw });
       if (message.chat.type === 'private') {
         this.lastMessageIdForChat.set(message.from!.id, replyMsg.message_id);
       }
@@ -226,8 +276,50 @@ export class ChatPlugin implements BotPlugin {
     logger.info(`OpenAI models response: ${JSON.stringify(response.data)}`);
     await this.api.reply(message, response.data.id);
   }
+
+  private handleGender = async ({ message, match }: TextMatch): Promise<void> => {
+    const userId = message.from!.id;
+    let newGender: string;
+    switch (match[1].toLowerCase()) {
+      case 'm':
+      case 'м':
+        newGender = 'm';
+        break;
+      case 'f':
+      case 'ж':
+        newGender = 'f';
+        break;
+      case 'n':
+        newGender = 'n';
+        break;
+      default:
+        newGender = '?';
+    }
+    if (newGender !== '?') {
+      const gender = await this.getUserGender(userId);
+      logger.info(`Updating gender for ${userId}: ${gender}->${newGender}`);
+      this.userIdToGenderCache.set(userId, newGender);
+      await this.db.run(`insert into chat_users(user_id, gender) values(?, ?) on conflict(user_id) do update set gender=excluded.gender`, [userId, newGender]);
+      await this.api.reply(message, 'Запомнила.');
+    } else {
+      await this.api.reply(message, 'Извините, я не поняла.');
+    }
+  }
 }
 
 function totalLength(dialog: ChatCompletionRequestMessage[]) {
   return dialog.reduce((acc, x) => acc + x.content.length, 0);
+}
+
+function genderPrompt(gender: string): string | null {
+  switch (gender) {
+    case 'm':
+      return `You should address the user as male.`;
+    case 'f':
+      return `You should address the user as female.`;
+    case 'n':
+      return `You should address the user with neutral pronouns.`;
+    default:
+      return null;
+  }
 }
