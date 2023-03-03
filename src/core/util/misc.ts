@@ -1,8 +1,9 @@
-import { AsyncHandler } from "core/util/promises";
 import { logger } from "core/logging/logger";
-import { Duration } from "moment";
-import { promisify } from 'util';
+import { AsyncHandler } from "core/util/promises";
 import * as fs from 'fs';
+import { Duration } from "moment";
+import { User } from 'node-telegram-bot-api';
+import { promisify } from 'util';
 
 export const maxDelayNodeJs = 2147483647;
 
@@ -166,4 +167,44 @@ export function repeatString(s: string, n: number): string {
     buf += s;
   }
   return buf;
+}
+
+const translitRulesStr = 'а-a,б-b,в-v,г-g,д-d,е-e,ё-yo,ж-zh,з-z,и-i,й-y,к-k,л-l,м-m,н-n,о-o,п-p,р-r,с-s,т-t,у-u,ф-f,х-kh,ц-c,ч-ch,ш-sh,щ-shch,ъ-,ы-yi,ь-,э-e,ю-yu,я-ya';
+const translitRulesRuEn = new Map<string, string>();
+translitRulesStr.split(',').forEach(pair => {
+  const [ru, en] = pair.split('-');
+  translitRulesRuEn.set(ru, en);
+  const upRu = ru.toUpperCase();
+  const upEn = en.length === 0 ? en : en[0].toUpperCase() + en.substring(1);
+  translitRulesRuEn.set(upRu, upEn);
+});
+
+export function translitRuEn(s: string): string {
+  return s.split('').map(ch => translitRulesRuEn.get(ch) ?? ch).join('');
+}
+
+export function translitName(user: User): string {
+  function normalize(name: string): string {
+    const transliterated = translitRuEn(name);
+    let result = transliterated.split('').map(ch => {
+      if (/\s/.test(ch)) {
+        return '_';
+      }
+      if (/[a-zA-Z0-9_-]/.test(ch)) {
+        return ch;
+      }
+      return '';
+    }).join('');
+    if (result.length > 64) {
+      result = result.substring(0, 64);
+    }
+    return result;
+  }
+
+  let origName = user.first_name.trim();
+  if (user.last_name != null) {
+    origName = (origName + ' ' + user.last_name).trim();
+  }
+  const result = normalize(origName);
+  return result !== '' ? result : normalize(user.username ?? '');
 }

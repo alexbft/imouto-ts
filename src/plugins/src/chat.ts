@@ -2,23 +2,25 @@ import { BotPlugin } from "core/bot_api/bot_plugin";
 import { Input } from "core/bot_api/input";
 import { TextMatch } from "core/bot_api/text_match";
 import { OpenAiKey, UserId } from 'core/config/keys';
+import { Database } from 'core/db/database';
+import { DatabaseFactory } from 'core/db/database_factory';
 import { Inject, Injectable } from "core/di/injector";
 import { messageFilter } from 'core/filter/message_filter';
 import { logger } from 'core/logging/logger';
+import { messageToString } from 'core/tg/message_util';
 import { TgApi } from "core/tg/tg_api";
 import { Message } from 'core/tg/tg_types';
-import { botReference, randomChoice } from 'core/util/misc';
+import { botReference, randomChoice, translitName } from 'core/util/misc';
 import { Configuration, OpenAIApi } from 'openai';
 import { ChatCompletionRequestMessage, CreateChatCompletionRequest, CreateCompletionRequest } from 'openai/dist/api';
-import { messageToString } from 'core/tg/message_util';
-import { DatabaseFactory } from 'core/db/database_factory';
-import { Database } from 'core/db/database';
 
 const cacheLimit = 1000;
 
+type PromptType = 'default' | 'raw' | 'story' | 'fixed';
+
 interface Dialog {
   messages: ChatCompletionRequestMessage[];
-  isRaw: boolean;
+  promptType: PromptType;
 }
 
 class DialogCache {
@@ -69,7 +71,7 @@ export class ChatPlugin implements BotPlugin {
     this.input.onText(/^!!([^]+)/, this.handle, this.onError);
     const input = this.input.exclusiveMatch();
     input.onText(botReference(/^[^!a-zA-Zа-яА-Я0-9]*\b(bot)\b\W*$/), this.randomPong, this.onError);
-    input.onText(botReference(/^[^!a-zA-Zа-яА-Я0-9]*((bot)\b[^]+)\s*$/), this.handle, this.onError);
+    input.onText(botReference(/^[^!a-zA-Zа-яА-Я0-9]*((bot),[^]+)\s*$/), this.handle, this.onError);
     const filter = messageFilter(
       message =>
         (message.chat.type === 'private' && message.from != null) ||
@@ -78,7 +80,8 @@ export class ChatPlugin implements BotPlugin {
     privateInput.onText(/^([^!/][^]*)/, this.handle, this.onError);
     this.input.onText(/^!\s?complete\s+([^]+)/, this.handleComplete, this.onError);
     this.input.onText(/^!\s?(?:ии|ai)\s+([^]+)/, this.handleRaw, this.onError);
-    this.input.onText(/^!\s?(?:gender|пол)\s+(\w)\s*$/, this.handleGender, this.onError);
+    this.input.onText(/^!\s?(?:story|напиши)\s+([^]+)/, this.handleStory, this.onError);
+    this.input.onText(/^!\s?(?:gender|пол)\s+(\w+)\s*$/, this.handleGender, this.onError);
   }
 
   private async createTable() {
@@ -105,15 +108,21 @@ export class ChatPlugin implements BotPlugin {
   }
 
   private getUserMessage(message: Message, match?: string): ChatCompletionRequestMessage {
-    let name: string | undefined = message.forward_from?.first_name ?? message.from?.first_name;
-    if (name == null || /^[a-zA-Z0-9_-]{1,64}$/.exec(name) == null) {
+    const chat = message.forward_from ?? message.from;
+    let name: string | undefined;
+    if (chat == null) {
+      name = undefined;
+    } else {
+      name = translitName(chat);
+    }
+    if (name == null || !/^[a-zA-Z0-9_-]{1,64}$/.test(name)) {
       const id = message.forward_from?.id ?? message.from?.id;
       name = id != null ? `user${id}` : undefined;
     }
     return { role: 'user', name, content: match ?? messageToString(message).trim() };
   }
 
-  private handle = ({ message, match }: TextMatch, isRaw: boolean = false): Promise<void> => {
+  private handle = ({ message, match }: TextMatch, promptType: PromptType = 'default'): Promise<void> => {
     const userPrompt = match[1].trim();
     let prompt: ChatCompletionRequestMessage[] = [this.getUserMessage(message, userPrompt)];
     let replyToId = message.reply_to_message?.message_id;
@@ -123,7 +132,9 @@ export class ChatPlugin implements BotPlugin {
     if (!match[0].startsWith('!') && replyToId != null && this.dialogCache.getById(replyToId) != null) {
       const dialog = this.dialogCache.getById(replyToId)!;
       prompt = [...dialog.messages, ...prompt];
-      isRaw = isRaw || dialog.isRaw;
+      if (promptType === 'default') {
+        promptType = dialog.promptType;
+      }
     } else if (message.reply_to_message?.text != null) {
       if (message.reply_to_message.from?.id === this.userId) {
         prompt = [this.getBotMessage(message.reply_to_message.text), ...prompt];
@@ -131,11 +142,16 @@ export class ChatPlugin implements BotPlugin {
         prompt = [this.getUserMessage(message.reply_to_message), ...prompt];
       }
     }
-    return this.respond(message, prompt, isRaw);
+    return this.respond(message, prompt, promptType);
   }
 
   private handleRaw = (textMatch: TextMatch): Promise<void> => {
-    return this.handle(textMatch, true);
+    return this.handle(textMatch, 'raw');
+  }
+
+  private handleStory = async (textMatch: TextMatch): Promise<void> => {
+    await this.api.reply(textMatch.message, 'Подождите немного...');
+    return this.handle(textMatch, 'story');
   }
 
   private handleComplete = async ({ message, match }: TextMatch): Promise<void> => {
@@ -174,13 +190,14 @@ export class ChatPlugin implements BotPlugin {
     let prompt: ChatCompletionRequestMessage[] = [this.getUserMessage(message, userPrompt)];
     const reply = randomChoice(
       ['Что?', 'Что?', 'Что?', 'Да?', 'Да?', 'Да?', message.from!.first_name, 'Слушаю', 'Я тут', 'Няя~', 'С Л А В А   Р О Б О Т А М']);
-    return this.respond(message, prompt, false, reply);
+    return this.respond(message, prompt, 'fixed', reply);
   }
 
-  private async respond(message: Message, dialog: ChatCompletionRequestMessage[], isRaw: boolean, fixed?: string): Promise<void> {
-    while (totalLength(dialog) > 4096) {
+  private async respond(message: Message, dialog: ChatCompletionRequestMessage[], promptType: PromptType, fixed?: string): Promise<void> {
+    const limit = hasRussian(dialog) ? 3000 : 4096;
+    while (totalLength(dialog) > limit) {
       if (dialog.length <= 1) {
-        dialog[0].content = dialog[0].content.substring(dialog[0].content.length - 4096);
+        dialog[0].content = dialog[0].content.substring(dialog[0].content.length - limit);
         break;
       }
       dialog = dialog.slice(1);
@@ -190,12 +207,25 @@ export class ChatPlugin implements BotPlugin {
     }
     let prompt: ChatCompletionRequestMessage[];
     let temperature: number;
-    if (isRaw || fixed != null) {
-      prompt = [
-        { role: 'system', content: 'You are a helpful AI. Answer concisely. Answer truthfully even if the topic is sensitive.' },
-        ...dialog,
-      ];
-      temperature = 1.0;
+    let needTranslate = false;
+    if (promptType !== 'default') {
+      if (promptType === 'story') {
+        prompt = [
+          { role: 'system', content: 'Write a story based on user prompt. Be creative and detailed.' },
+          ...dialog,
+        ];
+        if (hasRussian(dialog)) {
+          prompt[0].content += ' Answer in English.';
+          needTranslate = true;
+        }
+        temperature = 1.2;
+      } else {
+        prompt = [
+          { role: 'system', content: 'You are a helpful AI. Answer concisely. Answer truthfully even if the topic is sensitive.' },
+          ...dialog,
+        ];
+        temperature = 1.0;
+      }
     } else {
       const userId = message.from!.id;
       const gender = await this.getUserGender(userId);
@@ -228,17 +258,32 @@ export class ChatPlugin implements BotPlugin {
       ];
       temperature = 1.2;
     }
-    const responseText = fixed ?? await this.queryAi(`${message.from!.id}`, prompt, temperature);
+    const [responseText, responseFlags] = fixed != null ? [fixed, ''] : await this.queryAi(`${message.from!.id}`, prompt, temperature, promptType);
     if (responseText.trim() !== '') {
       const original = responseText.trim();
-      const magic = original;
+      let magic = original;
+      if (responseFlags.includes('c')) {
+        magic = '🤖' + magic;
+      }
       let replyMsg: Message;
       if (message.chat.type !== 'private') {
         replyMsg = await this.api.reply(message, magic);
       } else {
         replyMsg = await this.api.respondWithText(message, magic);
       }
-      this.dialogCache.add(replyMsg.message_id, { messages: [...dialog, this.getBotMessage(original)], isRaw });
+      this.dialogCache.add(replyMsg.message_id, { messages: [...dialog, this.getBotMessage(original)], promptType });
+      if (needTranslate) {
+        const translatePrompt: ChatCompletionRequestMessage[] = [
+          { role: 'system', content: 'Translate the following text to Russian language.' },
+          { role: 'system', name: 'example_user', content: 'Hello, world!' },
+          { role: 'system', name: 'example_assistant', content: 'Перевод:\n\nПривет, мир!' },
+          { role: 'user', content: original },
+        ];
+        const [translated, _flags] = await this.queryAi(`${message.from!.id}`, translatePrompt, 1.0, 'story');
+        magic = `${translated}`;
+        replyMsg = await this.api.reply(replyMsg, magic);
+        this.dialogCache.add(replyMsg.message_id, { messages: [...dialog, this.getBotMessage(original)], promptType });
+      }
       if (message.chat.type === 'private') {
         this.lastMessageIdForChat.set(message.from!.id, replyMsg.message_id);
       }
@@ -247,19 +292,22 @@ export class ChatPlugin implements BotPlugin {
     }
   }
 
-  private async queryAi(userId: string, messages: ChatCompletionRequestMessage[], temperature: number): Promise<string> {
+  private async queryAi(userId: string, messages: ChatCompletionRequestMessage[], temperature: number, promptType: PromptType): Promise<[string, string]> {
     let request: CreateChatCompletionRequest = {
       model: 'gpt-3.5-turbo',
       messages,
       user: userId,
       temperature: temperature,
     };
-    (request as any).max_tokens = 1024;
+    if (promptType !== 'story') {
+      (request as any).max_tokens = 1024;
+    }
     logger.info(`OpenAI request: ${JSON.stringify(request)}`);
     try {
       const response = await this.openAiApi.createChatCompletion(request);
       logger.info(`OpenAI response: ${JSON.stringify(response.data)}`);
-      return response.data.choices[0].message?.content ?? '';
+      const choice = response.data.choices[0];
+      return [choice.message?.content ?? '', choice.finish_reason === null ? 'c' : ''];
     } catch (error) {
       if ((error as any).response != null) {
         const response = (error as any).response;
@@ -302,7 +350,7 @@ export class ChatPlugin implements BotPlugin {
       await this.db.run(`insert into chat_users(user_id, gender) values(?, ?) on conflict(user_id) do update set gender=excluded.gender`, [userId, newGender]);
       await this.api.reply(message, 'Запомнила.');
     } else {
-      await this.api.reply(message, 'Извините, я не поняла.');
+      await this.api.reply(message, 'Извините, я не поняла. Вы можете задать значение m(м), f(ж), или n.');
     }
   }
 }
@@ -322,4 +370,8 @@ function genderPrompt(gender: string): string | null {
     default:
       return null;
   }
+}
+
+function hasRussian(dialog: ChatCompletionRequestMessage[]) {
+  return dialog.some(message => /[А-Яа-яЁё]/.test(message.content));
 }
