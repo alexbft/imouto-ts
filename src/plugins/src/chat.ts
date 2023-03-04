@@ -311,7 +311,7 @@ export class ChatPlugin implements BotPlugin {
       user: userId,
       temperature: temperature,
     };
-    if (promptType !== 'story') {
+    if (promptType === 'default') {
       (request as any).max_tokens = 1024;
     }
     logger.info(`OpenAI request: ${JSON.stringify(request)}`);
