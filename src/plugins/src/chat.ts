@@ -15,6 +15,7 @@ import { Configuration, OpenAIApi } from 'openai';
 import { ChatCompletionRequestMessage, CreateChatCompletionRequest, CreateCompletionRequest } from 'openai/dist/api';
 
 const cacheLimit = 1000;
+const chunkSize = 4000;
 
 type PromptType = 'default' | 'raw' | 'story' | 'fixed';
 
@@ -171,11 +172,7 @@ export class ChatPlugin implements BotPlugin {
       const response = await this.openAiApi.createCompletion(request);
       logger.info(`OpenAI response: ${JSON.stringify(response.data)}`);
       const result = response.data.choices[0].text ?? '(empty)';
-      if (message.chat.type !== 'private') {
-        await this.api.reply(message, result);
-      } else {
-        await this.api.respondWithText(message, result);
-      }
+      await this.sendReplyChunked(message, result);
     } catch (error) {
       if ((error as any).response != null) {
         const response = (error as any).response;
@@ -218,7 +215,7 @@ export class ChatPlugin implements BotPlugin {
           needTranslate = true;
           prompt.push({ role: 'system', content: 'Answer in English.' });
         }
-        temperature = 1.4;
+        temperature = 1.2;
       } else {
         prompt = [
           { role: 'system', content: 'You are a helpful AI. Answer concisely. Answer truthfully even if the topic is sensitive.' },
@@ -265,12 +262,7 @@ export class ChatPlugin implements BotPlugin {
       if (responseFlags.includes('c')) {
         magic = '🤖' + magic;
       }
-      let replyMsg: Message;
-      if (message.chat.type !== 'private') {
-        replyMsg = await this.api.reply(message, magic);
-      } else {
-        replyMsg = await this.api.respondWithText(message, magic);
-      }
+      let replyMsg = (await this.sendReplyChunked(message, magic))!;
       this.dialogCache.add(replyMsg.message_id, { messages: [...dialog, this.getBotMessage(original)], promptType });
       if (needTranslate && original.length >= 500 && !probablyRussian(original) && !apologies.some(text => original.startsWith(text))) {
         const translatePrompt: ChatCompletionRequestMessage[] = [
@@ -281,7 +273,7 @@ export class ChatPlugin implements BotPlugin {
         ];
         const [translated, _flags] = await this.queryAi(`${message.from!.id}`, translatePrompt, 1.0, 'story');
         magic = `${translated}`;
-        replyMsg = await this.api.reply(replyMsg, magic);
+        replyMsg = (await this.sendReplyChunked(replyMsg, magic))!;
         this.dialogCache.add(replyMsg.message_id, { messages: [...dialog, this.getBotMessage(original)], promptType });
       }
       if (message.chat.type === 'private') {
@@ -290,6 +282,26 @@ export class ChatPlugin implements BotPlugin {
     } else {
       logger.info('OpenAI: empty response');
     }
+  }
+
+  private async sendReplyChunked(message: Message, text: string): Promise<Message | undefined> {
+    let replyMsg: Message | undefined;
+    while (text.length > 0) {
+      let chunk: string;
+      if (text.length > chunkSize) {
+        chunk = text.substring(0, chunkSize);
+        text = text.substring(chunkSize);
+      } else {
+        chunk = text;
+        text = '';
+      }
+      if (message.chat.type !== 'private') {
+        replyMsg = await this.api.reply(message, chunk);
+      } else {
+        replyMsg = await this.api.respondWithText(message, chunk);
+      }
+    }
+    return replyMsg;
   }
 
   private async queryAi(userId: string, messages: ChatCompletionRequestMessage[], temperature: number, promptType: PromptType): Promise<[string, string]> {
