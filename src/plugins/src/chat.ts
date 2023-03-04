@@ -81,7 +81,7 @@ export class ChatPlugin implements BotPlugin {
     privateInput.onText(/^([^!/][^]*)/, this.handle, this.onError);
     this.input.onText(/^!\s?complete\s+([^]+)/, this.handleComplete, this.onError);
     this.input.onText(/^!\s?(?:ии|ai)\s+([^]+)/, this.handleRaw, this.onError);
-    this.input.onText(/^!\s?(?:story|напиши)\s+([^]+)/, this.handleStory, this.onError);
+    this.input.onText(/^!\s?(?:story|напиши|write|история)\s+([^]+)/, this.handleStory, this.onError);
     this.input.onText(/^!\s?(?:gender|пол)\s+(\w+)\s*$/, this.handleGender, this.onError);
   }
 
