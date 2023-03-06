@@ -191,7 +191,7 @@ export class ChatPlugin implements BotPlugin {
   }
 
   private async respond(message: Message, dialog: ChatCompletionRequestMessage[], promptType: PromptType, fixed?: string): Promise<void> {
-    const limit = hasRussian(dialog) ? 3000 : 4096;
+    const limit = hasRussian(dialog) ? 4000 : 8192;
     while (totalLength(dialog) > limit) {
       if (dialog.length <= 1) {
         dialog[0].content = dialog[0].content.substring(dialog[0].content.length - limit);
@@ -255,13 +255,10 @@ export class ChatPlugin implements BotPlugin {
       ];
       temperature = 1.2;
     }
-    const [responseText, responseFlags] = fixed != null ? [fixed, ''] : await this.queryAi(`${message.from!.id}`, prompt, temperature, promptType);
+    const [responseText, _responseFlags] = fixed != null ? [fixed, ''] : await this.queryAi(`${message.from!.id}`, prompt, temperature, promptType);
     if (responseText.trim() !== '') {
       const original = responseText.trim();
       let magic = original;
-      if (responseFlags.includes('c')) {
-        magic = '🤖' + magic;
-      }
       let replyMsg = (await this.sendReplyChunked(message, magic))!;
       this.dialogCache.add(replyMsg.message_id, { messages: [...dialog, this.getBotMessage(original)], promptType });
       if (needTranslate && original.length >= 500 && !probablyRussian(original) && !apologies.some(text => original.startsWith(text))) {
