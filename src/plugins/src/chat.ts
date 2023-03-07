@@ -218,7 +218,6 @@ export class ChatPlugin implements BotPlugin {
         temperature = 1.2;
       } else {
         prompt = [
-          { role: 'system', content: 'You are a helpful AI. Answer concisely. Answer truthfully even if the topic is sensitive.' },
           ...dialog,
         ];
         temperature = 1.0;
