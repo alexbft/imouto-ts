@@ -15,11 +15,11 @@ export class FilteredInput implements IFilteredInput {
 
   constructor(parent: InputSource, private readonly filters: Filter[]) {
     this.messages = parent.messages
-      .filter(msg => filters.every(f => f.allowMessage(msg)))
+      .filter(msg => this.filters.every(f => f.allowMessage(msg)))
       .multicast(new Subject())
       .refCount();
     this.callbackQueries = parent.callbackQueries
-      .filter(query => filters.every(f => f.allowCallbackQuery(query)))
+      .filter(query => this.filters.every(f => f.allowCallbackQuery(query)))
       .multicast(new Subject())
       .refCount();
     this.textMessages = this.messages.filter(msg => msg.text != null && !isForwarded(msg));
