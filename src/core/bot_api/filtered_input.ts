@@ -14,19 +14,14 @@ export class FilteredInput implements IFilteredInput {
   readonly textMessages: Observable<Message>;
 
   constructor(parent: InputSource, private readonly filters: Filter[]) {
-    if (filters.length === 0) {
-      this.messages = parent.messages;
-      this.callbackQueries = parent.callbackQueries;
-    } else {
-      this.messages = parent.messages
-        .filter(msg => filters.every(f => f.allowMessage(msg)))
-        .multicast(new Subject())
-        .refCount();
-      this.callbackQueries = parent.callbackQueries
-        .filter(query => filters.every(f => f.allowCallbackQuery(query)))
-        .multicast(new Subject())
-        .refCount();
-    }
+    this.messages = parent.messages
+      .filter(msg => filters.every(f => f.allowMessage(msg)))
+      .multicast(new Subject())
+      .refCount();
+    this.callbackQueries = parent.callbackQueries
+      .filter(query => filters.every(f => f.allowCallbackQuery(query)))
+      .multicast(new Subject())
+      .refCount();
     this.textMessages = this.messages.filter(msg => msg.text != null && !isForwarded(msg));
   }
 
