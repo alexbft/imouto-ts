@@ -33,7 +33,7 @@ export class BotApi {
 
   async initPlugins(): Promise<void> {
     const input = this.inputImpl.input;
-    input.installGlobalFilter(this.filters.isNotBanned(), 'User is banned');
+    input.installGlobalFilter(this.filters.isNotBanned(), 'User or chat is banned');
     const pluginInjector = this.injector.subContext([
       ...allBindings,
       provide(Input, { useValue: input }),

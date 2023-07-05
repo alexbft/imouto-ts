@@ -33,7 +33,11 @@ export class ExclusiveTextInput implements ExclusiveInput {
         } catch (e: any) {
           logger.error(e.stack || e);
           if (onError != null) {
-            await onError(msg, e);
+            try {
+              await onError(msg, e);
+            } catch (e2: any) {
+              logger.error(e2.stack || e2);
+            }
           }
         }
       }

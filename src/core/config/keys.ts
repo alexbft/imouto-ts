@@ -9,3 +9,4 @@ export const RoleMap = new InjectionToken<Map<string, number[]>>('RoleMap');
 export const OpenWeatherMapKey = new InjectionToken<string | null>('OpenWeatherMapKey');
 export const CmcKey = new InjectionToken<string | null>('CmcKey');
 export const OpenAiKey = new InjectionToken<string | null>('OpenAiKey');
+export const BannedChats = new InjectionToken<Set<number>>('BannedChats');
