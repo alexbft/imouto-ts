@@ -343,7 +343,7 @@ export class ChatPlugin implements BotPlugin {
 
   private async queryAi(userId: string, messages: ChatCompletionRequestMessage[], temperature: number, promptType: PromptType): Promise<[string, string]> {
     let request: CreateChatCompletionRequest = {
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-4o-mini',
       messages,
       user: userId,
       temperature: temperature,
